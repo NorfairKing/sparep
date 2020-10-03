@@ -9,21 +9,18 @@ where
 import Brick.AttrMap
 import Brick.Main
 import Brick.Types
+import Brick.Util
 import Brick.Widgets.Border
 import Brick.Widgets.Center
 import Brick.Widgets.Core
 import Cursor.Simple.List.NonEmpty
 import qualified Data.List.NonEmpty as NE
-import Data.List.NonEmpty (NonEmpty)
-import Data.Text (Text)
-import Data.Yaml
+import Graphics.Vty.Attributes
 import Graphics.Vty.Input.Events
 import Path
 import Path.IO
 import Sparep.Card
-import System.Directory
 import System.Exit
-import Text.Show.Pretty
 import YamlParse.Applicative
 
 sparep :: IO ()
@@ -35,8 +32,12 @@ sparep = do
 
 data State
   = State
-      { stateCursor :: NonEmptyCursor CardDef
+      { stateCursor :: NonEmptyCursor CardDef,
+        stateFrontBack :: FrontBack
       }
+  deriving (Show, Eq)
+
+data FrontBack = Front | Back
   deriving (Show, Eq)
 
 data ResourceName
@@ -50,7 +51,7 @@ tuiApp =
       appChooseCursor = showFirstCursor,
       appHandleEvent = handleTuiEvent,
       appStartEvent = pure,
-      appAttrMap = const $ attrMap mempty []
+      appAttrMap = const $ attrMap (fg brightWhite) []
     }
 
 buildInitialState :: Path Abs File -> IO State
@@ -62,29 +63,55 @@ buildInitialState cardDefsPath = do
       Nothing -> die "No cards to study."
       Just ne -> do
         let stateCursor = makeNonEmptyCursor ne
+        let stateFrontBack = Front
         pure State {..}
 
 drawTui :: State -> [Widget ResourceName]
 drawTui State {..} =
   let CardDef {..} = nonEmptyCursorCurrent stateCursor
-   in [ centerLayer $ border $
-          vBox
-            [ padAll 1 $ txt cardDefFront,
-              hBorder,
-              padAll 1 $ txt cardDefBack
+   in [ centerLayer $ border
+          $ vBox
+          $ concat
+            [ [padAll 1 $ txt cardDefFront],
+              case stateFrontBack of
+                Front -> []
+                Back ->
+                  [ padAll 1 $ txt cardDefBack
+                  ]
             ]
       ]
+
+data Difficulty
+  = CardWrong
+  | CardCorrect
+  | CardEasy
 
 handleTuiEvent :: State -> BrickEvent n e -> EventM n (Next State)
 handleTuiEvent s e =
   case e of
     VtyEvent vtye ->
-      case vtye of
-        EvKey (KChar 'q') [] -> halt s
-        EvKey KRight [] -> do
-          let cur = stateCursor s
-          case nonEmptyCursorSelectNext cur of
-            Nothing -> halt s
-            Just cur' -> continue $ s {stateCursor = cur'}
-        _ -> continue s
+      case stateFrontBack s of
+        Front ->
+          case vtye of
+            EvKey (KChar 'q') [] -> halt s
+            EvKey (KChar ' ') [] -> continue $ s {stateFrontBack = Back}
+            _ -> continue s
+        Back ->
+          let finishCard :: Difficulty -> EventM n (Next State)
+              finishCard _ = do
+                let cur = stateCursor s
+                case nonEmptyCursorSelectNext cur of
+                  Nothing -> halt s
+                  Just cur' ->
+                    continue $
+                      s
+                        { stateCursor = cur',
+                          stateFrontBack = Front
+                        }
+           in case vtye of
+                EvKey (KChar 'q') [] -> halt s
+                EvKey (KChar 'w') [] -> finishCard CardWrong
+                EvKey (KChar 'c') [] -> finishCard CardCorrect
+                EvKey (KChar 'e') [] -> finishCard CardEasy
+                _ -> continue s
     _ -> continue s
