@@ -19,7 +19,7 @@ share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
   [persistLowerCase|
 
-RepititionData
+Repetition
     card CardId
     difficulty Difficulty
     timestamp UTCTime

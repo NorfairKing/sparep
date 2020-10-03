@@ -17,6 +17,7 @@ library:
   - cryptohash-sha256
   - cursor
   - directory
+  - monad-logger
   - path
   - path-io
   - persistent
