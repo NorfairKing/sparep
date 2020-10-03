@@ -92,11 +92,6 @@ drawTui State {..} =
           ]
       ]
 
-data Difficulty
-  = CardIncorrect
-  | CardCorrect
-  | CardEasy
-
 handleTuiEvent :: State -> BrickEvent n e -> EventM n (Next State)
 handleTuiEvent s e =
   case e of

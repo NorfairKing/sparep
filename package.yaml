@@ -14,12 +14,20 @@ library:
   dependencies:
   - brick
   - bytestring
+  - cryptohash-sha256
   - cursor
   - directory
   - path
   - path-io
+  - persistent
+  - persistent-sqlite
+  - persistent-template
   - pretty-show
   - text
+  - time
+  - validity
+  - validity-bytestring
+  - validity-text
   - vty
   - yaml
   - yamlparse-applicative
@@ -44,4 +52,10 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - genvalidity
+    - genvalidity-bytestring
+    - genvalidity-hspec
+    - genvalidity-hspec-persistent
+    - genvalidity-text
+    - hspec
     - sparep

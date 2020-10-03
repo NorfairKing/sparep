@@ -3,3 +3,6 @@ packages:
 - .
 extra-deps:
 - yamlparse-applicative-0.1.0.1@sha256:204fe56e9caa1658bb5e16382ede6e1c1d7ba7c8c11fbbb07d73b5cd64a666a5,2133
+nix:
+  packages:
+    - zlib
