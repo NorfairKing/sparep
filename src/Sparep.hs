@@ -32,7 +32,7 @@ sparep = do
 
 data State
   = State
-      { stateCursor :: NonEmptyCursor CardDef,
+      { stateCursor :: NonEmptyCursor Card,
         stateFrontBack :: FrontBack
       }
   deriving (Show, Eq)
@@ -59,7 +59,7 @@ buildInitialState cardDefsPath = do
   mcd <- readConfigFile cardDefsPath
   case mcd of
     Nothing -> die $ "File does not exist: " <> fromAbsFile cardDefsPath
-    Just CardDefs {..} -> case NE.nonEmpty cardDefsCards of
+    Just cds -> case NE.nonEmpty $ resolveCardDefs cds of
       Nothing -> die "No cards to study."
       Just ne -> do
         let stateCursor = makeNonEmptyCursor ne
@@ -68,16 +68,16 @@ buildInitialState cardDefsPath = do
 
 drawTui :: State -> [Widget ResourceName]
 drawTui State {..} =
-  let CardDef {..} = nonEmptyCursorCurrent stateCursor
+  let Card {..} = nonEmptyCursorCurrent stateCursor
    in [ vBox
           [ centerLayer $ border
               $ vBox
               $ concat
-                [ [padAll 1 $ txt cardDefFront],
+                [ [padAll 1 $ txt cardFront],
                   case stateFrontBack of
                     Front -> []
                     Back ->
-                      [ padAll 1 $ txt cardDefBack
+                      [ padAll 1 $ txt cardBack
                       ]
                 ],
             hCenter $
