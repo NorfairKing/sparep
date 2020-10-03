@@ -24,6 +24,7 @@ library:
   - persistent-sqlite
   - persistent-template
   - pretty-show
+  - random-shuffle
   - text
   - time
   - validity

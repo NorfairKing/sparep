@@ -31,6 +31,7 @@ import Path.IO
 import Sparep.Card
 import Sparep.DB
 import System.Exit
+import System.Random.Shuffle
 import YamlParse.Applicative
 
 sparep :: IO ()
@@ -155,7 +156,7 @@ generateStudyDeck pool cards numCards = do
   let neverStudiedSelected = take numCards neverStudied
       studiedAtLeastOnceSorted = sortOn (repetitionTimestamp . head . snd) studiedAtLeastOnce -- TODO
       studiedAtLeastOnceSelected = take (numCards - length neverStudiedSelected) studiedAtLeastOnceSorted
-  pure $ map fst $ neverStudiedSelected ++ studiedAtLeastOnceSelected
+  shuffleM $ map fst $ neverStudiedSelected ++ studiedAtLeastOnceSelected
 
 handleStudyEvent :: ConnectionPool -> StudyState -> BrickEvent n e -> EventM n (Next StudyState)
 handleStudyEvent pool s e =
