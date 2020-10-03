@@ -69,20 +69,31 @@ buildInitialState cardDefsPath = do
 drawTui :: State -> [Widget ResourceName]
 drawTui State {..} =
   let CardDef {..} = nonEmptyCursorCurrent stateCursor
-   in [ centerLayer $ border
-          $ vBox
-          $ concat
-            [ [padAll 1 $ txt cardDefFront],
+   in [ vBox
+          [ centerLayer $ border
+              $ vBox
+              $ concat
+                [ [padAll 1 $ txt cardDefFront],
+                  case stateFrontBack of
+                    Front -> []
+                    Back ->
+                      [ padAll 1 $ txt cardDefBack
+                      ]
+                ],
+            hCenter $
               case stateFrontBack of
-                Front -> []
+                Front -> str "Show back: space"
                 Back ->
-                  [ padAll 1 $ txt cardDefBack
-                  ]
-            ]
+                  hBox $ map (padAll 1) $
+                    [ str "Incorrect: i",
+                      str "Correct: c",
+                      str "Easy: e"
+                    ]
+          ]
       ]
 
 data Difficulty
-  = CardWrong
+  = CardIncorrect
   | CardCorrect
   | CardEasy
 
@@ -110,7 +121,7 @@ handleTuiEvent s e =
                         }
            in case vtye of
                 EvKey (KChar 'q') [] -> halt s
-                EvKey (KChar 'w') [] -> finishCard CardWrong
+                EvKey (KChar 'i') [] -> finishCard CardIncorrect
                 EvKey (KChar 'c') [] -> finishCard CardCorrect
                 EvKey (KChar 'e') [] -> finishCard CardEasy
                 _ -> continue s
