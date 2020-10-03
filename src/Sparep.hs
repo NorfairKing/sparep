@@ -9,6 +9,8 @@ where
 import Brick.AttrMap
 import Brick.Main
 import Brick.Types
+import Brick.Widgets.Border
+import Brick.Widgets.Center
 import Brick.Widgets.Core
 import Cursor.Simple.List.NonEmpty
 import qualified Data.List.NonEmpty as NE
@@ -65,7 +67,13 @@ buildInitialState cardDefsPath = do
 drawTui :: State -> [Widget ResourceName]
 drawTui State {..} =
   let CardDef {..} = nonEmptyCursorCurrent stateCursor
-   in [vBox [txt cardDefFront, txt cardDefBack]]
+   in [ centerLayer $ border $
+          vBox
+            [ padAll 1 $ txt cardDefFront,
+              hBorder,
+              padAll 1 $ txt cardDefBack
+            ]
+      ]
 
 handleTuiEvent :: State -> BrickEvent n e -> EventM n (Next State)
 handleTuiEvent s e =
@@ -73,5 +81,10 @@ handleTuiEvent s e =
     VtyEvent vtye ->
       case vtye of
         EvKey (KChar 'q') [] -> halt s
+        EvKey KRight [] -> do
+          let cur = stateCursor s
+          case nonEmptyCursorSelectNext cur of
+            Nothing -> halt s
+            Just cur' -> continue $ s {stateCursor = cur'}
         _ -> continue s
     _ -> continue s
