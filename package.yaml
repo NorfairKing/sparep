@@ -14,10 +14,13 @@ library:
   dependencies:
   - brick
   - bytestring
+  - cursor
+  - directory
   - path
   - path-io
   - pretty-show
   - text
+  - vty
   - yaml
   - yamlparse-applicative
 
