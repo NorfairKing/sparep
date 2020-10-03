@@ -12,6 +12,7 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Builder as SBB
 import qualified Data.ByteString.Lazy as LB
+import Data.Maybe
 import Data.Proxy
 import qualified Data.Text as T
 import Data.Text (Text)
@@ -28,17 +29,19 @@ import YamlParse.Applicative
 
 data CardDefs
   = CardDefs
-      { cardDefsReverse :: Bool,
-        cardDefsCards :: [CardDef]
+      { cardDefsCards :: [CardDef],
+        cardDefsReverse :: Bool
       }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Validity CardDefs
 
 instance YamlSchema CardDefs where
   yamlSchema =
     objectParser "CardDefs" $
       CardDefs
-        <$> optionalFieldWithDefault "reverse" False "Whether to generate reverse cards"
-        <*> optionalFieldWithDefault "cards" [] "Card definitions"
+        <$> optionalFieldWithDefault "cards" [] "Card definitions"
+        <*> optionalFieldWithDefault "reverse" False "Whether to generate reverse cards"
 
 instance FromJSON CardDefs where
   parseJSON = viaYamlSchema
@@ -47,9 +50,11 @@ data CardDef
   = CardDef
       { cardDefFront :: Text,
         cardDefBack :: Text,
-        cardDefReverse :: Bool
+        cardDefReverse :: Maybe Bool
       }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+
+instance Validity CardDef
 
 instance YamlSchema CardDef where
   yamlSchema =
@@ -57,10 +62,27 @@ instance YamlSchema CardDef where
       CardDef
         <$> requiredField "front" "The front of the card"
         <*> requiredField "back" "The back of the card"
-        <*> optionalFieldWithDefault "reverse" False "Whether to also generate the reverse card"
+        <*> optionalField "reverse" "Whether to also generate the reverse card"
 
 instance FromJSON CardDef where
   parseJSON = viaYamlSchema
+
+resolveCardDefs :: CardDefs -> [Card]
+resolveCardDefs CardDefs {..} = concatMap (resolveCardDef cardDefsReverse) cardDefsCards
+
+resolveCardDef :: Bool -> CardDef -> [Card]
+resolveCardDef defaultReverse CardDef {..} =
+  let rightWayRoundCard = Card {cardFront = cardDefFront, cardBack = cardDefBack}
+      reversedCard = reverseCard rightWayRoundCard
+      doReversal = fromMaybe defaultReverse cardDefReverse
+   in [rightWayRoundCard] ++ [reversedCard | doReversal]
+
+reverseCard :: Card -> Card
+reverseCard c =
+  Card
+    { cardFront = cardBack c,
+      cardBack = cardFront c
+    }
 
 data Card
   = Card
