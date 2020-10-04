@@ -30,6 +30,7 @@ import Path
 import Path.IO
 import Sparep.Card
 import Sparep.DB
+import Sparep.Repetition
 import System.Exit
 import System.Random.Shuffle
 import YamlParse.Applicative
@@ -136,6 +137,7 @@ handleMenuEvent pool s e = case e of
   VtyEvent vtye -> case vtye of
     EvKey (KChar 'q') [] -> halt $ StateMenu s
     EvKey KEnter [] -> do
+      -- This computation may take a while, move it to a separate thread with a nice progress bar.
       cs <- liftIO $ generateStudyDeck pool (resolveCardDefs (menuStateCardDefs s)) 10
       case NE.nonEmpty cs of
         Nothing -> halt $ StateMenu s
@@ -145,18 +147,6 @@ handleMenuEvent pool s e = case e of
           continue $ StateStudy StudyState {..}
     _ -> continue $ StateMenu s
   _ -> continue $ StateMenu s
-
--- This computation may take a while, move it to a separate thread with a nice progress bar.
-generateStudyDeck :: ConnectionPool -> [Card] -> Int -> IO [Card]
-generateStudyDeck pool cards numCards = do
-  cardData <- forM cards $ \c -> do
-    let query = map entityVal <$> selectList [RepetitionCard ==. hashCard c] [Desc RepetitionTimestamp]
-    (,) c <$> runSqlPool query pool
-  let (neverStudied, studiedAtLeastOnce) = partition (null . snd) cardData
-  let neverStudiedSelected = take numCards neverStudied
-      studiedAtLeastOnceSorted = sortOn (repetitionTimestamp . head . snd) studiedAtLeastOnce -- TODO
-      studiedAtLeastOnceSelected = take (numCards - length neverStudiedSelected) studiedAtLeastOnceSorted
-  shuffleM $ map fst $ neverStudiedSelected ++ studiedAtLeastOnceSelected
 
 handleStudyEvent :: ConnectionPool -> StudyState -> BrickEvent n e -> EventM n (Next StudyState)
 handleStudyEvent pool s e =
