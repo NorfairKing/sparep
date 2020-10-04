@@ -39,7 +39,7 @@ decideStudyDeckSM0 now cardData numCards =
         let latestRepetition = head $ sortOn (Down . repetitionTimestamp) reps
             i = intervalSize (length reps) * nominalDay
          in addUTCTime i (repetitionTimestamp latestRepetition) > now
-      (tooSoon, notTooSoon) = partition isTooSoon cardData
+      (tooSoon, notTooSoon) = partition isTooSoon studiedAtLeastOnce
    in map fst $ chooseFromListsInOrder numCards [notTooSoon, neverStudied]
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
