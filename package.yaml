@@ -17,7 +17,10 @@ library:
   - cryptohash-sha256
   - cursor
   - directory
+  - envparse
+  - filepath
   - monad-logger
+  - optparse-applicative
   - path
   - path-io
   - persistent

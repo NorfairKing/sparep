@@ -5,12 +5,28 @@
 
 packages:
 - completed:
-    hackage: yamlparse-applicative-0.1.0.1@sha256:204fe56e9caa1658bb5e16382ede6e1c1d7ba7c8c11fbbb07d73b5cd64a666a5,2133
+    size: 15409
+    subdir: yamlparse-applicative
+    url: https://github.com/NorfairKing/yamlparse-applicative/archive/1d381a4cbc9736a2defc916a93cfcf8000ee7e37.tar.gz
+    cabal-file:
+      size: 2133
+      sha256: 204fe56e9caa1658bb5e16382ede6e1c1d7ba7c8c11fbbb07d73b5cd64a666a5
+    name: yamlparse-applicative
+    version: 0.1.0.1
+    sha256: c602e14438b5610228ba66f1a817bd41078ac1e35254fdc4bd0b945b379b5a51
     pantry-tree:
-      size: 799
-      sha256: 8083e19c7351f3e8dc145a0418d070b57196456a942ad02e16a1c46295a159f6
+      size: 953
+      sha256: 161f2565d7b030bdfe5885a404b93934697218846c0fb15e3de45045f4389147
   original:
-    hackage: yamlparse-applicative-0.1.0.1@sha256:204fe56e9caa1658bb5e16382ede6e1c1d7ba7c8c11fbbb07d73b5cd64a666a5,2133
+    subdir: yamlparse-applicative
+    url: https://github.com/NorfairKing/yamlparse-applicative/archive/1d381a4cbc9736a2defc916a93cfcf8000ee7e37.tar.gz
+- completed:
+    hackage: envparse-0.4.1@sha256:989902e6368532548f61de1fa245ad2b39176cddd8743b20071af519a709ce30,2842
+    pantry-tree:
+      size: 1180
+      sha256: 35044d67979fe2a5cff05cf8736a06a265592433cdd03e13a72908ceed892612
+  original:
+    hackage: envparse-0.4.1@sha256:989902e6368532548f61de1fa245ad2b39176cddd8743b20071af519a709ce30,2842
 snapshots:
 - completed:
     size: 496112

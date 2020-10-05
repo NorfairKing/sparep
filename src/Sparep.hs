@@ -30,24 +30,27 @@ import Path
 import Path.IO
 import Sparep.Card
 import Sparep.DB
+import Sparep.OptParse
+import Sparep.OptParse.Types
 import Sparep.Repetition
 import System.Exit
 import System.Random.Shuffle
 import YamlParse.Applicative
 
 sparep :: IO ()
-sparep = runNoLoggingT $ withSqlitePool "sparep.sqlite3" 1 $ \pool -> do
-  p <- resolveFile' "/home/syd/src/german/vocab/das-geld.yaml"
-  runSqlPool (runMigration migrateAll) pool
-  liftIO $ do
-    initialState <- buildInitialState p
-    void $ defaultMain (tuiApp pool) initialState
+sparep = do
+  Settings {..} <- getSettings
+  runNoLoggingT $ withSqlitePool "sparep.sqlite3" 1 $ \pool -> do
+    runSqlPool (runMigration migrateAll) pool
+    liftIO $ do
+      initialState <- buildInitialState setCardDefs
+      void $ defaultMain (tuiApp pool) initialState
 
 data State
   = StateMenu MenuState
   | StateStudy StudyState
 
-data MenuState = MenuState {menuStateCardDefs :: CardDefs}
+data MenuState = MenuState {menuStateCardDefs :: [CardDefs]}
   deriving (Show, Eq)
 
 data StudyState
@@ -74,12 +77,9 @@ tuiApp pool =
       appAttrMap = const $ attrMap (fg brightWhite) []
     }
 
-buildInitialState :: Path Abs File -> IO State
-buildInitialState cardDefsPath = do
-  mcd <- readConfigFile cardDefsPath
-  case mcd of
-    Nothing -> die $ "File does not exist: " <> fromAbsFile cardDefsPath
-    Just cds -> pure $ StateMenu $ MenuState {menuStateCardDefs = cds}
+buildInitialState :: [CardDefs] -> IO State
+buildInitialState cardDefs =
+  pure $ StateMenu $ MenuState {menuStateCardDefs = cardDefs}
 
 drawTui :: State -> [Widget ResourceName]
 drawTui = \case
@@ -92,8 +92,8 @@ drawMenuState MenuState {..} =
       vBox
         [ str "Sparep",
           str " ",
-          hBox [str "Found ", str (show (length (cardDefsCards menuStateCardDefs))), str " card definitions"],
-          hBox [str "which resolve to ", str (show (length (resolveCardDefs menuStateCardDefs))), str " cards"],
+          hBox [str "Found ", str (show (length (concatMap cardDefsCards menuStateCardDefs))), str " card definitions"],
+          hBox [str "which resolve to ", str (show (length (concatMap resolveCardDefs menuStateCardDefs))), str " cards"],
           str " ",
           str "Press enter to study now"
         ]
@@ -138,7 +138,7 @@ handleMenuEvent pool s e = case e of
     EvKey (KChar 'q') [] -> halt $ StateMenu s
     EvKey KEnter [] -> do
       -- This computation may take a while, move it to a separate thread with a nice progress bar.
-      cs <- liftIO $ generateStudyDeck pool (resolveCardDefs (menuStateCardDefs s)) 10
+      cs <- liftIO $ generateStudyDeck pool (concatMap resolveCardDefs (menuStateCardDefs s)) 10
       case NE.nonEmpty cs of
         Nothing -> halt $ StateMenu s
         Just ne -> do
