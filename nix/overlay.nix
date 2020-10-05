@@ -15,10 +15,15 @@ with final.haskell.lib;
               )
             ) (final.haskellPackages.autoexporter)
           );
+      sparepPkgWithComp =
+        exeName: name:
+          generateOptparseApplicativeCompletion exeName (sparepPkg name);
+      sparepPkgWithOwnComp = name: sparepPkgWithComp name name;
+
     in
-      final.lib.genAttrs [
-        "sparep"
-      ] sparepPkg;
+      {
+        "sparep" = sparepPkgWithOwnComp "sparep";
+      };
   haskellPackages =
     previous.haskellPackages.override (
       old:
