@@ -103,7 +103,11 @@ drawMenuState MenuState {..} =
           str " ",
           hBox
             [ str "Found ",
-              str (show (length (concatMap deckCards menuStateDecks))),
+              str (show (length menuStateDecks)),
+              str " decks containing"
+            ],
+          hBox
+            [ str (show (length (concatMap deckCards menuStateDecks))),
               str " card definitions"
             ],
           hBox

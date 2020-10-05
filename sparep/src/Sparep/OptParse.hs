@@ -21,6 +21,7 @@ import Sparep.Card
 import Sparep.OptParse.Types
 import qualified System.Directory as FP
 import qualified System.Environment as System
+import System.Exit
 import qualified YamlParse.Applicative as YamlParse
 
 getSettings :: IO Settings
@@ -33,8 +34,9 @@ getSettings = do
 combineToInstructions ::
   Flags -> Environment -> Maybe Configuration -> IO Settings
 combineToInstructions Flags {..} Environment {..} mConf = do
+  decksFromFlags <- mapM (readDeckOrDie <=< resolveFile') flagDecks
   setDecks <-
-    concat <$> mapM parseDecks (fromMaybe [] (mc confSpecifications) ++ flagDecks)
+    (decksFromFlags ++) . concat <$> mapM parseDecks (fromMaybe [] (mc confSpecifications))
   setRepetitionDb <-
     case flagRepetitionDbFile <|> envRepetitionDbFile
       <|> mmc confRepetitionDbFile of
@@ -68,6 +70,13 @@ parseDecks fp = do
               errOrDefs <- Yaml.decodeFileEither (fromAbsFile f)
               pure $ either (const Nothing) Just errOrDefs
         else pure []
+
+readDeckOrDie :: Path Abs File -> IO Deck
+readDeckOrDie p = do
+  md <- YamlParse.readConfigFile p
+  case md of
+    Nothing -> die $ "Deck file not found: " <> fromAbsFile p
+    Just d -> pure d
 
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
