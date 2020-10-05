@@ -19,6 +19,12 @@ instance GenValid CardDef where
 
   shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 
+instance GenValid Instructions where
+
+  genValid = genValidStructurallyWithoutExtraChecking
+
+  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
+
 instance GenValid Card where
 
   genValid = genValidStructurallyWithoutExtraChecking

@@ -2,7 +2,7 @@ let
   pkgs = import ./nix/pkgs.nix;
   nix-pre-commit-hooks =
     import (
-      builtins.fetchTarball "https://github.com/hercules-ci/nix-pre-commit-hooks/archive/5c3078ad58856ce22f883b5518879d27bfc59dd5.tar.gz"
+      builtins.fetchTarball "https://github.com/hercules-ci/nix-pre-commit-hooks/archive/4dd50ef441796b439a56f1e0f8b127d4129f8947.tar.gz"
     );
 in
 pkgs.sparepPackages // {

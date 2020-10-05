@@ -19,6 +19,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Logger
 import Cursor.Simple.List.NonEmpty
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe
 import qualified Data.Text as T
 import Data.Time
 import Database.Persist
@@ -117,32 +118,32 @@ drawMenuState MenuState {..} =
 
 drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
-  let Card {..} = nonEmptyCursorCurrent studyStateCursor
-   in [ vBox
-          [ hCenter $
-              hBox
-                [ str (show (length (nonEmptyCursorNext studyStateCursor))),
-                  str " cards left"
-                ],
-            centerLayer
-              $ border
-              $ vBox
+  [ let Card {..} = nonEmptyCursorCurrent studyStateCursor
+     in vBox
+          [ hCenterLayer
+              $ str
+              $ show (length (nonEmptyCursorNext studyStateCursor)) ++ " cards left",
+            vCenterLayer $ vBox
+              $ map hCenterLayer
               $ concat
-                [ [padAll 1 $ txt cardFront],
-                  case studyStateFrontBack of
-                    Front -> []
-                    Back -> [padAll 1 $ txt cardBack]
-                ],
-            hCenter $
-              case studyStateFrontBack of
-                Front -> str "Show back: space"
-                Back ->
-                  hBox $
-                    map
-                      (padAll 1)
-                      [str "Incorrect: i", str "Correct: c", str "Easy: e"]
+                [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
+                  [ padAll 1
+                      $ border
+                      $ vBox
+                      $ concat
+                        [ [padAll 1 $ txt cardFront],
+                          case studyStateFrontBack of
+                            Front -> []
+                            Back -> [padAll 1 $ txt cardBack]
+                        ],
+                    padLeftRight 3 $
+                      case studyStateFrontBack of
+                        Front -> str "Show back: space"
+                        Back -> padAll 1 $ str "Incorrect: i,  Correct: c,  Easy: e"
+                  ]
+                ]
           ]
-      ]
+  ]
 
 handleTuiEvent ::
   ConnectionPool -> State -> BrickEvent n e -> EventM n (Next State)

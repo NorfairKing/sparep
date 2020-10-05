@@ -5,6 +5,7 @@
 
 module Sparep.Card where
 
+import Control.Applicative
 import Control.Monad
 import Crypto.Hash.SHA256 as SHA256
 import Data.Bits
@@ -29,7 +30,10 @@ import YamlParse.Applicative
 
 data Deck
   = Deck
-      { deckReverse :: Bool,
+      { deckName :: Maybe Text,
+        deckDescription :: Maybe Text,
+        deckInstructions :: Maybe Instructions,
+        deckReverse :: Bool,
         deckCards :: [CardDef]
       }
   deriving (Show, Eq, Generic)
@@ -40,7 +44,10 @@ instance YamlSchema Deck where
   yamlSchema =
     objectParser "Deck" $
       Deck
-        <$> optionalFieldWithDefault "reverse" False "Whether to generate reverse cards"
+        <$> optionalField "name" "Name of the deck"
+        <*> optionalField "description" "Description of the deck"
+        <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
+        <*> optionalFieldWithDefault "reverse" False "Whether to generate reverse cards"
         <*> optionalFieldWithDefault "cards" [] "Card definitions"
 
 instance FromJSON Deck where
@@ -50,7 +57,8 @@ data CardDef
   = CardDef
       { cardDefFront :: Text,
         cardDefBack :: Text,
-        cardDefReverse :: Maybe Bool
+        cardDefReverse :: Maybe Bool,
+        cardDefInstructions :: Maybe Instructions
       }
   deriving (Show, Eq, Generic)
 
@@ -59,32 +67,72 @@ instance Validity CardDef
 instance YamlSchema CardDef where
   yamlSchema =
     objectParser "CardDef" $
-      CardDef <$> requiredField "front" "The front of the card"
+      CardDef
+        <$> requiredField "front" "The front of the card"
         <*> requiredField "back" "The back of the card"
         <*> optionalField "reverse" "Whether to also generate the reverse card"
+        <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
 
 instance FromJSON CardDef where
   parseJSON = viaYamlSchema
 
+data Instructions
+  = InstructionsBoth !Text
+  | InstructionsSeparate !Text !Text
+  deriving (Show, Eq, Generic)
+
+instance Validity Instructions
+
+instance YamlSchema Instructions where
+  yamlSchema =
+    alternatives
+      [ InstructionsBoth <$> yamlSchema,
+        objectParser "InstructionsSeparate" $
+          InstructionsSeparate
+            <$> requiredField "normal" "The instructions for front-to-back study"
+            <*> requiredField "normal" "The instructions for studying a card in reverse"
+      ]
+
+instance FromJSON Instructions where
+  parseJSON = viaYamlSchema
+
 resolveDeck :: Deck -> [Card]
 resolveDeck Deck {..} =
-  concatMap (resolveCardDef deckReverse) deckCards
+  concatMap (resolveCardDef deckReverse deckInstructions) deckCards
 
-resolveCardDef :: Bool -> CardDef -> [Card]
-resolveCardDef defaultReverse CardDef {..} =
-  let rightWayRoundCard =
-        Card {cardFront = cardDefFront, cardBack = cardDefBack}
-      reversedCard = reverseCard rightWayRoundCard
+resolveCardDef :: Bool -> Maybe Instructions -> CardDef -> [Card]
+resolveCardDef defaultReverse defaultInstructions CardDef {..} =
+  let mInstructions = cardDefInstructions <|> defaultInstructions
+      rightWayRoundCard =
+        Card
+          { cardInstructions =
+              ( \case
+                  InstructionsBoth t -> t
+                  InstructionsSeparate t _ -> t
+              )
+                <$> mInstructions,
+            cardFront = cardDefFront,
+            cardBack = cardDefBack
+          }
+      reversedCard =
+        Card
+          { cardInstructions =
+              ( \case
+                  InstructionsBoth t -> t
+                  InstructionsSeparate _ t -> t
+              )
+                <$> mInstructions,
+            cardFront = cardDefBack,
+            cardBack = cardDefFront
+          }
       doReversal = fromMaybe defaultReverse cardDefReverse
    in rightWayRoundCard : [reversedCard | doReversal]
 
-reverseCard :: Card -> Card
-reverseCard c = Card {cardFront = cardBack c, cardBack = cardFront c}
-
 data Card
   = Card
-      { cardFront :: Text,
-        cardBack :: Text
+      { cardInstructions :: !(Maybe Text),
+        cardFront :: !Text,
+        cardBack :: !Text
       }
   deriving (Show, Eq, Generic)
 
@@ -92,7 +140,12 @@ instance Validity Card
 
 hashCard :: Card -> CardId
 hashCard Card {..} =
-  let bs = SB.concat [TE.encodeUtf8 cardFront, TE.encodeUtf8 cardBack]
+  let bs =
+        SB.concat $
+          concat
+            [ [TE.encodeUtf8 cardFront, TE.encodeUtf8 cardBack],
+              [TE.encodeUtf8 ins | ins <- maybeToList cardInstructions]
+            ]
    in CardId
         { cardIdSha256 = SHA256.hash bs,
           cardIdLength = fromIntegral $ SB.length bs

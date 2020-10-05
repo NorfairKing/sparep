@@ -21,10 +21,7 @@ spec = do
     $ producesValidsOnValids resolveDeck
   describe "resolveCardDef"
     $ it "produce valid cards"
-    $ producesValidsOnValids2 resolveCardDef
-  describe "reverseCard"
-    $ it "produces valid card ids"
-    $ producesValidsOnValids reverseCard
+    $ producesValidsOnValids3 resolveCardDef
   describe "hashCard"
     $ it "produces valid card ids"
     $ producesValidsOnValids hashCard
