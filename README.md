@@ -1,1 +1,1 @@
-# sparep
+# Sparep: Declarative Spaced Repetition

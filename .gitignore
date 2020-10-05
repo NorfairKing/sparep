@@ -3,3 +3,5 @@
 *~
 stack.yaml.lock
 sparep.cabal
+.pre-commit-config.yaml
+result*

@@ -30,14 +30,18 @@ getSettings = do
   config <- getConfiguration flags env
   combineToInstructions flags env config
 
-combineToInstructions :: Flags -> Environment -> Maybe Configuration -> IO Settings
+combineToInstructions ::
+  Flags -> Environment -> Maybe Configuration -> IO Settings
 combineToInstructions Flags {..} Environment {..} mConf = do
-  setCardDefs <- concat <$> mapM parseCardDefs (fromMaybe [] $ mc confSpecifications)
-  setRepetitionDb <- case flagRepetitionDbFile <|> envRepetitionDbFile <|> mmc confRepetitionDbFile of
-    Nothing -> do
-      dataDir <- defaultDataDir
-      resolveFile dataDir "repetition-data.sqlite3"
-    Just fp -> resolveFile' fp
+  setCardDefs <-
+    concat <$> mapM parseCardDefs (fromMaybe [] $ mc confSpecifications)
+  setRepetitionDb <-
+    case flagRepetitionDbFile <|> envRepetitionDbFile
+      <|> mmc confRepetitionDbFile of
+      Nothing -> do
+        dataDir <- defaultDataDir
+        resolveFile dataDir "repetition-data.sqlite3"
+      Just fp -> resolveFile' fp
   pure Settings {..}
   where
     mc :: (Configuration -> a) -> Maybe a
@@ -58,9 +62,11 @@ parseCardDefs fp = do
         then do
           p <- resolveDir' fp
           fs <- snd <$> listDirRecur p
-          fmap catMaybes $ forM fs $ \f -> do
-            errOrDefs <- Yaml.decodeFileEither (fromAbsFile f)
-            pure $ either (const Nothing) Just errOrDefs
+          fmap catMaybes
+            $ forM fs
+            $ \f -> do
+              errOrDefs <- Yaml.decodeFileEither (fromAbsFile f)
+              pure $ either (const Nothing) Just errOrDefs
         else pure []
 
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
@@ -87,9 +93,12 @@ environmentParser =
   Env.prefixed "SPAREP_" $
     Environment
       <$> Env.var (fmap Just . Env.str) "CONFIG_FILE" (mE <> Env.help "Config file")
-      <*> Env.var (fmap Just . Env.str) "REPETITION_DATABASE" (mE <> Env.help "The file to store the repetition database in")
+      <*> Env.var
+        (fmap Just . Env.str)
+        "REPETITION_DATABASE"
+        (mE <> Env.help "The file to store the repetition database in")
   where
-    mE = Env.def Nothing <> Env.keep
+    mE = Env.def Nothing
 
 getArguments :: IO Flags
 getArguments = do
@@ -102,13 +111,13 @@ runArgumentsParser = execParserPure prefs_ argParser
   where
     prefs_ :: ParserPrefs
     prefs_ =
-      defaultPrefs
-        { prefShowHelpOnError = True,
-          prefShowHelpOnEmpty = True
-        }
+      defaultPrefs {prefShowHelpOnError = True, prefShowHelpOnEmpty = True}
 
 argParser :: ParserInfo Flags
-argParser = info (helper <*> parseArgs) (fullDesc <> footerDoc (Just $ OptParse.string footerStr))
+argParser =
+  info
+    (helper <*> parseArgs)
+    (fullDesc <> footerDoc (Just $ OptParse.string footerStr))
   where
     footerStr =
       unlines
@@ -126,12 +135,11 @@ parseFlags =
   Flags
     <$> optional
       ( strOption
-          ( ( mconcat
-                [ long "config-file",
-                  help "Give the path to an altenative config file",
-                  metavar "FILEPATH"
-                ]
-            )
+          ( mconcat
+              [ long "config-file",
+                help "Give the path to an altenative config file",
+                metavar "FILEPATH"
+              ]
           )
       )
     <*> optional

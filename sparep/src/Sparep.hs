@@ -38,17 +38,22 @@ sparep :: IO ()
 sparep = do
   Settings {..} <- getSettings
   ensureDir $ parent setRepetitionDb
-  runNoLoggingT $ withSqlitePool (T.pack $ fromAbsFile setRepetitionDb) 1 $ \pool -> do
-    runSqlPool (runMigration migrateAll) pool
-    liftIO $ do
-      initialState <- buildInitialState setCardDefs
-      void $ defaultMain (tuiApp pool) initialState
+  runNoLoggingT
+    $ withSqlitePool (T.pack $ fromAbsFile setRepetitionDb) 1
+    $ \pool -> do
+      runSqlPool (runMigration migrateAll) pool
+      liftIO $ do
+        initialState <- buildInitialState setCardDefs
+        void $ defaultMain (tuiApp pool) initialState
 
 data State
   = StateMenu MenuState
   | StateStudy StudyState
 
-data MenuState = MenuState {menuStateCardDefs :: [CardDefs]}
+data MenuState
+  = MenuState
+      { menuStateCardDefs :: [CardDefs]
+      }
   deriving (Show, Eq)
 
 data StudyState
@@ -58,7 +63,9 @@ data StudyState
       }
   deriving (Show, Eq)
 
-data FrontBack = Front | Back
+data FrontBack
+  = Front
+  | Back
   deriving (Show, Eq)
 
 data ResourceName
@@ -80,18 +87,29 @@ buildInitialState cardDefs =
   pure $ StateMenu $ MenuState {menuStateCardDefs = cardDefs}
 
 drawTui :: State -> [Widget ResourceName]
-drawTui = \case
-  StateMenu ms -> drawMenuState ms
-  StateStudy ss -> drawStudyState ss
+drawTui =
+  \case
+    StateMenu ms -> drawMenuState ms
+    StateStudy ss -> drawStudyState ss
 
 drawMenuState :: MenuState -> [Widget ResourceName]
 drawMenuState MenuState {..} =
-  [ centerLayer $ border $ padAll 1 $
-      vBox
+  [ centerLayer
+      $ border
+      $ padAll 1
+      $ vBox
         [ str "Sparep",
           str " ",
-          hBox [str "Found ", str (show (length (concatMap cardDefsCards menuStateCardDefs))), str " card definitions"],
-          hBox [str "which resolve to ", str (show (length (concatMap resolveCardDefs menuStateCardDefs))), str " cards"],
+          hBox
+            [ str "Found ",
+              str (show (length (concatMap cardDefsCards menuStateCardDefs))),
+              str " card definitions"
+            ],
+          hBox
+            [ str "which resolve to ",
+              str (show (length (concatMap resolveCardDefs menuStateCardDefs))),
+              str " cards"
+            ],
           str " ",
           str "Press enter to study now"
         ]
@@ -101,52 +119,68 @@ drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
   let Card {..} = nonEmptyCursorCurrent studyStateCursor
    in [ vBox
-          [ hCenter $ hBox [str (show (length (nonEmptyCursorNext studyStateCursor))), str " cards left"],
-            centerLayer $ border
+          [ hCenter $
+              hBox
+                [ str (show (length (nonEmptyCursorNext studyStateCursor))),
+                  str " cards left"
+                ],
+            centerLayer
+              $ border
               $ vBox
               $ concat
-                [ [ padAll 1 $ txt cardFront
-                  ],
+                [ [padAll 1 $ txt cardFront],
                   case studyStateFrontBack of
                     Front -> []
-                    Back ->
-                      [ padAll 1 $ txt cardBack
-                      ]
+                    Back -> [padAll 1 $ txt cardBack]
                 ],
             hCenter $
               case studyStateFrontBack of
                 Front -> str "Show back: space"
                 Back ->
-                  hBox $ map (padAll 1) $
-                    [ str "Incorrect: i",
-                      str "Correct: c",
-                      str "Easy: e"
-                    ]
+                  hBox $
+                    map
+                      (padAll 1)
+                      [str "Incorrect: i", str "Correct: c", str "Easy: e"]
           ]
       ]
 
-handleTuiEvent :: ConnectionPool -> State -> BrickEvent n e -> EventM n (Next State)
-handleTuiEvent pool s e = case s of
-  StateMenu ms -> handleMenuEvent pool ms e
-  StateStudy ss -> fmap StateStudy <$> handleStudyEvent pool ss e
+handleTuiEvent ::
+  ConnectionPool -> State -> BrickEvent n e -> EventM n (Next State)
+handleTuiEvent pool s e =
+  case s of
+    StateMenu ms -> handleMenuEvent pool ms e
+    StateStudy ss -> fmap StateStudy <$> handleStudyEvent pool ss e
 
-handleMenuEvent :: ConnectionPool -> MenuState -> BrickEvent n e -> EventM n (Next State)
-handleMenuEvent pool s e = case e of
-  VtyEvent vtye -> case vtye of
-    EvKey (KChar 'q') [] -> halt $ StateMenu s
-    EvKey KEnter [] -> do
-      -- This computation may take a while, move it to a separate thread with a nice progress bar.
-      cs <- liftIO $ generateStudyDeck pool (concatMap resolveCardDefs (menuStateCardDefs s)) 10
-      case NE.nonEmpty cs of
-        Nothing -> halt $ StateMenu s
-        Just ne -> do
-          let studyStateCursor = makeNonEmptyCursor ne
-          let studyStateFrontBack = Front
-          continue $ StateStudy StudyState {..}
+handleMenuEvent ::
+  ConnectionPool -> MenuState -> BrickEvent n e -> EventM n (Next State)
+handleMenuEvent pool s e =
+  case e of
+    VtyEvent vtye ->
+      case vtye of
+        EvKey (KChar 'q') [] -> halt $ StateMenu s
+        EvKey KEnter [] ->
+          -- This computation may take a while, move it to a separate thread with a nice progress bar.
+          do
+            cs <-
+              liftIO $
+                generateStudyDeck
+                  pool
+                  (concatMap resolveCardDefs (menuStateCardDefs s))
+                  10
+            case NE.nonEmpty cs of
+              Nothing -> halt $ StateMenu s
+              Just ne -> do
+                let studyStateCursor = makeNonEmptyCursor ne
+                let studyStateFrontBack = Front
+                continue $ StateStudy StudyState {..}
+        _ -> continue $ StateMenu s
     _ -> continue $ StateMenu s
-  _ -> continue $ StateMenu s
 
-handleStudyEvent :: ConnectionPool -> StudyState -> BrickEvent n e -> EventM n (Next StudyState)
+handleStudyEvent ::
+  ConnectionPool ->
+  StudyState ->
+  BrickEvent n e ->
+  EventM n (Next StudyState)
 handleStudyEvent pool s e =
   case e of
     VtyEvent vtye ->

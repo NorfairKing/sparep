@@ -39,7 +39,10 @@ instance YamlSchema Configuration where
   yamlSchema =
     objectParser "Configuration" $
       Configuration
-        <$> optionalFieldWithDefault "specifications" [] "The files and directories containing card definitions"
+        <$> optionalFieldWithDefault
+          "specifications"
+          []
+          "The files and directories containing card definitions"
         <*> optionalField "repetition-database" "The file to store repitition data in"
 
 data Settings
