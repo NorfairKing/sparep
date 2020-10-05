@@ -34,7 +34,7 @@ combineToInstructions ::
   Flags -> Environment -> Maybe Configuration -> IO Settings
 combineToInstructions Flags {..} Environment {..} mConf = do
   setCardDefs <-
-    concat <$> mapM parseCardDefs (fromMaybe [] $ mc confSpecifications)
+    concat <$> mapM parseCardDefs (fromMaybe [] (mc confSpecifications) ++ flagSpecifications)
   setRepetitionDb <-
     case flagRepetitionDbFile <|> envRepetitionDbFile
       <|> mmc confRepetitionDbFile of
@@ -140,7 +140,7 @@ parseFlags =
       ( strOption
           ( mconcat
               [ long "config-file",
-                help "Give the path to an altenative config file",
+                help "the config file",
                 metavar "FILEPATH"
               ]
           )
@@ -149,8 +149,18 @@ parseFlags =
       ( strOption
           ( mconcat
               [ long "repetition-database",
-                help "Give the path to an altenative config file",
+                help "The path to store the repetition database in",
                 metavar "FILEPATH"
+              ]
+          )
+      )
+    <*> many
+      ( strOption
+          ( mconcat
+              [ long "specification",
+                long "spec",
+                help "A path to more specifications",
+                metavar "PATH"
               ]
           )
       )

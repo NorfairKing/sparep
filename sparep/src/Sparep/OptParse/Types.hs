@@ -14,7 +14,8 @@ import YamlParse.Applicative
 data Flags
   = Flags
       { flagConfigFile :: Maybe FilePath,
-        flagRepetitionDbFile :: Maybe FilePath
+        flagRepetitionDbFile :: Maybe FilePath,
+        flagSpecifications :: [FilePath]
       }
   deriving (Show, Eq, Generic)
 
