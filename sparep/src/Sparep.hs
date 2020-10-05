@@ -43,7 +43,7 @@ sparep = do
     $ \pool -> do
       runSqlPool (runMigration migrateAll) pool
       liftIO $ do
-        initialState <- buildInitialState setCardDefs
+        initialState <- buildInitialState setDecks
         void $ defaultMain (tuiApp pool) initialState
 
 data State
@@ -52,7 +52,7 @@ data State
 
 data MenuState
   = MenuState
-      { menuStateCardDefs :: [CardDefs]
+      { menuStateDecks :: [Deck]
       }
   deriving (Show, Eq)
 
@@ -82,9 +82,9 @@ tuiApp pool =
       appAttrMap = const $ attrMap (fg brightWhite) []
     }
 
-buildInitialState :: [CardDefs] -> IO State
-buildInitialState cardDefs =
-  pure $ StateMenu $ MenuState {menuStateCardDefs = cardDefs}
+buildInitialState :: [Deck] -> IO State
+buildInitialState decks =
+  pure $ StateMenu $ MenuState {menuStateDecks = decks}
 
 drawTui :: State -> [Widget ResourceName]
 drawTui =
@@ -102,12 +102,12 @@ drawMenuState MenuState {..} =
           str " ",
           hBox
             [ str "Found ",
-              str (show (length (concatMap cardDefsCards menuStateCardDefs))),
+              str (show (length (concatMap deckCards menuStateDecks))),
               str " card definitions"
             ],
           hBox
             [ str "which resolve to ",
-              str (show (length (concatMap resolveCardDefs menuStateCardDefs))),
+              str (show (length (concatMap resolveDeck menuStateDecks))),
               str " cards"
             ],
           str " ",
@@ -165,7 +165,7 @@ handleMenuEvent pool s e =
               liftIO $
                 generateStudyDeck
                   pool
-                  (concatMap resolveCardDefs (menuStateCardDefs s))
+                  (concatMap resolveDeck (menuStateDecks s))
                   10
             case NE.nonEmpty cs of
               Nothing -> halt $ StateMenu s

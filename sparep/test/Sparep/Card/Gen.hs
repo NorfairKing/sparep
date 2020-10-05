@@ -7,7 +7,7 @@ import Data.GenValidity.ByteString ()
 import Data.GenValidity.Text ()
 import Sparep.Card
 
-instance GenValid CardDefs where
+instance GenValid Deck where
 
   genValid = genValidStructurallyWithoutExtraChecking
 

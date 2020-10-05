@@ -15,7 +15,7 @@ data Flags
   = Flags
       { flagConfigFile :: Maybe FilePath,
         flagRepetitionDbFile :: Maybe FilePath,
-        flagSpecifications :: [FilePath]
+        flagDecks :: [FilePath]
       }
   deriving (Show, Eq, Generic)
 
@@ -48,7 +48,7 @@ instance YamlSchema Configuration where
 
 data Settings
   = Settings
-      { setCardDefs :: [CardDefs],
+      { setDecks :: [Deck],
         setRepetitionDb :: Path Abs File
       }
   deriving (Show, Eq, Generic)

@@ -33,8 +33,8 @@ getSettings = do
 combineToInstructions ::
   Flags -> Environment -> Maybe Configuration -> IO Settings
 combineToInstructions Flags {..} Environment {..} mConf = do
-  setCardDefs <-
-    concat <$> mapM parseCardDefs (fromMaybe [] (mc confSpecifications) ++ flagSpecifications)
+  setDecks <-
+    concat <$> mapM parseDecks (fromMaybe [] (mc confSpecifications) ++ flagDecks)
   setRepetitionDb <-
     case flagRepetitionDbFile <|> envRepetitionDbFile
       <|> mmc confRepetitionDbFile of
@@ -49,8 +49,8 @@ combineToInstructions Flags {..} Environment {..} mConf = do
     mmc :: (Configuration -> Maybe a) -> Maybe a
     mmc f = mConf >>= f
 
-parseCardDefs :: FilePath -> IO [CardDefs]
-parseCardDefs fp = do
+parseDecks :: FilePath -> IO [Deck]
+parseDecks fp = do
   fileExists <- FP.doesFileExist fp
   if fileExists
     then do
@@ -126,8 +126,8 @@ argParser =
           "Configuration file format:",
           T.unpack (YamlParse.prettyColourisedSchemaDoc @Configuration),
           "",
-          "Specification file format:",
-          T.unpack (YamlParse.prettyColourisedSchemaDoc @CardDefs)
+          "Deck file format:",
+          T.unpack (YamlParse.prettyColourisedSchemaDoc @Deck)
         ]
 
 parseArgs :: Parser Flags
@@ -157,9 +157,8 @@ parseFlags =
     <*> many
       ( strOption
           ( mconcat
-              [ long "specification",
-                long "spec",
-                help "A path to more specifications",
+              [ long "deck",
+                help "A path to more decks",
                 metavar "PATH"
               ]
           )

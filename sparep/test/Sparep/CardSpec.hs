@@ -18,7 +18,7 @@ spec = do
   genValidSpec @Difficulty
   describe "resolveCardDefs"
     $ it "produce valid cards"
-    $ producesValidsOnValids resolveCardDefs
+    $ producesValidsOnValids resolveDeck
   describe "resolveCardDef"
     $ it "produce valid cards"
     $ producesValidsOnValids2 resolveCardDef

@@ -27,22 +27,23 @@ import Database.Persist.Sql
 import GHC.Generics (Generic)
 import YamlParse.Applicative
 
-data CardDefs
-  = CardDefs
-      { cardDefsCards :: [CardDef],
-        cardDefsReverse :: Bool
+data Deck
+  = Deck
+      { deckReverse :: Bool,
+        deckCards :: [CardDef]
       }
   deriving (Show, Eq, Generic)
 
-instance Validity CardDefs
+instance Validity Deck
 
-instance YamlSchema CardDefs where
+instance YamlSchema Deck where
   yamlSchema =
-    objectParser "CardDefs" $
-      CardDefs <$> optionalFieldWithDefault "cards" [] "Card definitions"
-        <*> optionalFieldWithDefault "reverse" False "Whether to generate reverse cards"
+    objectParser "Deck" $
+      Deck
+        <$> optionalFieldWithDefault "reverse" False "Whether to generate reverse cards"
+        <*> optionalFieldWithDefault "cards" [] "Card definitions"
 
-instance FromJSON CardDefs where
+instance FromJSON Deck where
   parseJSON = viaYamlSchema
 
 data CardDef
@@ -65,9 +66,9 @@ instance YamlSchema CardDef where
 instance FromJSON CardDef where
   parseJSON = viaYamlSchema
 
-resolveCardDefs :: CardDefs -> [Card]
-resolveCardDefs CardDefs {..} =
-  concatMap (resolveCardDef cardDefsReverse) cardDefsCards
+resolveDeck :: Deck -> [Card]
+resolveDeck Deck {..} =
+  concatMap (resolveCardDef deckReverse) deckCards
 
 resolveCardDef :: Bool -> CardDef -> [Card]
 resolveCardDef defaultReverse CardDef {..} =
