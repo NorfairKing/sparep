@@ -5,8 +5,6 @@
 
 module Sparep.OptParse.Types where
 
-import Control.Applicative
-import Data.Text (Text)
 import Data.Yaml as Yaml hiding (object)
 import GHC.Generics (Generic)
 import Path
@@ -15,19 +13,23 @@ import YamlParse.Applicative
 
 data Flags
   = Flags
-      { flagConfigFile :: Maybe FilePath
+      { flagConfigFile :: Maybe FilePath,
+        flagRepetitionDbFile :: Maybe FilePath
       }
   deriving (Show, Eq, Generic)
 
 data Environment
   = Environment
-      { envConfigFile :: Maybe FilePath
+      { envConfigFile :: Maybe FilePath,
+        envRepetitionDbFile :: Maybe FilePath
       }
   deriving (Show, Eq, Generic)
 
 data Configuration
   = Configuration
-      {confSpecifications :: [FilePath]}
+      { confSpecifications :: [FilePath],
+        confRepetitionDbFile :: Maybe FilePath
+      }
   deriving (Show, Eq, Generic)
 
 instance FromJSON Configuration where
@@ -38,9 +40,11 @@ instance YamlSchema Configuration where
     objectParser "Configuration" $
       Configuration
         <$> optionalFieldWithDefault "specifications" [] "The files and directories containing card definitions"
+        <*> optionalField "repetition-database" "The file to store repitition data in"
 
 data Settings
   = Settings
-      { setCardDefs :: [CardDefs]
+      { setCardDefs :: [CardDefs],
+        setRepetitionDb :: Path Abs File
       }
   deriving (Show, Eq, Generic)

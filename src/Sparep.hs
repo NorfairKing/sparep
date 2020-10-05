@@ -18,8 +18,8 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Logger
 import Cursor.Simple.List.NonEmpty
-import Data.List
 import qualified Data.List.NonEmpty as NE
+import qualified Data.Text as T
 import Data.Time
 import Database.Persist
 import Database.Persist.Sql
@@ -33,14 +33,12 @@ import Sparep.DB
 import Sparep.OptParse
 import Sparep.OptParse.Types
 import Sparep.Repetition
-import System.Exit
-import System.Random.Shuffle
-import YamlParse.Applicative
 
 sparep :: IO ()
 sparep = do
   Settings {..} <- getSettings
-  runNoLoggingT $ withSqlitePool "sparep.sqlite3" 1 $ \pool -> do
+  ensureDir $ parent setRepetitionDb
+  runNoLoggingT $ withSqlitePool (T.pack $ fromAbsFile setRepetitionDb) 1 $ \pool -> do
     runSqlPool (runMigration migrateAll) pool
     liftIO $ do
       initialState <- buildInitialState setCardDefs

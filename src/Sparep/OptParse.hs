@@ -21,7 +21,6 @@ import Sparep.Card
 import Sparep.OptParse.Types
 import qualified System.Directory as FP
 import qualified System.Environment as System
-import qualified System.FilePath as FP
 import qualified YamlParse.Applicative as YamlParse
 
 getSettings :: IO Settings
@@ -34,6 +33,11 @@ getSettings = do
 combineToInstructions :: Flags -> Environment -> Maybe Configuration -> IO Settings
 combineToInstructions Flags {..} Environment {..} mConf = do
   setCardDefs <- concat <$> mapM parseCardDefs (fromMaybe [] $ mc confSpecifications)
+  setRepetitionDb <- case flagRepetitionDbFile <|> envRepetitionDbFile <|> mmc confRepetitionDbFile of
+    Nothing -> do
+      dataDir <- defaultDataDir
+      resolveFile dataDir "repetition-data.sqlite3"
+    Just fp -> resolveFile' fp
   pure Settings {..}
   where
     mc :: (Configuration -> a) -> Maybe a
@@ -72,13 +76,18 @@ defaultConfigFile = do
   xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|sparep|])
   resolveFile xdgConfigDir "config.yaml"
 
+defaultDataDir :: IO (Path Abs Dir)
+defaultDataDir = getXdgDir XdgData (Just [reldir|sparep|])
+
 getEnvironment :: IO Environment
 getEnvironment = Env.parse (Env.header "Environment") environmentParser
 
 environmentParser :: Env.Parser Env.Error Environment
 environmentParser =
   Env.prefixed "SPAREP_" $
-    Environment <$> Env.var (fmap Just . Env.str) "CONFIG_FILE" (mE <> Env.help "Config file")
+    Environment
+      <$> Env.var (fmap Just . Env.str) "CONFIG_FILE" (mE <> Env.help "Config file")
+      <*> Env.var (fmap Just . Env.str) "REPETITION_DATABASE" (mE <> Env.help "The file to store the repetition database in")
   where
     mE = Env.def Nothing <> Env.keep
 
@@ -115,12 +124,22 @@ parseArgs = parseFlags
 parseFlags :: Parser Flags
 parseFlags =
   Flags
-    <$> option
-      (Just <$> str)
-      ( mconcat
-          [ long "config-file",
-            help "Give the path to an altenative config file",
-            value Nothing,
-            metavar "FILEPATH"
-          ]
+    <$> optional
+      ( strOption
+          ( ( mconcat
+                [ long "config-file",
+                  help "Give the path to an altenative config file",
+                  metavar "FILEPATH"
+                ]
+            )
+          )
+      )
+    <*> optional
+      ( strOption
+          ( mconcat
+              [ long "repetition-database",
+                help "Give the path to an altenative config file",
+                metavar "FILEPATH"
+              ]
+          )
       )

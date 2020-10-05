@@ -2,7 +2,6 @@
 
 module Sparep.Repetition where
 
-import Control.Arrow
 import Control.Monad
 import Data.List
 import Data.Ord
@@ -39,7 +38,7 @@ decideStudyDeckSM0 now cardData numCards =
         let latestRepetition = head $ sortOn (Down . repetitionTimestamp) reps
             i = intervalSize (length reps) * nominalDay
          in addUTCTime i (repetitionTimestamp latestRepetition) > now
-      (tooSoon, notTooSoon) = partition isTooSoon studiedAtLeastOnce
+      (_tooSoon, notTooSoon) = partition isTooSoon studiedAtLeastOnce
    in map fst $ chooseFromListsInOrder numCards [notTooSoon, neverStudied]
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
@@ -52,7 +51,7 @@ decideStudyDeckSM0 now cardData numCards =
 
 -- Choose i elements from the lists in order, choosing as many as possible from previous lists.
 chooseFromListsInOrder :: Int -> [[a]] -> [a]
-chooseFromListsInOrder i [] = []
+chooseFromListsInOrder _ [] = []
 chooseFromListsInOrder i _ | i <= 0 = []
 chooseFromListsInOrder i (l : ls) =
   let found = take i l
