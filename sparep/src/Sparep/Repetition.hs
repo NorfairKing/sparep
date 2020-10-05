@@ -42,9 +42,11 @@ decideStudyDeckSM0 now cardData numCards =
   let (neverStudied, studiedAtLeastOnce) = partition (null . snd) cardData
       isTooSoon :: (a, [Repetition]) -> Bool
       isTooSoon (_, reps) =
-        let latestRepetition = head $ sortOn (Down . repetitionTimestamp) reps
-            i = intervalSize (length reps) * nominalDay
-         in addUTCTime i (repetitionTimestamp latestRepetition) > now
+        case sortOn (Down . repetitionTimestamp) (filter ((/= CardIncorrect) . repetitionDifficulty) reps) of
+          [] -> False
+          (latestRepetition : _) ->
+            let i = intervalSize (length reps) * nominalDay
+             in addUTCTime i (repetitionTimestamp latestRepetition) > now
       (_tooSoon, notTooSoon) = partition isTooSoon studiedAtLeastOnce
    in map fst $ chooseFromListsInOrder numCards [notTooSoon, neverStudied]
   where

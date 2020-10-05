@@ -143,7 +143,7 @@ drawStudyState StudyState {..} =
                     padLeftRight 3 $
                       case studyStateFrontBack of
                         Front -> str "Show back: space"
-                        Back -> padAll 1 $ str "Incorrect: i,  Correct: c,  Easy: e"
+                        Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
                   ]
                 ]
           ]
@@ -213,16 +213,22 @@ handleStudyEvent pool s e =
                 case nonEmptyCursorSelectNext cursor of
                   Nothing -> halt s
                   Just cursor' -> do
+                    let cursor'' =
+                          -- Require re-studying incorrect cards
+                          if difficulty == CardIncorrect
+                            then nonEmptyCursorAppend cur cursor'
+                            else cursor'
                     liftIO $ runSqlPool query pool
                     continue $
                       s
-                        { studyStateCursor = cursor',
+                        { studyStateCursor = cursor'',
                           studyStateFrontBack = Front
                         }
            in case vtye of
                 EvKey (KChar 'q') [] -> halt s
                 EvKey (KChar 'i') [] -> finishCard CardIncorrect
-                EvKey (KChar 'c') [] -> finishCard CardCorrect
+                EvKey (KChar 'h') [] -> finishCard CardHard
+                EvKey (KChar 'g') [] -> finishCard CardGood
                 EvKey (KChar 'e') [] -> finishCard CardEasy
                 _ -> continue s
     _ -> continue s

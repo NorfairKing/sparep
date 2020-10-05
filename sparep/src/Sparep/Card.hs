@@ -30,11 +30,11 @@ import YamlParse.Applicative
 
 data Deck
   = Deck
-      { deckName :: Maybe Text,
-        deckDescription :: Maybe Text,
-        deckInstructions :: Maybe Instructions,
-        deckReverse :: Bool,
-        deckCards :: [CardDef]
+      { deckName :: !(Maybe Text),
+        deckDescription :: !(Maybe Text),
+        deckInstructions :: !(Maybe Instructions),
+        deckReverse :: !(Maybe Bool),
+        deckCards :: ![CardDef]
       }
   deriving (Show, Eq, Generic)
 
@@ -47,7 +47,7 @@ instance YamlSchema Deck where
         <$> optionalField "name" "Name of the deck"
         <*> optionalField "description" "Description of the deck"
         <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
-        <*> optionalFieldWithDefault "reverse" False "Whether to generate reverse cards"
+        <*> optionalField "reverse" "Whether to generate reverse cards"
         <*> optionalFieldWithDefault "cards" [] "Card definitions"
 
 instance FromJSON Deck where
@@ -55,10 +55,10 @@ instance FromJSON Deck where
 
 data CardDef
   = CardDef
-      { cardDefFront :: Text,
-        cardDefBack :: Text,
-        cardDefReverse :: Maybe Bool,
-        cardDefInstructions :: Maybe Instructions
+      { cardDefFront :: !Text,
+        cardDefBack :: !Text,
+        cardDefReverse :: !(Maybe Bool),
+        cardDefInstructions :: !(Maybe Instructions)
       }
   deriving (Show, Eq, Generic)
 
@@ -100,9 +100,10 @@ resolveDeck :: Deck -> [Card]
 resolveDeck Deck {..} =
   concatMap (resolveCardDef deckReverse deckInstructions) deckCards
 
-resolveCardDef :: Bool -> Maybe Instructions -> CardDef -> [Card]
-resolveCardDef defaultReverse defaultInstructions CardDef {..} =
+resolveCardDef :: Maybe Bool -> Maybe Instructions -> CardDef -> [Card]
+resolveCardDef mDefaultReverse defaultInstructions CardDef {..} =
   let mInstructions = cardDefInstructions <|> defaultInstructions
+      defaultReverse = fromMaybe False mDefaultReverse
       rightWayRoundCard =
         Card
           { cardInstructions =
@@ -199,7 +200,8 @@ instance PersistFieldSql CardId where
 
 data Difficulty
   = CardIncorrect
-  | CardCorrect
+  | CardHard
+  | CardGood
   | CardEasy
   deriving (Show, Eq, Generic)
 
@@ -209,14 +211,17 @@ renderDifficulty :: Difficulty -> Text
 renderDifficulty =
   \case
     CardIncorrect -> "Incorrect"
-    CardCorrect -> "Correct"
+    CardHard -> "Hard"
+    CardGood -> "Good"
     CardEasy -> "Easy"
 
 parseDifficulty :: Text -> Either Text Difficulty
 parseDifficulty =
   \case
     "Incorrect" -> Right CardIncorrect
-    "Correct" -> Right CardCorrect
+    "Hard" -> Right CardHard
+    "Good" -> Right CardGood
+    "Correct" -> Right CardGood
     "Easy" -> Right CardEasy
     _ -> Left "Unknown Difficulty"
 
