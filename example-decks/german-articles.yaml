@@ -1,6 +1,6 @@
 name: German definite articles
 description: German definite articles for each gender, plurality and case
-instructions: "Type the corresponding definite article for the given gender, plurality and case"
+instructions: "Type the corresponding definite article for the given gender, plurality and case in German"
 reverse: false
 type: type
 cards:

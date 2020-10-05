@@ -1,5 +1,5 @@
 name: French definite articles
-instructions: "Give the corresponding definite article for the given gramatical gender and plurality"
+instructions: "Give the corresponding definite article for the given gramatical gender and plurality in French"
 cards:
 - front: Masculine singular
   back: le
