@@ -124,7 +124,10 @@ argParser =
         [ Env.helpDoc environmentParser,
           "",
           "Configuration file format:",
-          T.unpack (YamlParse.prettyColourisedSchemaDoc @Configuration)
+          T.unpack (YamlParse.prettyColourisedSchemaDoc @Configuration),
+          "",
+          "Specification file format:",
+          T.unpack (YamlParse.prettyColourisedSchemaDoc @CardDefs)
         ]
 
 parseArgs :: Parser Flags
