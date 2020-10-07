@@ -177,14 +177,6 @@ drawCardsState CardsState {..} =
       ]
   ]
 
-verticalNonEmptyCursorTableWithHeader ::
-  (a -> [Widget n]) -> (a -> [Widget n]) -> (a -> [Widget n]) -> [Widget n] -> NonEmptyCursor a -> Widget n
-verticalNonEmptyCursorTableWithHeader prevFunc curFunc nextFunc header =
-  nonEmptyCursorWidget (\ps c ns -> drawTable $ header : (map prevFunc ps ++ [curFunc c] ++ map nextFunc ns))
-
-drawTable :: [[Widget n]] -> Widget n
-drawTable = hBox . intersperse (str " ") . map vBox . transpose
-
 drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
   [ case studyStateCursor of

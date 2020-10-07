@@ -8,6 +8,10 @@ extra-deps:
   - yamlparse-applicative
 - github: supki/envparse
   commit: de5944fb09e9d941fafa35c0f05446af348e7b4d
+- github: NorfairKing/cursor-brick
+  commit: a7b47b03c8c5525234aaccc0c372e49a80134b9d
+  subdirs:
+  - cursor-brick
 nix:
   packages:
     - zlib
