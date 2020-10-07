@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Sparep
@@ -11,17 +9,12 @@ import Brick.AttrMap
 import Brick.Main
 import Brick.Types
 import Brick.Util
-import Brick.Widgets.Border
-import Brick.Widgets.Center
-import Brick.Widgets.Core
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Logger
-import Cursor.Brick
 import Cursor.Simple.List.NonEmpty
 import Data.List
 import qualified Data.List.NonEmpty as NE
-import Data.Maybe
 import qualified Data.Text as T
 import Data.Time
 import Database.Persist
@@ -34,9 +27,11 @@ import Path.IO
 import Safe
 import Sparep.Card
 import Sparep.DB
+import Sparep.Draw
 import Sparep.OptParse
 import Sparep.OptParse.Types
 import Sparep.Repetition
+import Sparep.State
 
 sparep :: IO ()
 sparep = do
@@ -49,47 +44,6 @@ sparep = do
       liftIO $ do
         initialState <- buildInitialState setDecks
         void $ defaultMain (tuiApp pool) initialState
-
-data State
-  = StateMenu MenuState
-  | StateDecks DecksState
-  | StateCards CardsState
-  | StateStudy StudyState
-
-data MenuState
-  = MenuState
-      { menuStateDecks :: [Deck]
-      }
-  deriving (Show, Eq)
-
-data DecksState
-  = DecksState
-      { decksStateCursor :: NonEmptyCursor (Deck, Selection Card)
-      }
-  deriving (Show, Eq)
-
-data CardsState
-  = CardsState
-      { cardsStateDeck :: Deck,
-        cardsStateCursor :: Maybe (NonEmptyCursor (Card, Maybe UTCTime, Maybe UTCTime))
-      }
-  deriving (Show, Eq)
-
-data StudyState
-  = StudyState
-      { studyStateCursor :: Maybe (NonEmptyCursor Card),
-        studyStateFrontBack :: FrontBack
-      }
-  deriving (Show, Eq)
-
-data FrontBack
-  = Front
-  | Back
-  deriving (Show, Eq)
-
-data ResourceName
-  = ResourceName
-  deriving (Show, Eq, Ord)
 
 tuiApp :: ConnectionPool -> App State e ResourceName
 tuiApp pool =
@@ -104,110 +58,6 @@ tuiApp pool =
 buildInitialState :: [Deck] -> IO State
 buildInitialState decks =
   pure $ StateMenu $ MenuState {menuStateDecks = decks}
-
-drawTui :: State -> [Widget ResourceName]
-drawTui =
-  \case
-    StateMenu ms -> drawMenuState ms
-    StateDecks ds -> drawDecksState ds
-    StateCards ds -> drawCardsState ds
-    StateStudy ss -> drawStudyState ss
-
-drawMenuState :: MenuState -> [Widget ResourceName]
-drawMenuState MenuState {..} =
-  [ centerLayer
-      $ border
-      $ padAll 1
-      $ vBox
-        [ str "Sparep",
-          str " ",
-          hBox
-            [ str "Found ",
-              str (show (length menuStateDecks)),
-              str " decks containing"
-            ],
-          hBox
-            [ str (show (length (concatMap deckCards menuStateDecks))),
-              str " card definitions"
-            ],
-          hBox
-            [ str "which resolve to ",
-              str (show (length (concatMap resolveDeck menuStateDecks))),
-              str " cards"
-            ],
-          str " ",
-          str "Press enter to study now",
-          str " ",
-          str "Press d to show decks"
-        ]
-  ]
-
-drawDecksState :: DecksState -> [Widget ResourceName]
-drawDecksState DecksState {..} =
-  [ vBox
-      [ padBottom Max $
-          let go (Deck {..}, Selection {..}) =
-                [ txt $ fromMaybe "No Name" deckName,
-                  str (show (length selectionTooSoon)),
-                  str (show (length selectionReady)),
-                  str (show (length selectionNew))
-                ]
-           in verticalNonEmptyCursorTableWithHeader go go go [str "Name", str "Done", str "Ready", str "New"] decksStateCursor,
-        str "Press enter to study the selected deck",
-        str "Press c to show the cards in the selected deck"
-      ]
-  ]
-
-drawCardsState :: CardsState -> [Widget ResourceName]
-drawCardsState CardsState {..} =
-  [ vBox
-      [ padBottom Max $ case cardsStateCursor of
-          Nothing -> str "No cards"
-          Just cursor ->
-            let showTime = formatTime defaultTimeLocale "%F %R"
-                go (Card {..}, mPrevTime, mNextTime) =
-                  [ txt cardFront,
-                    txt cardBack,
-                    str (maybe "" showTime mPrevTime),
-                    str (maybe "" showTime mNextTime)
-                  ]
-             in verticalNonEmptyCursorTableWithHeader go go go [str "Front", str "Back", str "Last Study", str "Next Study"] cursor,
-        str "Press Enter to study this deck",
-        str "Press Escape to exit"
-      ]
-  ]
-
-drawStudyState :: StudyState -> [Widget ResourceName]
-drawStudyState StudyState {..} =
-  [ case studyStateCursor of
-      Nothing -> centerLayer $ str "Done"
-      Just cursor ->
-        let Card {..} = nonEmptyCursorCurrent cursor
-         in vBox
-              [ hCenterLayer
-                  $ str
-                  $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
-                vCenterLayer $ vBox
-                  $ map hCenterLayer
-                  $ concat
-                    [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
-                      [ padAll 1
-                          $ border
-                          $ vBox
-                          $ concat
-                            [ [padAll 1 $ txt cardFront],
-                              case studyStateFrontBack of
-                                Front -> []
-                                Back -> [padAll 1 $ txt cardBack]
-                            ],
-                        padLeftRight 3 $
-                          case studyStateFrontBack of
-                            Front -> str "Show back: space"
-                            Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
-                      ]
-                    ]
-              ]
-  ]
 
 handleTuiEvent ::
   ConnectionPool -> State -> BrickEvent n e -> EventM n (Next State)
