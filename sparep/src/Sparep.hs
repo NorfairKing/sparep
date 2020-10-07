@@ -172,7 +172,8 @@ drawCardsState CardsState {..} =
                     str (maybe "" showTime mNextTime)
                   ]
              in verticalNonEmptyCursorTableWithHeader go go go [str "Front", str "Back", str "Last Study", str "Next Study"] cursor,
-        str "Press Escape to go back to the deck menu"
+        str "Press Enter to study this deck",
+        str "Press Escape to exit"
       ]
   ]
 
@@ -221,7 +222,8 @@ handleTuiEvent ::
 handleTuiEvent pool s e =
   case s of
     StateMenu ms -> handleMenuEvent pool ms e
-    StateDecks ss -> handleDeckEvent pool ss e
+    StateDecks ss -> handleDecksEvent pool ss e
+    StateCards cs -> handleCardsEvent pool cs e
     StateStudy ss -> fmap StateStudy <$> handleStudyEvent pool ss e
 
 handleMenuEvent ::
@@ -242,9 +244,9 @@ handleMenuEvent pool s e =
         _ -> continue $ StateMenu s
     _ -> continue $ StateMenu s
 
-handleDeckEvent ::
+handleDecksEvent ::
   ConnectionPool -> DecksState -> BrickEvent n e -> EventM n (Next State)
-handleDeckEvent pool s e =
+handleDecksEvent pool s e =
   case e of
     VtyEvent vtye ->
       case vtye of
@@ -256,11 +258,23 @@ handleDeckEvent pool s e =
             let getReps = map entityVal <$> selectList [RepetitionCard ==. hashCard card] [Desc RepetitionTimestamp]
             reps <- liftIO $ runSqlPool getReps pool
             pure (card, repetitionTimestamp <$> headMay reps, nextRepititionSM2 reps)
-          let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty tups
+          let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (sortOn (\(_, _, z) -> z) tups)
           continue $ StateCards $ CardsState {..}
         EvKey KEnter [] -> handleStudy pool [fst (nonEmptyCursorCurrent (decksStateCursor s))]
         _ -> continue $ StateDecks s
     _ -> continue $ StateDecks s
+
+handleCardsEvent ::
+  ConnectionPool -> CardsState -> BrickEvent n e -> EventM n (Next State)
+handleCardsEvent pool s e =
+  case e of
+    VtyEvent vtye ->
+      case vtye of
+        EvKey (KChar 'q') [] -> halt $ StateCards s
+        EvKey KEsc [] -> halt $ StateCards s
+        EvKey KEnter [] -> handleStudy pool [cardsStateDeck s]
+        _ -> continue $ StateCards s
+    _ -> continue $ StateCards s
 
 handleStudyEvent ::
   ConnectionPool ->
