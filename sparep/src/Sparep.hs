@@ -43,7 +43,10 @@ sparep = do
       runSqlPool (runMigration migrateAll) pool
       liftIO $ do
         initialState <- buildInitialState setDecks
-        void $ defaultMain (tuiApp pool) initialState
+        endState <- defaultMain (tuiApp pool) initialState
+        case endState of
+          StateStudy ss -> runSqlPool (insertMany_ (studyStateRepetitions ss)) pool
+          _ -> pure ()
 
 tuiApp :: ConnectionPool -> App State e ResourceName
 tuiApp pool =
@@ -66,7 +69,7 @@ handleTuiEvent pool s e =
     StateMenu ms -> handleMenuEvent pool ms e
     StateDecks ss -> handleDecksEvent pool ss e
     StateCards cs -> handleCardsEvent pool cs e
-    StateStudy ss -> fmap StateStudy <$> handleStudyEvent pool ss e
+    StateStudy ss -> fmap StateStudy <$> handleStudyEvent ss e
 
 handleMenuEvent ::
   ConnectionPool -> MenuState -> BrickEvent n e -> EventM n (Next State)
@@ -119,11 +122,10 @@ handleCardsEvent pool s e =
     _ -> continue $ StateCards s
 
 handleStudyEvent ::
-  ConnectionPool ->
   StudyState ->
   BrickEvent n e ->
   EventM n (Next StudyState)
-handleStudyEvent pool s e =
+handleStudyEvent s e =
   case e of
     VtyEvent vtye ->
       case studyStateCursor s of
@@ -140,15 +142,12 @@ handleStudyEvent pool s e =
                   finishCard difficulty = do
                     let cur = nonEmptyCursorCurrent cursor
                     now <- liftIO getCurrentTime
-                    let query =
-                          -- TODO move the querying to a separate thread
-                          insert_
-                            ( Repetition
-                                { repetitionCard = hashCard cur,
-                                  repetitionDifficulty = difficulty,
-                                  repetitionTimestamp = now
-                                }
-                            )
+                    let rep =
+                          Repetition
+                            { repetitionCard = hashCard cur,
+                              repetitionDifficulty = difficulty,
+                              repetitionTimestamp = now
+                            }
                     let mcursor' = nonEmptyCursorSelectNext cursor
                     let mcursor'' =
                           -- Require re-studying incorrect cards
@@ -157,11 +156,11 @@ handleStudyEvent pool s e =
                               Nothing -> singletonNonEmptyCursor cur
                               Just cursor' -> nonEmptyCursorAppendAtEnd cur cursor'
                             else mcursor'
-                    liftIO $ runSqlPool query pool
                     continue $
                       s
                         { studyStateCursor = mcursor'',
-                          studyStateFrontBack = Front
+                          studyStateFrontBack = Front,
+                          studyStateRepetitions = rep : studyStateRepetitions s
                         }
                in case vtye of
                     EvKey (KChar 'q') [] -> halt s
@@ -181,12 +180,12 @@ handleStudy pool decks = do
         pool
         (concatMap resolveDeck decks)
         25
+  let studyStateRepetitions = []
+  let studyStateFrontBack = Front
   case NE.nonEmpty cs of
     Nothing -> do
       let studyStateCursor = Nothing
-      let studyStateFrontBack = Front
       continue $ StateStudy $ StudyState {..}
     Just ne -> do
       let studyStateCursor = Just $ makeNonEmptyCursor ne
-      let studyStateFrontBack = Front
       continue $ StateStudy $ StudyState {..}

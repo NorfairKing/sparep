@@ -3,6 +3,7 @@ module Sparep.State where
 import Cursor.Simple.List.NonEmpty
 import Data.Time
 import Sparep.Card
+import Sparep.DB
 import Sparep.Repetition
 
 data State
@@ -25,15 +26,16 @@ data DecksState
 
 data CardsState
   = CardsState
-      { cardsStateDeck :: Deck,
-        cardsStateCursor :: Maybe (NonEmptyCursor (Card, Maybe UTCTime, Maybe UTCTime))
+      { cardsStateDeck :: !Deck,
+        cardsStateCursor :: !(Maybe (NonEmptyCursor (Card, Maybe UTCTime, Maybe UTCTime)))
       }
   deriving (Show, Eq)
 
 data StudyState
   = StudyState
-      { studyStateCursor :: Maybe (NonEmptyCursor Card),
-        studyStateFrontBack :: FrontBack
+      { studyStateCursor :: !(Maybe (NonEmptyCursor Card)),
+        studyStateFrontBack :: !FrontBack,
+        studyStateRepetitions :: ![Repetition]
       }
   deriving (Show, Eq)
 

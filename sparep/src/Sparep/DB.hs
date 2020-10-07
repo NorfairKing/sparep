@@ -23,5 +23,5 @@ Repetition
     card CardId
     difficulty Difficulty
     timestamp UTCTime
-    deriving Show
+    deriving Show Eq
 |]
