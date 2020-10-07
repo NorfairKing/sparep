@@ -307,20 +307,20 @@ handleStudyEvent pool s e =
                                   repetitionTimestamp = now
                                 }
                             )
-                    case nonEmptyCursorSelectNext cursor of
-                      Nothing -> halt s
-                      Just cursor' -> do
-                        let cursor'' =
-                              -- Require re-studying incorrect cards
-                              if difficulty == CardIncorrect
-                                then nonEmptyCursorAppend cur cursor'
-                                else cursor'
-                        liftIO $ runSqlPool query pool
-                        continue $
-                          s
-                            { studyStateCursor = Just cursor'',
-                              studyStateFrontBack = Front
-                            }
+                    let mcursor' = nonEmptyCursorSelectNext cursor
+                    let mcursor'' =
+                          -- Require re-studying incorrect cards
+                          if difficulty == CardIncorrect
+                            then Just $ case mcursor' of
+                              Nothing -> singletonNonEmptyCursor cur
+                              Just cursor' -> nonEmptyCursorAppend cur cursor'
+                            else mcursor'
+                    liftIO $ runSqlPool query pool
+                    continue $
+                      s
+                        { studyStateCursor = mcursor'',
+                          studyStateFrontBack = Front
+                        }
                in case vtye of
                     EvKey (KChar 'q') [] -> halt s
                     EvKey (KChar 'i') [] -> finishCard CardIncorrect
@@ -338,7 +338,7 @@ handleStudy pool decks = do
       generateStudyDeck
         pool
         (concatMap resolveDeck decks)
-        10
+        25
   case NE.nonEmpty cs of
     Nothing -> do
       let studyStateCursor = Nothing
