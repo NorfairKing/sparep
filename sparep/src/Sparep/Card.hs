@@ -144,7 +144,9 @@ hashCard Card {..} =
   let bs =
         SB.concat $
           concat
-            [ [TE.encodeUtf8 cardFront, TE.encodeUtf8 cardBack],
+            [ [ TE.encodeUtf8 (T.strip cardFront),
+                TE.encodeUtf8 (T.strip cardBack)
+              ],
               [TE.encodeUtf8 ins | ins <- maybeToList cardInstructions]
             ]
    in CardId
