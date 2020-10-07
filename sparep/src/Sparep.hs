@@ -17,7 +17,9 @@ import Brick.Widgets.Core
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Logger
+import Cursor.Brick
 import Cursor.Simple.List.NonEmpty
+import Data.List
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
 import qualified Data.Text as T
@@ -49,6 +51,7 @@ sparep = do
 
 data State
   = StateMenu MenuState
+  | StateDecks DecksState
   | StateStudy StudyState
 
 data MenuState
@@ -57,9 +60,15 @@ data MenuState
       }
   deriving (Show, Eq)
 
+data DecksState
+  = DecksState
+      { decksStateCursor :: NonEmptyCursor (Deck, Selection Card)
+      }
+  deriving (Show, Eq)
+
 data StudyState
   = StudyState
-      { studyStateCursor :: NonEmptyCursor Card,
+      { studyStateCursor :: Maybe (NonEmptyCursor Card),
         studyStateFrontBack :: FrontBack
       }
   deriving (Show, Eq)
@@ -91,6 +100,7 @@ drawTui :: State -> [Widget ResourceName]
 drawTui =
   \case
     StateMenu ms -> drawMenuState ms
+    StateDecks ds -> drawDecksState ds
     StateStudy ss -> drawStudyState ss
 
 drawMenuState :: MenuState -> [Widget ResourceName]
@@ -116,37 +126,61 @@ drawMenuState MenuState {..} =
               str " cards"
             ],
           str " ",
-          str "Press enter to study now"
+          str "Press enter to study now",
+          str " ",
+          str "Press d to show decks"
         ]
   ]
 
+drawDecksState :: DecksState -> [Widget ResourceName]
+drawDecksState DecksState {..} =
+  [ let go (Deck {..}, Selection {..}) =
+          [ txt $ fromMaybe "No Name" deckName,
+            str (show (length selectionTooSoon)),
+            str (show (length selectionReady)),
+            str (show (length selectionNew))
+          ]
+     in verticalNonEmptyCursorTableWithHeader go go go [str "Name", str "Done", str "Ready", str "New"] decksStateCursor
+  ]
+
+verticalNonEmptyCursorTableWithHeader ::
+  (a -> [Widget n]) -> (a -> [Widget n]) -> (a -> [Widget n]) -> [Widget n] -> NonEmptyCursor a -> Widget n
+verticalNonEmptyCursorTableWithHeader prevFunc curFunc nextFunc header =
+  nonEmptyCursorWidget (\ps c ns -> drawTable $ header : (map prevFunc ps ++ [curFunc c] ++ map nextFunc ns))
+
+drawTable :: [[Widget n]] -> Widget n
+drawTable = hBox . intersperse (str " ") . map vBox . transpose
+
 drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
-  [ let Card {..} = nonEmptyCursorCurrent studyStateCursor
-     in vBox
-          [ hCenterLayer
-              $ str
-              $ show (length (nonEmptyCursorNext studyStateCursor)) ++ " cards left",
-            vCenterLayer $ vBox
-              $ map hCenterLayer
-              $ concat
-                [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
-                  [ padAll 1
-                      $ border
-                      $ vBox
-                      $ concat
-                        [ [padAll 1 $ txt cardFront],
+  [ case studyStateCursor of
+      Nothing -> centerLayer $ str "Done"
+      Just cursor ->
+        let Card {..} = nonEmptyCursorCurrent cursor
+         in vBox
+              [ hCenterLayer
+                  $ str
+                  $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
+                vCenterLayer $ vBox
+                  $ map hCenterLayer
+                  $ concat
+                    [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
+                      [ padAll 1
+                          $ border
+                          $ vBox
+                          $ concat
+                            [ [padAll 1 $ txt cardFront],
+                              case studyStateFrontBack of
+                                Front -> []
+                                Back -> [padAll 1 $ txt cardBack]
+                            ],
+                        padLeftRight 3 $
                           case studyStateFrontBack of
-                            Front -> []
-                            Back -> [padAll 1 $ txt cardBack]
-                        ],
-                    padLeftRight 3 $
-                      case studyStateFrontBack of
-                        Front -> str "Show back: space"
-                        Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
-                  ]
-                ]
-          ]
+                            Front -> str "Show back: space"
+                            Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
+                      ]
+                    ]
+              ]
   ]
 
 handleTuiEvent ::
@@ -154,6 +188,7 @@ handleTuiEvent ::
 handleTuiEvent pool s e =
   case s of
     StateMenu ms -> handleMenuEvent pool ms e
+    StateDecks ss -> handleDeckEvent pool ss e
     StateStudy ss -> fmap StateStudy <$> handleStudyEvent pool ss e
 
 handleMenuEvent ::
@@ -163,23 +198,27 @@ handleMenuEvent pool s e =
     VtyEvent vtye ->
       case vtye of
         EvKey (KChar 'q') [] -> halt $ StateMenu s
-        EvKey KEnter [] ->
-          -- This computation may take a while, move it to a separate thread with a nice progress bar.
-          do
-            cs <-
-              liftIO $
-                generateStudyDeck
-                  pool
-                  (concatMap resolveDeck (menuStateDecks s))
-                  10
-            case NE.nonEmpty cs of
-              Nothing -> halt $ StateMenu s
-              Just ne -> do
-                let studyStateCursor = makeNonEmptyCursor ne
-                let studyStateFrontBack = Front
-                continue $ StateStudy StudyState {..}
+        EvKey (KChar 'd') [] -> do
+          ds <- liftIO $ forM (menuStateDecks s) $ \d -> (,) d <$> generateStudySelection pool (resolveDeck d)
+          case NE.nonEmpty ds of
+            Nothing -> halt $ StateMenu s
+            Just ne -> do
+              let decksStateCursor = makeNonEmptyCursor ne
+              continue $ StateDecks DecksState {..}
+        EvKey KEnter [] -> handleStudy pool (menuStateDecks s)
         _ -> continue $ StateMenu s
     _ -> continue $ StateMenu s
+
+handleDeckEvent ::
+  ConnectionPool -> DecksState -> BrickEvent n e -> EventM n (Next State)
+handleDeckEvent pool s e =
+  case e of
+    VtyEvent vtye ->
+      case vtye of
+        EvKey (KChar 'q') [] -> halt $ StateDecks s
+        EvKey KEnter [] -> handleStudy pool [fst (nonEmptyCursorCurrent (decksStateCursor s))]
+        _ -> continue $ StateDecks s
+    _ -> continue $ StateDecks s
 
 handleStudyEvent ::
   ConnectionPool ->
@@ -189,46 +228,67 @@ handleStudyEvent ::
 handleStudyEvent pool s e =
   case e of
     VtyEvent vtye ->
-      case studyStateFrontBack s of
-        Front ->
-          case vtye of
-            EvKey (KChar 'q') [] -> halt s
-            EvKey (KChar ' ') [] -> continue $ s {studyStateFrontBack = Back}
-            _ -> continue s
-        Back ->
-          let finishCard :: Difficulty -> EventM n (Next StudyState)
-              finishCard difficulty = do
-                let cursor = studyStateCursor s
-                let cur = nonEmptyCursorCurrent cursor
-                now <- liftIO getCurrentTime
-                let query =
-                      -- TODO move the querying to a separate thread
-                      insert_
-                        ( Repetition
-                            { repetitionCard = hashCard cur,
-                              repetitionDifficulty = difficulty,
-                              repetitionTimestamp = now
-                            }
-                        )
-                case nonEmptyCursorSelectNext cursor of
-                  Nothing -> halt s
-                  Just cursor' -> do
-                    let cursor'' =
-                          -- Require re-studying incorrect cards
-                          if difficulty == CardIncorrect
-                            then nonEmptyCursorAppend cur cursor'
-                            else cursor'
-                    liftIO $ runSqlPool query pool
-                    continue $
-                      s
-                        { studyStateCursor = cursor'',
-                          studyStateFrontBack = Front
-                        }
-           in case vtye of
+      case studyStateCursor s of
+        Nothing -> halt s
+        Just cursor ->
+          case studyStateFrontBack s of
+            Front ->
+              case vtye of
                 EvKey (KChar 'q') [] -> halt s
-                EvKey (KChar 'i') [] -> finishCard CardIncorrect
-                EvKey (KChar 'h') [] -> finishCard CardHard
-                EvKey (KChar 'g') [] -> finishCard CardGood
-                EvKey (KChar 'e') [] -> finishCard CardEasy
+                EvKey (KChar ' ') [] -> continue $ s {studyStateFrontBack = Back}
                 _ -> continue s
+            Back ->
+              let finishCard :: Difficulty -> EventM n (Next StudyState)
+                  finishCard difficulty = do
+                    let cur = nonEmptyCursorCurrent cursor
+                    now <- liftIO getCurrentTime
+                    let query =
+                          -- TODO move the querying to a separate thread
+                          insert_
+                            ( Repetition
+                                { repetitionCard = hashCard cur,
+                                  repetitionDifficulty = difficulty,
+                                  repetitionTimestamp = now
+                                }
+                            )
+                    case nonEmptyCursorSelectNext cursor of
+                      Nothing -> halt s
+                      Just cursor' -> do
+                        let cursor'' =
+                              -- Require re-studying incorrect cards
+                              if difficulty == CardIncorrect
+                                then nonEmptyCursorAppend cur cursor'
+                                else cursor'
+                        liftIO $ runSqlPool query pool
+                        continue $
+                          s
+                            { studyStateCursor = Just cursor'',
+                              studyStateFrontBack = Front
+                            }
+               in case vtye of
+                    EvKey (KChar 'q') [] -> halt s
+                    EvKey (KChar 'i') [] -> finishCard CardIncorrect
+                    EvKey (KChar 'h') [] -> finishCard CardHard
+                    EvKey (KChar 'g') [] -> finishCard CardGood
+                    EvKey (KChar 'e') [] -> finishCard CardEasy
+                    _ -> continue s
     _ -> continue s
+
+-- This computation may take a while, move it to a separate thread with a nice progress bar.
+handleStudy :: ConnectionPool -> [Deck] -> EventM n (Next State)
+handleStudy pool decks = do
+  cs <-
+    liftIO $
+      generateStudyDeck
+        pool
+        (concatMap resolveDeck decks)
+        10
+  case NE.nonEmpty cs of
+    Nothing -> do
+      let studyStateCursor = Nothing
+      let studyStateFrontBack = Front
+      continue $ StateStudy $ StudyState {..}
+    Just ne -> do
+      let studyStateCursor = Just $ makeNonEmptyCursor ne
+      let studyStateFrontBack = Front
+      continue $ StateStudy $ StudyState {..}

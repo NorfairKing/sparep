@@ -16,6 +16,7 @@ library:
   - bytestring
   - cryptohash-sha256
   - cursor
+  - cursor-brick
   - directory
   - envparse
   - filepath
