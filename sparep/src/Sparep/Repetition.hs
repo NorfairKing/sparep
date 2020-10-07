@@ -9,6 +9,7 @@ import Data.List
 import Data.Ord
 import Data.Time
 import Database.Persist.Sql
+import Safe
 import Sparep.Card
 import Sparep.DB
 import System.Random.Shuffle
@@ -78,19 +79,17 @@ decideStudyDeckSM2 now cardData =
 
 -- Nothing means it's new
 nextRepititionSM2 :: [Repetition] -> Maybe UTCTime
-nextRepititionSM2 reps =
-  case sortOn (Down . repetitionTimestamp) (filter ((/= CardIncorrect) . repetitionDifficulty) reps) of
-    [] -> Nothing
-    (latestRepetition : _) ->
-      Just $ addUTCTime (intervalSize reps) (repetitionTimestamp latestRepetition)
+nextRepititionSM2 reps = do
+  latestRepetition <- lastMay $ sortOn repetitionTimestamp $ filter ((/= CardIncorrect) . repetitionDifficulty) reps
+  pure $ addUTCTime (intervalSize reps) (repetitionTimestamp latestRepetition)
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
     intervalSize :: [Repetition] -> NominalDiffTime
-    intervalSize reps =
-      case length reps of
+    intervalSize reps_ =
+      case length reps_ of
         1 -> 1 * nominalDay
         2 -> 6 * nominalDay
-        i -> intervalSize (tail reps) * fromRational (eFactor reps)
+        _ -> intervalSize (tail reps_) * fromRational (eFactor reps_)
     -- FIXME this is quite inefficient because the eFactor is recalculated O(2) times.
     eFactor :: [Repetition] -> Rational
     eFactor [] = 2.5
