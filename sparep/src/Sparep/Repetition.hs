@@ -16,8 +16,7 @@ import System.Random.Shuffle
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
 generateStudyDeck :: ConnectionPool -> [Card] -> Int -> IO [Card]
-generateStudyDeck pool cards numCards =
-  shuffleM =<< studyFromSelection numCards <$> generateStudySelection pool cards
+generateStudyDeck pool cards numCards = generateStudySelection pool cards >>= studyFromSelection numCards
 
 generateStudySelection :: ConnectionPool -> [Card] -> IO (Selection Card)
 generateStudySelection pool cards = do
@@ -111,8 +110,11 @@ data Selection a
       }
   deriving (Show, Eq, Functor)
 
-studyFromSelection :: Int -> Selection a -> [a]
-studyFromSelection i Selection {..} = chooseFromListsInOrder i [selectionReady, selectionNew]
+studyFromSelection :: Int -> Selection a -> IO [a]
+studyFromSelection i Selection {..} = do
+  readyShuffled <- shuffleM selectionReady
+  newShuffled <- shuffleM selectionNew
+  pure $ chooseFromListsInOrder i [readyShuffled, newShuffled]
 
 -- Choose i elements from the lists in order, choosing as many as possible from previous lists.
 chooseFromListsInOrder :: Int -> [[a]] -> [a]
