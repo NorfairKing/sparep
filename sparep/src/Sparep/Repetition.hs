@@ -79,8 +79,9 @@ decideStudyDeckSM2 now cardData =
 -- Nothing means it's new
 nextRepititionSM2 :: [Repetition] -> Maybe UTCTime
 nextRepititionSM2 reps = do
-  latestRepetition <- lastMay $ sortOn repetitionTimestamp $ filter ((/= CardIncorrect) . repetitionDifficulty) reps
-  pure $ addUTCTime (intervalSize reps) (repetitionTimestamp latestRepetition)
+  let reps' = filter ((/= CardIncorrect) . repetitionDifficulty) reps
+  latestRepetition <- lastMay $ sortOn repetitionTimestamp reps'
+  pure $ addUTCTime (intervalSize reps') (repetitionTimestamp latestRepetition)
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
     intervalSize :: [Repetition] -> NominalDiffTime
