@@ -313,7 +313,7 @@ handleStudyEvent pool s e =
                           if difficulty == CardIncorrect
                             then Just $ case mcursor' of
                               Nothing -> singletonNonEmptyCursor cur
-                              Just cursor' -> nonEmptyCursorAppend cur cursor'
+                              Just cursor' -> nonEmptyCursorAppendAtEnd cur cursor'
                             else mcursor'
                     liftIO $ runSqlPool query pool
                     continue $
