@@ -29,6 +29,7 @@ library:
   - persistent-template
   - pretty-show
   - random-shuffle
+  - safe
   - text
   - time
   - validity

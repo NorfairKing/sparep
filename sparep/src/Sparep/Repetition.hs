@@ -72,14 +72,17 @@ decideStudyDeckSM2 :: UTCTime -> [(a, [Repetition])] -> Selection a
 decideStudyDeckSM2 now cardData =
   let (selectionNew, studiedAtLeastOnce) = partition (null . snd) cardData
       isTooSoon :: (a, [Repetition]) -> Bool
-      isTooSoon (_, reps) =
-        case sortOn (Down . repetitionTimestamp) (filter ((/= CardIncorrect) . repetitionDifficulty) reps) of
-          [] -> False
-          (latestRepetition : _) ->
-            let i = intervalSize reps * nominalDay
-             in addUTCTime i (repetitionTimestamp latestRepetition) > now
+      isTooSoon (_, reps) = maybe False (> now) $ nextRepititionSM2 reps
       (selectionTooSoon, selectionReady) = partition isTooSoon studiedAtLeastOnce
    in fst <$> Selection {..}
+
+-- Nothing means it's new
+nextRepititionSM2 :: [Repetition] -> Maybe UTCTime
+nextRepititionSM2 reps =
+  case sortOn (Down . repetitionTimestamp) (filter ((/= CardIncorrect) . repetitionDifficulty) reps) of
+    [] -> Nothing
+    (latestRepetition : _) ->
+      Just $ addUTCTime (intervalSize reps) (repetitionTimestamp latestRepetition)
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
     intervalSize :: [Repetition] -> NominalDiffTime

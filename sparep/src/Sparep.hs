@@ -31,6 +31,7 @@ import Graphics.Vty.Attributes
 import Graphics.Vty.Input.Events
 import Path
 import Path.IO
+import Safe
 import Sparep.Card
 import Sparep.DB
 import Sparep.OptParse
@@ -70,7 +71,7 @@ data DecksState
 data CardsState
   = CardsState
       { cardsStateDeck :: Deck,
-        cardsStateCursor :: Maybe (NonEmptyCursor Card)
+        cardsStateCursor :: Maybe (NonEmptyCursor (Card, Maybe UTCTime, Maybe UTCTime))
       }
   deriving (Show, Eq)
 
@@ -163,11 +164,14 @@ drawCardsState CardsState {..} =
       [ padBottom Max $ case cardsStateCursor of
           Nothing -> str "No cards"
           Just cursor ->
-            let go Card {..} =
+            let showTime = formatTime defaultTimeLocale "%F %R"
+                go (Card {..}, mPrevTime, mNextTime) =
                   [ txt cardFront,
-                    txt cardBack
+                    txt cardBack,
+                    str (maybe "" showTime mPrevTime),
+                    str (maybe "" showTime mNextTime)
                   ]
-             in verticalNonEmptyCursorTableWithHeader go go go [str "Front", str "Back"] cursor,
+             in verticalNonEmptyCursorTableWithHeader go go go [str "Front", str "Back", str "Last Study", str "Next Study"] cursor,
         str "Press Escape to go back to the deck menu"
       ]
   ]
@@ -248,7 +252,11 @@ handleDeckEvent pool s e =
         EvKey (KChar 'c') [] -> do
           let cardsStateDeck = fst (nonEmptyCursorCurrent (decksStateCursor s))
           let cards = resolveDeck cardsStateDeck
-          let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty cards
+          tups <- forM cards $ \card -> do
+            let getReps = map entityVal <$> selectList [RepetitionCard ==. hashCard card] [Desc RepetitionTimestamp]
+            reps <- liftIO $ runSqlPool getReps pool
+            pure (card, repetitionTimestamp <$> headMay reps, nextRepititionSM2 reps)
+          let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty tups
           continue $ StateCards $ CardsState {..}
         EvKey KEnter [] -> handleStudy pool [fst (nonEmptyCursorCurrent (decksStateCursor s))]
         _ -> continue $ StateDecks s
