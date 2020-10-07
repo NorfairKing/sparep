@@ -52,6 +52,7 @@ sparep = do
 data State
   = StateMenu MenuState
   | StateDecks DecksState
+  | StateCards CardsState
   | StateStudy StudyState
 
 data MenuState
@@ -63,6 +64,13 @@ data MenuState
 data DecksState
   = DecksState
       { decksStateCursor :: NonEmptyCursor (Deck, Selection Card)
+      }
+  deriving (Show, Eq)
+
+data CardsState
+  = CardsState
+      { cardsStateDeck :: Deck,
+        cardsStateCursor :: Maybe (NonEmptyCursor Card)
       }
   deriving (Show, Eq)
 
@@ -101,6 +109,7 @@ drawTui =
   \case
     StateMenu ms -> drawMenuState ms
     StateDecks ds -> drawDecksState ds
+    StateCards ds -> drawCardsState ds
     StateStudy ss -> drawStudyState ss
 
 drawMenuState :: MenuState -> [Widget ResourceName]
@@ -134,13 +143,33 @@ drawMenuState MenuState {..} =
 
 drawDecksState :: DecksState -> [Widget ResourceName]
 drawDecksState DecksState {..} =
-  [ let go (Deck {..}, Selection {..}) =
-          [ txt $ fromMaybe "No Name" deckName,
-            str (show (length selectionTooSoon)),
-            str (show (length selectionReady)),
-            str (show (length selectionNew))
-          ]
-     in verticalNonEmptyCursorTableWithHeader go go go [str "Name", str "Done", str "Ready", str "New"] decksStateCursor
+  [ vBox
+      [ padBottom Max $
+          let go (Deck {..}, Selection {..}) =
+                [ txt $ fromMaybe "No Name" deckName,
+                  str (show (length selectionTooSoon)),
+                  str (show (length selectionReady)),
+                  str (show (length selectionNew))
+                ]
+           in verticalNonEmptyCursorTableWithHeader go go go [str "Name", str "Done", str "Ready", str "New"] decksStateCursor,
+        str "Press enter to study the selected deck",
+        str "Press c to show the cards in the selected deck"
+      ]
+  ]
+
+drawCardsState :: CardsState -> [Widget ResourceName]
+drawCardsState CardsState {..} =
+  [ vBox
+      [ padBottom Max $ case cardsStateCursor of
+          Nothing -> str "No cards"
+          Just cursor ->
+            let go Card {..} =
+                  [ txt cardFront,
+                    txt cardBack
+                  ]
+             in verticalNonEmptyCursorTableWithHeader go go go [str "Front", str "Back"] cursor,
+        str "Press Escape to go back to the deck menu"
+      ]
   ]
 
 verticalNonEmptyCursorTableWithHeader ::
@@ -216,6 +245,11 @@ handleDeckEvent pool s e =
     VtyEvent vtye ->
       case vtye of
         EvKey (KChar 'q') [] -> halt $ StateDecks s
+        EvKey (KChar 'c') [] -> do
+          let cardsStateDeck = fst (nonEmptyCursorCurrent (decksStateCursor s))
+          let cards = resolveDeck cardsStateDeck
+          let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty cards
+          continue $ StateCards $ CardsState {..}
         EvKey KEnter [] -> handleStudy pool [fst (nonEmptyCursorCurrent (decksStateCursor s))]
         _ -> continue $ StateDecks s
     _ -> continue $ StateDecks s
