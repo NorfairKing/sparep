@@ -1,4 +1,6 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Sparep.Repetition where
 
@@ -13,7 +15,11 @@ import System.Random.Shuffle
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
 generateStudyDeck :: ConnectionPool -> [Card] -> Int -> IO [Card]
-generateStudyDeck pool cards numCards = do
+generateStudyDeck pool cards numCards =
+  shuffleM =<< studyFromSelection numCards <$> generateStudySelection pool cards
+
+generateStudySelection :: ConnectionPool -> [Card] -> IO (Selection Card)
+generateStudySelection pool cards = do
   cardData <-
     forM cards $ \c -> do
       let query =
@@ -23,7 +29,7 @@ generateStudyDeck pool cards numCards = do
                 [Desc RepetitionTimestamp]
       (,) c <$> runSqlPool query pool
   now <- getCurrentTime
-  shuffleM $ decideStudyDeckSM2 now cardData numCards
+  pure $ decideStudyDeckSM2 now cardData
 
 -- My own algorithm that just takes the least-recently studied cards
 decideStudyDeck :: [(a, [Repetition])] -> Int -> [a]
@@ -37,9 +43,9 @@ decideStudyDeck cardData numCards =
    in map fst $ neverStudiedSelected ++ studiedAtLeastOnceSelected
 
 -- SM-0, from https://www.supermemo.com/en/archives1990-2015/english/ol/beginning
-decideStudyDeckSM0 :: UTCTime -> [(a, [Repetition])] -> Int -> [a]
-decideStudyDeckSM0 now cardData numCards =
-  let (neverStudied, studiedAtLeastOnce) = partition (null . snd) cardData
+decideStudyDeckSM0 :: UTCTime -> [(a, [Repetition])] -> Selection a
+decideStudyDeckSM0 now cardData =
+  let (selectionNew, studiedAtLeastOnce) = partition (null . snd) cardData
       isTooSoon :: (a, [Repetition]) -> Bool
       isTooSoon (_, reps) =
         case sortOn (Down . repetitionTimestamp) (filter ((/= CardIncorrect) . repetitionDifficulty) reps) of
@@ -47,8 +53,8 @@ decideStudyDeckSM0 now cardData numCards =
           (latestRepetition : _) ->
             let i = realToFrac (intervalSize (length reps)) * nominalDay
              in addUTCTime i (repetitionTimestamp latestRepetition) > now
-      (_tooSoon, notTooSoon) = partition isTooSoon studiedAtLeastOnce
-   in map fst $ chooseFromListsInOrder numCards [notTooSoon, neverStudied]
+      (selectionTooSoon, selectionReady) = partition isTooSoon studiedAtLeastOnce
+   in fst <$> Selection {..}
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
     -- in number of days
@@ -62,9 +68,9 @@ decideStudyDeckSM0 now cardData numCards =
         i -> intervalSize (i - 1) * 2
 
 -- SM-2, from https://www.supermemo.com/en/archives1990-2015/english/ol/sm2
-decideStudyDeckSM2 :: UTCTime -> [(a, [Repetition])] -> Int -> [a]
-decideStudyDeckSM2 now cardData numCards =
-  let (neverStudied, studiedAtLeastOnce) = partition (null . snd) cardData
+decideStudyDeckSM2 :: UTCTime -> [(a, [Repetition])] -> Selection a
+decideStudyDeckSM2 now cardData =
+  let (selectionNew, studiedAtLeastOnce) = partition (null . snd) cardData
       isTooSoon :: (a, [Repetition]) -> Bool
       isTooSoon (_, reps) =
         case sortOn (Down . repetitionTimestamp) (filter ((/= CardIncorrect) . repetitionDifficulty) reps) of
@@ -72,8 +78,8 @@ decideStudyDeckSM2 now cardData numCards =
           (latestRepetition : _) ->
             let i = intervalSize reps * nominalDay
              in addUTCTime i (repetitionTimestamp latestRepetition) > now
-      (_tooSoon, notTooSoon) = partition isTooSoon studiedAtLeastOnce
-   in map fst $ chooseFromListsInOrder numCards [notTooSoon, neverStudied]
+      (selectionTooSoon, selectionReady) = partition isTooSoon studiedAtLeastOnce
+   in fst <$> Selection {..}
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
     intervalSize :: [Repetition] -> NominalDiffTime
@@ -94,6 +100,17 @@ decideStudyDeckSM2 now cardData numCards =
       CardHard -> 3
       CardGood -> 4
       CardEasy -> 5
+
+data Selection a
+  = Selection
+      { selectionTooSoon :: [a],
+        selectionReady :: [a],
+        selectionNew :: [a]
+      }
+  deriving (Show, Eq, Functor)
+
+studyFromSelection :: Int -> Selection a -> [a]
+studyFromSelection i Selection {..} = chooseFromListsInOrder i [selectionReady, selectionNew]
 
 -- Choose i elements from the lists in order, choosing as many as possible from previous lists.
 chooseFromListsInOrder :: Int -> [[a]] -> [a]
