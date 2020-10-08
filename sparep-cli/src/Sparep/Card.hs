@@ -90,7 +90,7 @@ instance YamlSchema Instructions where
         objectParser "InstructionsSeparate" $
           InstructionsSeparate
             <$> requiredField "normal" "The instructions for front-to-back study"
-            <*> requiredField "normal" "The instructions for studying a card in reverse"
+            <*> requiredField "reverse" "The instructions for studying a card in reverse"
       ]
 
 instance FromJSON Instructions where

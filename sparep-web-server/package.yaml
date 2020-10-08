@@ -1,6 +1,5 @@
-name:                sparep
+name:                sparep-web-server
 version:             0.0.0.0
-github:              "NorfairKing/sparep"
 license:             AllRightsReserved
 author:              "Tom Sydney Kerckhove"
 maintainer:          "syd@cs-syd.eu"
@@ -12,35 +11,21 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-  - brick
-  - bytestring
-  - cryptohash-sha256
-  - cursor
-  - cursor-brick
-  - directory
+  - data-default
+  - yaml
   - envparse
-  - filepath
   - monad-logger
   - optparse-applicative
   - path
   - path-io
-  - persistent
-  - persistent-sqlite
-  - persistent-template
-  - pretty-show
-  - random-shuffle
-  - safe
+  - shakespeare
+  - template-haskell
   - text
-  - time
-  - validity
-  - validity-bytestring
-  - validity-text
-  - vty
-  - yaml
   - yamlparse-applicative
+  - yesod
 
 executables:
-  sparep:
+  sparep-web-server:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -48,10 +33,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - sparep
+    - sparep-web-server
 
 tests:
-  sparep-test:
+  sparep-web-server-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -59,10 +44,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - genvalidity
-    - genvalidity-bytestring
-    - genvalidity-hspec
-    - genvalidity-hspec-persistent
-    - genvalidity-text
     - hspec
-    - sparep
+    - monad-logger
+    - sparep-web-server
+    - yesod-test

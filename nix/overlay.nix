@@ -22,7 +22,8 @@ with final.haskell.lib;
 
     in
       {
-        "sparep" = sparepPkgWithOwnComp "sparep";
+        "sparep-cli" = sparepPkgWithComp "sparep" "sparep-cli";
+        "sparep-web-server" = sparepPkgWithOwnComp "sparep-web-server";
       };
   haskellPackages =
     previous.haskellPackages.override (

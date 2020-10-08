@@ -1,0 +1,26 @@
+$doctype 5
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" sizes="32x32" href="https://cs-syd.eu/logo/res/favicon.ico">
+
+    <title>#{pageTitle pageContent}
+    ^{pageHead pageContent}
+
+    $maybe verification <- appGoogleSearchConsoleVerification app
+      <meta name="google-site-verification" content="#{verification}"/>
+
+    $maybe trackingId <- appGoogleAnalyticsTracking app
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=#{trackingId}">
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', '#{trackingId}');
+
+
+  <body>
+    ^{pageBody pageContent}
