@@ -1,0 +1,100 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 09459ee953a69d1bcb9cad08a0e384fd95ad3e899a49c50786d135162a2bcdbd
+
+name:           sparep-cli
+version:        0.0.0.0
+homepage:       https://github.com/NorfairKing/sparep#readme
+bug-reports:    https://github.com/NorfairKing/sparep/issues
+author:         Tom Sydney Kerckhove
+maintainer:     syd@cs-syd.eu
+copyright:      Copyright (c) 2020 Tom Sydney Kerckhove
+license:        AllRightsReserved
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/NorfairKing/sparep
+
+library
+  exposed-modules:
+      Sparep
+      Sparep.Card
+      Sparep.DB
+      Sparep.Draw
+      Sparep.OptParse
+      Sparep.OptParse.Types
+      Sparep.Repetition
+      Sparep.State
+  other-modules:
+      Paths_sparep_cli
+  hs-source-dirs:
+      src
+  build-depends:
+      async
+    , base >=4.7 && <5
+    , brick
+    , bytestring
+    , cryptohash-sha256
+    , cursor
+    , cursor-brick
+    , directory
+    , envparse
+    , filepath
+    , monad-logger
+    , mtl
+    , optparse-applicative
+    , path
+    , path-io
+    , persistent
+    , persistent-sqlite
+    , persistent-template
+    , pretty-show
+    , random-shuffle
+    , safe
+    , text
+    , time
+    , validity
+    , validity-bytestring
+    , validity-text
+    , vty
+    , yaml
+    , yamlparse-applicative
+  default-language: Haskell2010
+
+executable sparep
+  main-is: Main.hs
+  other-modules:
+      Paths_sparep_cli
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , sparep-cli
+  default-language: Haskell2010
+
+test-suite sparep-cli-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Sparep.Card.Gen
+      Sparep.CardSpec
+      Paths_sparep_cli
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , genvalidity
+    , genvalidity-bytestring
+    , genvalidity-hspec
+    , genvalidity-hspec-persistent
+    , genvalidity-text
+    , hspec
+    , sparep-cli
+  default-language: Haskell2010

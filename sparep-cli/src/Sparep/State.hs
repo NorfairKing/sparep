@@ -6,11 +6,15 @@ import Sparep.Card
 import Sparep.DB
 import Sparep.Repetition
 
+data Loading a = Loading | Loaded a
+  deriving (Show, Eq)
+
 data State
   = StateMenu MenuState
   | StateDecks DecksState
   | StateCards CardsState
   | StateStudy StudyState
+  deriving (Show, Eq)
 
 data MenuState
   = MenuState
@@ -20,20 +24,20 @@ data MenuState
 
 data DecksState
   = DecksState
-      { decksStateCursor :: NonEmptyCursor (Deck, Selection Card)
+      { decksStateCursor :: !(Maybe (NonEmptyCursor (Deck, Loading (Selection Card))))
       }
   deriving (Show, Eq)
 
 data CardsState
   = CardsState
       { cardsStateDeck :: !Deck,
-        cardsStateCursor :: !(Maybe (NonEmptyCursor (Card, Maybe UTCTime, Maybe UTCTime)))
+        cardsStateCursor :: !(Maybe (NonEmptyCursor (Card, Loading (Maybe (UTCTime, UTCTime)))))
       }
   deriving (Show, Eq)
 
 data StudyState
   = StudyState
-      { studyStateCursor :: !(Maybe (NonEmptyCursor Card)),
+      { studyStateCursor :: !(Loading (Maybe (NonEmptyCursor Card))),
         studyStateFrontBack :: !FrontBack,
         studyStateRepetitions :: ![Repetition]
       }

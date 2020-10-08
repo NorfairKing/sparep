@@ -56,14 +56,24 @@ drawMenuState MenuState {..} =
 drawDecksState :: DecksState -> [Widget ResourceName]
 drawDecksState DecksState {..} =
   [ vBox
-      [ padBottom Max $
-          let go (Deck {..}, Selection {..}) =
-                [ txt $ fromMaybe "No Name" deckName,
-                  str (show (length selectionTooSoon)),
-                  str (show (length selectionReady)),
-                  str (show (length selectionNew))
-                ]
-           in verticalNonEmptyCursorTableWithHeader go go go [str "Name", str "Done", str "Ready", str "New"] decksStateCursor,
+      [ case decksStateCursor of
+          Nothing -> str "No decks"
+          Just cursor ->
+            padBottom Max $
+              let go (Deck {..}, ls) =
+                    concat
+                      [ [txt $ fromMaybe "No Name" deckName],
+                        case ls of
+                          Loading ->
+                            [ str "Loading"
+                            ]
+                          Loaded Selection {..} ->
+                            [ str (show (length selectionTooSoon)),
+                              str (show (length selectionReady)),
+                              str (show (length selectionNew))
+                            ]
+                      ]
+               in verticalNonEmptyCursorTableWithHeader go go go [str "Name", str "Done", str "Ready", str "New"] cursor,
         str "Press enter to study the selected deck",
         str "Press c to show the cards in the selected deck"
       ]
@@ -76,12 +86,17 @@ drawCardsState CardsState {..} =
           Nothing -> str "No cards"
           Just cursor ->
             let showTime = formatTime defaultTimeLocale "%F %R"
-                go (Card {..}, mPrevTime, mNextTime) =
-                  [ txt cardFront,
-                    txt cardBack,
-                    str (maybe "" showTime mPrevTime),
-                    str (maybe "" showTime mNextTime)
-                  ]
+                go (Card {..}, lTimes) =
+                  concat
+                    [ [ txt cardFront,
+                        txt cardBack
+                      ],
+                      case lTimes of
+                        Loading -> [str "Loading"]
+                        Loaded mTimes -> case mTimes of
+                          Nothing -> [str " ", str " "]
+                          Just (prevTime, nextTime) -> [str $ showTime prevTime, str $ showTime nextTime]
+                    ]
              in verticalNonEmptyCursorTableWithHeader go go go [str "Front", str "Back", str "Last Study", str "Next Study"] cursor,
         str "Press Enter to study this deck",
         str "Press Escape to exit"
@@ -91,31 +106,34 @@ drawCardsState CardsState {..} =
 drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
   [ case studyStateCursor of
-      Nothing -> centerLayer $ str "Done"
-      Just cursor ->
-        let Card {..} = nonEmptyCursorCurrent cursor
-         in vBox
-              [ hCenterLayer
-                  $ str
-                  $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
-                vCenterLayer $ vBox
-                  $ map hCenterLayer
-                  $ concat
-                    [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
-                      [ padAll 1
-                          $ border
-                          $ vBox
-                          $ concat
-                            [ [padAll 1 $ txt cardFront],
+      Loading -> centerLayer $ str "Loading cards to study..."
+      Loaded mCursor ->
+        case mCursor of
+          Nothing -> centerLayer $ str "Done"
+          Just cursor ->
+            let Card {..} = nonEmptyCursorCurrent cursor
+             in vBox
+                  [ hCenterLayer
+                      $ str
+                      $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
+                    vCenterLayer $ vBox
+                      $ map hCenterLayer
+                      $ concat
+                        [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
+                          [ padAll 1
+                              $ border
+                              $ vBox
+                              $ concat
+                                [ [padAll 1 $ txt cardFront],
+                                  case studyStateFrontBack of
+                                    Front -> []
+                                    Back -> [padAll 1 $ txt cardBack]
+                                ],
+                            padLeftRight 3 $
                               case studyStateFrontBack of
-                                Front -> []
-                                Back -> [padAll 1 $ txt cardBack]
-                            ],
-                        padLeftRight 3 $
-                          case studyStateFrontBack of
-                            Front -> str "Show back: space"
-                            Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
-                      ]
-                    ]
-              ]
+                                Front -> str "Show back: space"
+                                Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
+                          ]
+                        ]
+                  ]
   ]

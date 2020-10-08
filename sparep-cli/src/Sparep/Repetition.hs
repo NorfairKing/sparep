@@ -5,6 +5,7 @@
 module Sparep.Repetition where
 
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.List
 import Data.Ord
 import Data.Time
@@ -14,32 +15,36 @@ import Sparep.Card
 import Sparep.DB
 import System.Random.Shuffle
 
--- This computation may take a while, move it to a separate thread with a nice progress bar.
-generateStudyDeck :: ConnectionPool -> [Card] -> Int -> IO [Card]
-generateStudyDeck pool cards numCards = generateStudySelection pool cards >>= studyFromSelection numCards
+getCardDates :: Card -> SqlPersistT IO (Maybe (UTCTime, UTCTime))
+getCardDates card = do
+  reps <- map entityVal <$> selectList [RepetitionCard ==. hashCard card] [Desc RepetitionTimestamp]
+  pure $ (,) <$> (repetitionTimestamp <$> headMay reps) <*> nextRepititionSM2 reps
 
-generateStudySelection :: ConnectionPool -> [Card] -> IO (Selection Card)
-generateStudySelection pool cards = do
+-- This computation may take a while, move it to a separate thread with a nice progress bar.
+generateStudyDeck :: [Card] -> Word -> SqlPersistT IO [Card]
+generateStudyDeck cards numCards = generateStudySelection cards >>= (liftIO . studyFromSelection numCards)
+
+generateStudySelection :: [Card] -> SqlPersistT IO (Selection Card)
+generateStudySelection cards = do
   cardData <-
-    forM cards $ \c -> do
-      let query =
-            map entityVal
-              <$> selectList
-                [RepetitionCard ==. hashCard c]
-                [Desc RepetitionTimestamp]
-      (,) c <$> runSqlPool query pool
-  now <- getCurrentTime
+    forM cards $ \c ->
+      (,) c
+        <$> map entityVal
+        <$> selectList
+          [RepetitionCard ==. hashCard c]
+          [Desc RepetitionTimestamp]
+  now <- liftIO getCurrentTime
   pure $ decideStudyDeckSM2 now cardData
 
 -- My own algorithm that just takes the least-recently studied cards
-decideStudyDeck :: [(a, [Repetition])] -> Int -> [a]
+decideStudyDeck :: [(a, [Repetition])] -> Word -> [a]
 decideStudyDeck cardData numCards =
   let (neverStudied, studiedAtLeastOnce) = partition (null . snd) cardData
-      neverStudiedSelected = take numCards neverStudied
+      neverStudiedSelected = take (fromIntegral numCards) neverStudied
       studiedAtLeastOnceSorted =
         sortOn (repetitionTimestamp . head . snd) studiedAtLeastOnce
       studiedAtLeastOnceSelected =
-        take (numCards - length neverStudiedSelected) studiedAtLeastOnceSorted
+        take (fromIntegral numCards - length neverStudiedSelected) studiedAtLeastOnceSorted
    in map fst $ neverStudiedSelected ++ studiedAtLeastOnceSelected
 
 -- SM-0, from https://www.supermemo.com/en/archives1990-2015/english/ol/beginning
@@ -51,14 +56,14 @@ decideStudyDeckSM0 now cardData =
         case sortOn (Down . repetitionTimestamp) (filter ((/= CardIncorrect) . repetitionDifficulty) reps) of
           [] -> False
           (latestRepetition : _) ->
-            let i = realToFrac (intervalSize (length reps)) * nominalDay
+            let i = realToFrac (intervalSize (genericLength reps)) * nominalDay
              in addUTCTime i (repetitionTimestamp latestRepetition) > now
       (selectionTooSoon, selectionReady) = partition isTooSoon studiedAtLeastOnce
    in fst <$> Selection {..}
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
     -- in number of days
-    intervalSize :: Int -> Int
+    intervalSize :: Word -> Word
     intervalSize =
       \case
         1 -> 1
@@ -111,18 +116,20 @@ data Selection a
       }
   deriving (Show, Eq, Functor)
 
-studyFromSelection :: Int -> Selection a -> IO [a]
+studyFromSelection :: Word -> Selection a -> IO [a]
 studyFromSelection i Selection {..} = do
   readyShuffled <- shuffleM selectionReady
   newShuffled <- shuffleM selectionNew
   pure $ chooseFromListsInOrder i [readyShuffled, newShuffled]
 
 -- Choose i elements from the lists in order, choosing as many as possible from previous lists.
-chooseFromListsInOrder :: Int -> [[a]] -> [a]
+chooseFromListsInOrder :: Word -> [[a]] -> [a]
 chooseFromListsInOrder _ [] = []
-chooseFromListsInOrder i _
-  | i <= 0 = []
+chooseFromListsInOrder 0 _ = []
 chooseFromListsInOrder i (l : ls) =
-  let found = take i l
-      j = i - length found
-   in found ++ chooseFromListsInOrder j ls
+  let found = take (fromIntegral i) l
+      len = genericLength found
+      j = i - len
+   in if i >= len
+        then found ++ chooseFromListsInOrder j ls
+        else found
