@@ -25,11 +25,8 @@ import Database.Persist
 import Database.Persist.Sql
 import Database.Persist.Sqlite
 import Graphics.Vty
-import Graphics.Vty.Attributes
-import Graphics.Vty.Input.Events
 import Path
 import Path.IO
-import Safe
 import Sparep.Card
 import Sparep.DB
 import Sparep.Draw
