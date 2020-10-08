@@ -2,7 +2,7 @@ let
   pkgs = import ./nix/pkgs.nix;
 in
 pkgs.mkShell {
-  name = "smos-web-server-front-shell";
+  name = "sparep-web-server-front-shell";
   buildInputs =
     with pkgs;
     [
