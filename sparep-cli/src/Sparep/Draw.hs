@@ -30,26 +30,43 @@ drawMenuState MenuState {..} =
       $ border
       $ padAll 1
       $ vBox
-        [ str "Sparep",
-          str " ",
-          hBox
-            [ str "Found ",
-              str (show (length menuStateDecks)),
-              str " decks containing"
-            ],
-          hBox
-            [ str (show (length (concatMap deckCards menuStateDecks))),
-              str " card definitions"
-            ],
-          hBox
-            [ str "which resolve to ",
-              str (show (length (concatMap resolveDeck menuStateDecks))),
-              str " cards"
-            ],
-          str " ",
-          str "Press enter to study now",
-          str " ",
-          str "Press d to show decks"
+      $ concat
+        [ [ str "Sparep",
+            str " ",
+            hBox
+              [ str "Found ",
+                str (show (length menuStateDecks)),
+                str " decks containing"
+              ],
+            hBox
+              [ str (show (length (concatMap deckCards menuStateDecks))),
+                str " card definitions"
+              ],
+            hBox
+              [ str "which resolve to ",
+                str (show (length (concatMap resolveDeck menuStateDecks))),
+                str " cards"
+              ]
+          ],
+          case menuStateSelection of
+            Loading -> []
+            Loaded Selection {..} ->
+              [ str " ",
+                str $
+                  unwords
+                    [ "Done:",
+                      show (length selectionTooSoon),
+                      " Ready:",
+                      show (length selectionReady),
+                      " New:",
+                      show (length selectionNew)
+                    ]
+              ],
+          [ str " ",
+            str "Press enter to study now",
+            str " ",
+            str "Press d to show decks"
+          ]
         ]
   ]
 
@@ -65,7 +82,9 @@ drawDecksState DecksState {..} =
                       [ [txt $ fromMaybe "No Name" deckName],
                         case ls of
                           Loading ->
-                            [ str "Loading"
+                            [ str "Loading",
+                              str "Loading",
+                              str "Loading"
                             ]
                           Loaded Selection {..} ->
                             [ str (show (length selectionTooSoon)),

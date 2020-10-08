@@ -11,7 +11,6 @@ import Brick.BChan
 import Brick.Main
 import Brick.Types
 import Brick.Util
-import Control.Concurrent
 import Control.Concurrent.Async
 import Control.Monad
 import Control.Monad.IO.Class
@@ -48,9 +47,9 @@ sparep = do
     $ \pool -> do
       runSqlPool (runMigration migrateAll) pool
       liftIO $ do
-        initialState <- buildInitialState setDecks
         qChan <- newBChan 1000
         rChan <- newBChan 1000
+        initialState <- buildInitialState qChan setDecks
         let vtyBuilder = mkVty defaultConfig
         firstVty <- vtyBuilder
         Right endState <-
@@ -60,10 +59,6 @@ sparep = do
         case endState of
           StateStudy ss -> runSqlPool (insertMany_ (studyStateRepetitions ss)) pool
           _ -> pure ()
-
-completeLoading :: a -> Loading a -> Loading a
-completeLoading a Loading = Loaded a
-completeLoading a (Loaded _) = Loaded a
 
 type DB a = ReaderT ConnectionPool IO a
 
@@ -75,17 +70,16 @@ data Query
 
 data Response
   = ResponseGetDeckSelection Deck (Selection Card)
-  | ResponseGetDecksSelection [Deck] (Selection Card)
+  | ResponseGetDecksSelection (Selection Card)
   | ResponseGetCardDates Card (Maybe (UTCTime, UTCTime))
   | ResponseGetStudyCards [Card]
 
 dbWorker :: BChan Query -> BChan Response -> DB ()
 dbWorker qChan rChan = forever $ do
   query <- liftIO $ readBChan qChan
-  liftIO $ threadDelay 1000000
   response <- case query of
     QueryGetDeckSelection d -> runDB $ ResponseGetDeckSelection d <$> generateStudySelection (resolveDeck d)
-    QueryGetDecksSelection ds -> runDB $ ResponseGetDecksSelection ds <$> generateStudySelection (concatMap resolveDeck ds)
+    QueryGetDecksSelection ds -> runDB $ ResponseGetDecksSelection <$> generateStudySelection (concatMap resolveDeck ds)
     QueryGetCardDates c -> runDB $ ResponseGetCardDates c <$> getCardDates c
     QueryGetStudyCards ds w -> runDB $ ResponseGetStudyCards <$> generateStudyDeck (concatMap resolveDeck ds) w
   liftIO $ writeBChan rChan response
@@ -95,7 +89,7 @@ runDB func = do
   pool <- ask
   liftIO $ runSqlPool func pool
 
-tuiApp :: BChan Query -> App State e ResourceName
+tuiApp :: BChan Query -> App State Response ResourceName
 tuiApp qChan =
   App
     { appDraw = drawTui,
@@ -105,12 +99,17 @@ tuiApp qChan =
       appAttrMap = const $ attrMap (fg brightWhite) []
     }
 
-buildInitialState :: [Deck] -> IO State
-buildInitialState decks =
-  pure $ StateMenu $ MenuState {menuStateDecks = decks}
+buildInitialState :: BChan Query -> [Deck] -> IO State
+buildInitialState qChan decks = do
+  writeBChan qChan $ QueryGetDecksSelection decks
+  pure $ StateMenu $
+    MenuState
+      { menuStateDecks = decks,
+        menuStateSelection = Loading
+      }
 
 handleTuiEvent ::
-  BChan Query -> State -> BrickEvent n e -> EventM n (Next State)
+  BChan Query -> State -> BrickEvent n Response -> EventM n (Next State)
 handleTuiEvent qChan s e =
   case s of
     StateMenu ms -> handleMenuEvent qChan ms e
@@ -119,7 +118,7 @@ handleTuiEvent qChan s e =
     StateStudy ss -> fmap StateStudy <$> handleStudyEvent ss e
 
 handleMenuEvent ::
-  BChan Query -> MenuState -> BrickEvent n e -> EventM n (Next State)
+  BChan Query -> MenuState -> BrickEvent n Response -> EventM n (Next State)
 handleMenuEvent qChan s e =
   case e of
     VtyEvent vtye ->
@@ -127,15 +126,18 @@ handleMenuEvent qChan s e =
         EvKey (KChar 'q') [] -> halt $ StateMenu s
         EvKey (KChar 'd') [] -> do
           let decks = menuStateDecks s
-          forM decks $ \d -> liftIO $ writeBChan qChan $ QueryGetDeckSelection d
-          let decksStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\d -> (d, Loading)) decks)
+          forM_ decks $ \d -> liftIO $ writeBChan qChan $ QueryGetDeckSelection d
+          let decksStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\d -> (d, Loading)) $ sortOn deckName decks)
           continue $ StateDecks DecksState {..}
         EvKey KEnter [] -> handleStudy qChan (menuStateDecks s)
         _ -> continue $ StateMenu s
+    AppEvent (ResponseGetDecksSelection sel) -> do
+      let s' = s {menuStateSelection = Loaded sel}
+      continue $ StateMenu s'
     _ -> continue $ StateMenu s
 
 handleDecksEvent ::
-  BChan Query -> DecksState -> BrickEvent n e -> EventM n (Next State)
+  BChan Query -> DecksState -> BrickEvent n Response -> EventM n (Next State)
 handleDecksEvent qChan s e = case decksStateCursor s of
   Nothing ->
     case e of
@@ -152,15 +154,19 @@ handleDecksEvent qChan s e = case decksStateCursor s of
           EvKey (KChar 'c') [] -> do
             let cardsStateDeck = fst (nonEmptyCursorCurrent cursor)
             let cards = resolveDeck cardsStateDeck
-            forM cards $ \c -> liftIO $ writeBChan qChan $ QueryGetCardDates c
+            forM_ cards $ \c -> liftIO $ writeBChan qChan $ QueryGetCardDates c
             let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\c -> (c, Loading)) cards)
             continue $ StateCards $ CardsState {..}
           EvKey KEnter [] -> handleStudy qChan [fst (nonEmptyCursorCurrent cursor)]
           _ -> continue $ StateDecks s
+      AppEvent (ResponseGetDeckSelection d sel) -> do
+        let mCursor' = flip fmap (decksStateCursor s) $ mapNonEmptyCursor (\t@(d', _) -> if d == d' then (d', Loaded sel) else t)
+        let s' = s {decksStateCursor = mCursor'}
+        continue $ StateDecks s'
       _ -> continue $ StateDecks s
 
 handleCardsEvent ::
-  BChan Query -> CardsState -> BrickEvent n e -> EventM n (Next State)
+  BChan Query -> CardsState -> BrickEvent n Response -> EventM n (Next State)
 handleCardsEvent qChan s e =
   case e of
     VtyEvent vtye ->
@@ -169,11 +175,15 @@ handleCardsEvent qChan s e =
         EvKey KEsc [] -> halt $ StateCards s
         EvKey KEnter [] -> handleStudy qChan [cardsStateDeck s]
         _ -> continue $ StateCards s
+    AppEvent (ResponseGetCardDates c dates) -> do
+      let mCursor' = flip fmap (cardsStateCursor s) $ mapNonEmptyCursor (\t@(c', _) -> if c == c' then (c', Loaded dates) else t)
+      let s' = s {cardsStateCursor = mCursor'}
+      continue $ StateCards s'
     _ -> continue $ StateCards s
 
 handleStudyEvent ::
   StudyState ->
-  BrickEvent n e ->
+  BrickEvent n Response ->
   EventM n (Next StudyState)
 handleStudyEvent s e =
   case studyStateCursor s of
@@ -183,6 +193,7 @@ handleStudyEvent s e =
           case vtye of
             EvKey (KChar 'q') [] -> halt s
             _ -> continue s
+        AppEvent (ResponseGetStudyCards cs) -> continue $ s {studyStateCursor = Loaded $ makeNonEmptyCursor <$> NE.nonEmpty cs}
         _ -> continue s
     Loaded mCursor ->
       case e of
@@ -217,7 +228,7 @@ handleStudyEvent s e =
                                 else mcursor'
                         continue $
                           s
-                            { studyStateCursor = Loaded $ mcursor'',
+                            { studyStateCursor = Loaded mcursor'',
                               studyStateFrontBack = Front,
                               studyStateRepetitions = rep : studyStateRepetitions s
                             }

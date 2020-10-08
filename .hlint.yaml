@@ -4,3 +4,5 @@
     name: "Use String"
 - ignore:
     name: "Use ++"
+- ignore:
+    name: "Use tuple-section"

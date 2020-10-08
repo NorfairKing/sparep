@@ -18,7 +18,8 @@ data State
 
 data MenuState
   = MenuState
-      { menuStateDecks :: [Deck]
+      { menuStateDecks :: [Deck],
+        menuStateSelection :: Loading (Selection Card)
       }
   deriving (Show, Eq)
 

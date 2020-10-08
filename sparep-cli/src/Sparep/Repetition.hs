@@ -29,7 +29,7 @@ generateStudySelection cards = do
   cardData <-
     forM cards $ \c ->
       (,) c
-        <$> map entityVal
+        . map entityVal
         <$> selectList
           [RepetitionCard ==. hashCard c]
           [Desc RepetitionTimestamp]
@@ -86,15 +86,18 @@ nextRepititionSM2 :: [Repetition] -> Maybe UTCTime
 nextRepititionSM2 reps = do
   let reps' = sortOn repetitionTimestamp reps
   latestRepetition <- lastMay reps'
-  pure $ addUTCTime (intervalSize reps') (repetitionTimestamp latestRepetition)
+  is <- intervalSize reps'
+  pure $ addUTCTime is (repetitionTimestamp latestRepetition)
   where
     -- How long to wait after the n'th study session before doing the n+1th study session
-    intervalSize :: [Repetition] -> NominalDiffTime
+    intervalSize :: [Repetition] -> Maybe NominalDiffTime
     intervalSize reps_ =
       case length $ filter ((/= CardIncorrect) . repetitionDifficulty) reps_ of
-        1 -> 1 * nominalDay
-        2 -> 6 * nominalDay
-        _ -> intervalSize (tail reps_) * fromRational (eFactor reps_)
+        0 -> Nothing
+        1 -> Just $ 1 * nominalDay
+        2 -> Just $ 6 * nominalDay
+        _ ->
+          (* fromRational (eFactor reps_)) <$> (tailMay reps_ >>= intervalSize)
     -- FIXME this is quite inefficient because the eFactor is recalculated O(2) times.
     eFactor :: [Repetition] -> Rational
     eFactor [] = 2.5
