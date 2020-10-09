@@ -123,7 +123,7 @@ studyFromSelection :: Word -> Selection a -> IO [a]
 studyFromSelection i Selection {..} = do
   readyShuffled <- shuffleM selectionReady
   newShuffled <- shuffleM selectionNew
-  pure $ chooseFromListsInOrder i [readyShuffled, newShuffled]
+  shuffleM $ chooseFromListsInOrder i [readyShuffled, newShuffled]
 
 -- Choose i elements from the lists in order, choosing as many as possible from previous lists.
 chooseFromListsInOrder :: Word -> [[a]] -> [a]
