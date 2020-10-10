@@ -76,10 +76,16 @@ dbWorker :: BChan Query -> BChan Response -> DB ()
 dbWorker qChan rChan = forever $ do
   query <- liftIO $ readBChan qChan
   response <- case query of
-    QueryGetDeckSelection d -> runDB $ ResponseGetDeckSelection d <$> generateStudySelection (resolveDeck d)
-    QueryGetDecksSelection ds -> runDB $ ResponseGetDecksSelection <$> generateStudySelection (concatMap resolveDeck ds)
+    QueryGetDeckSelection d -> do
+      cs <- resolveDeck d
+      runDB $ ResponseGetDeckSelection d <$> generateStudySelection cs
+    QueryGetDecksSelection ds -> do
+      cs <- concat <$> mapM resolveDeck ds
+      runDB $ ResponseGetDecksSelection <$> generateStudySelection cs
     QueryGetCardDates c -> runDB $ ResponseGetCardDates c <$> getCardDates c
-    QueryGetStudyCards ds w -> runDB $ ResponseGetStudyCards <$> generateStudyDeck (concatMap resolveDeck ds) w
+    QueryGetStudyCards ds w -> do
+      cs <- concat <$> mapM resolveDeck ds
+      runDB $ ResponseGetStudyCards <$> generateStudyDeck cs w
   liftIO $ writeBChan rChan response
 
 runDB :: SqlPersistT IO a -> DB a
@@ -151,7 +157,7 @@ handleDecksEvent qChan s e = case decksStateCursor s of
           EvKey (KChar 'q') [] -> halt $ StateDecks s
           EvKey (KChar 'c') [] -> do
             let cardsStateDeck = fst (nonEmptyCursorCurrent cursor)
-            let cards = resolveDeck cardsStateDeck
+            cards <- resolveDeck cardsStateDeck
             forM_ cards $ \c -> liftIO $ writeBChan qChan $ QueryGetCardDates c
             let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\c -> (c, Loading)) cards)
             continue $ StateCards $ CardsState {..}
@@ -207,7 +213,7 @@ handleStudyEvent s e =
                           Back -> cardBack cur
                     case side of
                       TextSide _ -> pure ()
-                      SoundSide fp -> runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "play" [fp]
+                      SoundSide fp -> runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "play" [fromAbsFile fp]
                     continue s
                in case studyStateFrontBack s of
                     Front ->

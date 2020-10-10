@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b5b406c0dc52d8bf61824a825899d90d5c20c0eeb293c52553035da388c78486
+-- hash: b57dd0e7ef262582473ce964af4254337866ef18c7f7c08b1d44f012751b1615
 
 name:           sparep-cli
 version:        0.0.0.0
@@ -63,6 +63,7 @@ library
     , validity
     , validity-bytestring
     , validity-containers
+    , validity-path
     , validity-text
     , vty
     , yaml

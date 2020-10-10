@@ -37,6 +37,7 @@ library:
   - time
   - typed-process
   - validity
+  - validity-path
   - validity-bytestring
   - validity-containers
   - validity-text

@@ -7,6 +7,7 @@ module Sparep.Card where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.IO.Class
 import Crypto.Hash.SHA256 as SHA256
 import Data.Bits
 import Data.ByteString (ByteString)
@@ -23,12 +24,15 @@ import qualified Data.Text.Encoding as TE
 import Data.Validity
 import Data.Validity.ByteString ()
 import Data.Validity.Containers ()
+import Data.Validity.Path ()
 import Data.Validity.Text ()
 import Data.Word
 import Data.Yaml
 import Database.Persist
 import Database.Persist.Sql
 import GHC.Generics (Generic)
+import Path
+import Path.IO
 import YamlParse.Applicative
 
 data Deck
@@ -75,8 +79,8 @@ instance FromJSON CardDef where
 
 data CardFrontBackDef
   = CardFrontBackDef
-      { cardFrontBackDefFront :: !CardSide,
-        cardFrontBackDefBack :: !CardSide,
+      { cardFrontBackDefFront :: !CardSideDef,
+        cardFrontBackDefBack :: !CardSideDef,
         cardFrontBackDefReverse :: !(Maybe Bool),
         cardFrontBackDefInstructions :: !(Maybe Instructions)
       }
@@ -109,7 +113,7 @@ instance FromJSON Instructions where
 
 data CardManySidedDef
   = CardManySidedDef
-      { cardManySidedDefSides :: !(Map Text CardSide),
+      { cardManySidedDefSides :: !(Map Text CardSideDef),
         cardManySidedDefInstructions :: Maybe Instructions
       }
   deriving (Show, Eq, Generic)
@@ -123,9 +127,109 @@ instance YamlSchema CardManySidedDef where
         <$> requiredField "sides" "The sides of the many-sided card"
         <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
 
+data CardSideDef
+  = TextSideDef Text
+  | SoundSideDef FilePath
+  deriving (Show, Eq, Generic)
+
+instance Validity CardSideDef
+
+instance YamlSchema CardSideDef where
+  yamlSchema =
+    alternatives
+      [ TextSideDef <$> yamlSchema,
+        objectParser "SoundSideDef" $
+          ( SoundSideDef
+              <$ requiredFieldWith "type" "Declare that it's a sound" (literalString "sound")
+          )
+            <*> requiredField "path" "The path to the sound file, from the deck definition"
+      ]
+
+instance FromJSON CardSideDef where
+  parseJSON = viaYamlSchema
+
+resolveDeck :: MonadIO m => Deck -> m [Card]
+resolveDeck Deck {..} =
+  concat <$> mapM (resolveCardDef deckReverse deckInstructions) deckCards
+
+resolveCardDef :: MonadIO m => Maybe Bool -> Maybe Instructions -> CardDef -> m [Card]
+resolveCardDef mDefaultReverse mDefaultInstructions = \case
+  CardFrontBack cfbd -> resolveCardFrontBackDef mDefaultReverse mDefaultInstructions cfbd
+  CardManySided cmsd -> resolveCardManySidedDef mDefaultInstructions cmsd
+
+resolveCardFrontBackDef :: MonadIO m => Maybe Bool -> Maybe Instructions -> CardFrontBackDef -> m [Card]
+resolveCardFrontBackDef mDefaultReverse mDefaultInstructions CardFrontBackDef {..} = do
+  let mInstructions = cardFrontBackDefInstructions <|> mDefaultInstructions
+      defaultReverse = fromMaybe False mDefaultReverse
+  frontSide <- resolveCardSideDef cardFrontBackDefFront
+  backSide <- resolveCardSideDef cardFrontBackDefBack
+  let rightWayRoundCard =
+        Card
+          { cardInstructions = unInstructions <$> mInstructions,
+            cardFront = frontSide,
+            cardBack = backSide
+          }
+      reversedCard =
+        Card
+          { cardInstructions = unInstructions <$> mInstructions,
+            cardFront = backSide,
+            cardBack = frontSide
+          }
+      doReversal = fromMaybe defaultReverse cardFrontBackDefReverse
+  pure $ rightWayRoundCard : [reversedCard | doReversal]
+
+resolveCardManySidedDef :: MonadIO m => Maybe Instructions -> CardManySidedDef -> m [Card]
+resolveCardManySidedDef mDefaultInstructions CardManySidedDef {..} = do
+  let mInstructions = cardManySidedDefInstructions <|> mDefaultInstructions
+  sidesList <- M.toList <$> mapM resolveCardSideDef cardManySidedDefSides
+  pure $ do
+    s1@(side1Name, side1) <- sidesList
+    (side2Name, side2) <- filter (/= s1) sidesList
+    pure
+      Card
+        { cardInstructions =
+            Just $ T.unwords $
+              concat
+                [ [unInstructions i | i <- maybeToList mInstructions],
+                  ["(", side1Name, "->", side2Name, ")"]
+                ],
+          cardFront = side1,
+          cardBack = side2
+        }
+
+resolveCardSideDef :: MonadIO m => CardSideDef -> m CardSide
+resolveCardSideDef = \case
+  TextSideDef t -> pure $ TextSide $ T.strip t
+  SoundSideDef fp -> SoundSide <$> resolveFile' fp
+
+data Card
+  = Card
+      { cardInstructions :: !(Maybe Text),
+        cardFront :: !CardSide,
+        cardBack :: !CardSide
+      }
+  deriving (Show, Eq, Generic)
+
+instance Validity Card
+
+hashCard :: Card -> CardId
+hashCard Card {..} =
+  let sideBytes = \case
+        TextSide t -> TE.encodeUtf8 (T.strip t)
+        SoundSide fp -> TE.encodeUtf8 $ T.pack $ "sound: " <> fromAbsFile fp
+      bs =
+        SB.concat
+          [ sideBytes cardFront,
+            sideBytes cardBack
+          ]
+   in CardId
+        { cardIdSha256 = SHA256.hash bs,
+          cardIdLength = fromIntegral $ SB.length bs
+        }
+
 data CardSide
   = TextSide Text
-  | SoundSide FilePath
+  | SoundSide (Path Abs File)
   deriving (Show, Eq, Generic)
 
 instance Validity CardSide
@@ -143,77 +247,6 @@ instance YamlSchema CardSide where
 
 instance FromJSON CardSide where
   parseJSON = viaYamlSchema
-
-resolveDeck :: Deck -> [Card]
-resolveDeck Deck {..} =
-  concatMap (resolveCardDef deckReverse deckInstructions) deckCards
-
-resolveCardDef :: Maybe Bool -> Maybe Instructions -> CardDef -> [Card]
-resolveCardDef mDefaultReverse mDefaultInstructions = \case
-  CardFrontBack cfbd -> resolveCardFrontBackDef mDefaultReverse mDefaultInstructions cfbd
-  CardManySided cmsd -> resolveCardManySidedDef mDefaultInstructions cmsd
-
-resolveCardFrontBackDef :: Maybe Bool -> Maybe Instructions -> CardFrontBackDef -> [Card]
-resolveCardFrontBackDef mDefaultReverse mDefaultInstructions CardFrontBackDef {..} =
-  let mInstructions = cardFrontBackDefInstructions <|> mDefaultInstructions
-      defaultReverse = fromMaybe False mDefaultReverse
-      rightWayRoundCard =
-        Card
-          { cardInstructions = unInstructions <$> mInstructions,
-            cardFront = cardFrontBackDefFront,
-            cardBack = cardFrontBackDefBack
-          }
-      reversedCard =
-        Card
-          { cardInstructions = unInstructions <$> mInstructions,
-            cardFront = cardFrontBackDefBack,
-            cardBack = cardFrontBackDefFront
-          }
-      doReversal = fromMaybe defaultReverse cardFrontBackDefReverse
-   in rightWayRoundCard : [reversedCard | doReversal]
-
-resolveCardManySidedDef :: Maybe Instructions -> CardManySidedDef -> [Card]
-resolveCardManySidedDef mDefaultInstructions CardManySidedDef {..} = do
-  let mInstructions = cardManySidedDefInstructions <|> mDefaultInstructions
-  let sidesList = M.toList cardManySidedDefSides
-  s1@(side1Name, side1) <- sidesList
-  (side2Name, side2) <- filter (/= s1) sidesList
-  pure $
-    Card
-      { cardInstructions =
-          Just $ T.unwords $
-            concat
-              [ [unInstructions i | i <- maybeToList mInstructions],
-                ["(", side1Name, "->", side2Name, ")"]
-              ],
-        cardFront = side1,
-        cardBack = side2
-      }
-
-data Card
-  = Card
-      { cardInstructions :: !(Maybe Text),
-        cardFront :: !CardSide,
-        cardBack :: !CardSide
-      }
-  deriving (Show, Eq, Generic)
-
-instance Validity Card
-
-hashCard :: Card -> CardId
-hashCard Card {..} =
-  let sideText = \case
-        TextSide t -> T.strip t
-        SoundSide fp -> "sound: " <> T.pack fp
-      bs =
-        SB.concat
-          [ TE.encodeUtf8 (sideText cardFront),
-            TE.encodeUtf8 (sideText cardBack)
-          ]
-   in CardId
-        { cardIdSha256 = SHA256.hash bs,
-          cardIdLength = fromIntegral $ SB.length bs
-        }
 
 data CardId
   = CardId

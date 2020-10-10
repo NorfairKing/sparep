@@ -39,3 +39,8 @@ $ sparep
 ![Study](study.png)
 
 Sparep takes care of showing you the right cards to study at the right time.
+
+### Prerequisites
+
+To play sound files, you will need to have a `play` command in your path.
+You can get this from `sox`.

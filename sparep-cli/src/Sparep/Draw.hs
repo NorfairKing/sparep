@@ -14,10 +14,10 @@ import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
+import Path
 import Sparep.Card
 import Sparep.Repetition
 import Sparep.State
-import qualified System.FilePath as FP
 
 drawTui :: State -> [Widget ResourceName]
 drawTui =
@@ -35,21 +35,7 @@ drawMenuState MenuState {..} =
       $ vBox
       $ concat
         [ [ str "Sparep",
-            str " ",
-            hBox
-              [ str "Found ",
-                str (show (length menuStateDecks)),
-                str " decks containing"
-              ],
-            hBox
-              [ str (show (length (concatMap deckCards menuStateDecks))),
-                str " card definitions"
-              ],
-            hBox
-              [ str "which resolve to ",
-                str (show (length (concatMap resolveDeck menuStateDecks))),
-                str " cards"
-              ]
+            str " "
           ],
           case menuStateSelection of
             Loading -> []
@@ -128,7 +114,7 @@ drawCardsState CardsState {..} =
 cardSideDescription :: CardSide -> Text
 cardSideDescription = \case
   TextSide t -> t
-  SoundSide fp -> T.pack $ FP.takeFileName fp
+  SoundSide fp -> T.pack $ fromRelFile $ filename fp
 
 drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
@@ -165,14 +151,14 @@ drawCardStudy fb Card {..} =
             $ concat
               [ [ padAll 1 $ case cardFront of
                     TextSide t -> txt t
-                    SoundSide fp -> str $ "Press 'f' to play " <> fp
+                    SoundSide fp -> str $ "Press 'f' to play " <> fromAbsFile fp
                 ],
                 case fb of
                   Front -> []
                   Back ->
                     [ padAll 1 $ case cardBack of
                         TextSide t -> txt t
-                        SoundSide fp -> str $ "Press 'b' to play " <> fp
+                        SoundSide fp -> str $ "Press 'b' to play " <> fromAbsFile fp
                     ]
               ]
         ]
