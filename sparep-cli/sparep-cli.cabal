@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b57dd0e7ef262582473ce964af4254337866ef18c7f7c08b1d44f012751b1615
+-- hash: d3e05ba010af3a312c45f875247ef60ddef88c2f51358f2dcdee275682cdebe8
 
 name:           sparep-cli
 version:        0.0.0.0
@@ -99,6 +99,7 @@ test-suite sparep-cli-test
     , genvalidity-containers
     , genvalidity-hspec
     , genvalidity-hspec-persistent
+    , genvalidity-path
     , genvalidity-text
     , hspec
     , sparep-cli

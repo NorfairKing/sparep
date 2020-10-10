@@ -16,12 +16,6 @@ spec = do
   genValidSpec @CardId
   genValidSpec @Card
   genValidSpec @Difficulty
-  describe "resolveCardDefs"
-    $ it "produce valid cards"
-    $ producesValidsOnValids resolveDeck
-  describe "resolveCardDef"
-    $ it "produce valid cards"
-    $ producesValidsOnValids3 resolveCardDef
   describe "hashCard"
     $ it "produces valid card ids"
     $ producesValidsOnValids hashCard

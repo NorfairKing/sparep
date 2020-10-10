@@ -70,6 +70,7 @@ tests:
     - genvalidity-containers
     - genvalidity-hspec
     - genvalidity-hspec-persistent
+    - genvalidity-path
     - genvalidity-text
     - hspec
     - sparep-cli

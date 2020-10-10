@@ -9,11 +9,8 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import Crypto.Hash.SHA256 as SHA256
-import Data.Bits
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as SB
-import qualified Data.ByteString.Builder as SBB
-import qualified Data.ByteString.Lazy as LB
 import qualified Data.Map as M
 import Data.Map (Map)
 import Data.Maybe
@@ -26,7 +23,6 @@ import Data.Validity.ByteString ()
 import Data.Validity.Containers ()
 import Data.Validity.Path ()
 import Data.Validity.Text ()
-import Data.Word
 import Data.Yaml as Yaml
 import Database.Persist
 import Database.Persist.Sql
@@ -257,10 +253,7 @@ hashCard Card {..} =
           [ sideBytes cardFront,
             sideBytes cardBack
           ]
-   in CardId
-        { cardIdSha256 = SHA256.hash bs,
-          cardIdLength = fromIntegral $ SB.length bs
-        }
+   in CardId {cardIdSha256 = SHA256.hash bs}
 
 data CardSide
   = TextSide Text
@@ -269,11 +262,7 @@ data CardSide
 
 instance Validity CardSide
 
-data CardId
-  = CardId
-      { cardIdSha256 :: !ByteString,
-        cardIdLength :: !Word16
-      }
+newtype CardId = CardId {cardIdSha256 :: ByteString}
   deriving (Show, Eq, Generic)
 
 instance Validity CardId where
@@ -285,26 +274,17 @@ instance Validity CardId where
       ]
 
 renderCardId :: CardId -> ByteString
-renderCardId CardId {..} =
-  LB.toStrict
-    $ SBB.toLazyByteString
-    $ mconcat [SBB.byteString cardIdSha256, SBB.word16BE cardIdLength]
+renderCardId CardId {..} = cardIdSha256
 
 parseCardId :: ByteString -> Either Text CardId
 parseCardId sb =
   case SB.length sb of
-    34 ->
-      let ws = SB.unpack sb
-          (shaBytes, lengthBytes) = splitAt 32 ws
-          cardIdSha256 = SB.pack shaBytes
-       in case lengthBytes of
-            [lb1, lb2] -> do
-              let lb116 = fromIntegral lb1 :: Word16
-              let lb216 = fromIntegral lb2 :: Word16
-              let cardIdLength = shiftL lb116 8 + lb216
-              pure CardId {..}
-            _ -> Left "Invalid number of length bytes, not 2"
-    l -> Left $ "Invalid card id length: " <> T.pack (show l)
+    32 ->
+      pure CardId {cardIdSha256 = sb}
+    l
+      | l > 32 ->
+        pure CardId {cardIdSha256 = SB.take 32 sb}
+      | otherwise -> Left $ "Invalid card id length: " <> T.pack (show l)
 
 instance PersistField CardId where
   toPersistValue = toPersistValue . renderCardId

@@ -24,7 +24,9 @@ import Data.Time
 import Database.Persist
 import Database.Persist.Sql
 import Database.Persist.Sqlite
-import Graphics.Vty
+import Graphics.Vty (defaultConfig, mkVty)
+import Graphics.Vty.Attributes
+import Graphics.Vty.Input
 import Path
 import Path.IO
 import Sparep.Card
@@ -43,7 +45,7 @@ sparep = do
   runNoLoggingT
     $ withSqlitePool (T.pack $ fromAbsFile setRepetitionDb) 1
     $ \pool -> do
-      runSqlPool (runMigration migrateAll) pool
+      runSqlPool migrateSparep pool
       liftIO $ do
         qChan <- newBChan 1000
         rChan <- newBChan 1000
@@ -57,6 +59,17 @@ sparep = do
         case endState of
           StateStudy ss -> runSqlPool (insertMany_ (studyStateRepetitions ss)) pool
           _ -> pure ()
+
+migrateSparep :: MonadIO m => SqlPersistT m ()
+migrateSparep = do
+  runMigration migrateAll
+  migrateHashSize
+
+migrateHashSize :: MonadIO m => SqlPersistT m ()
+migrateHashSize = do
+  rs <- selectList [] []
+  forM_ rs $ \(Entity rid Repetition {..}) ->
+    update rid [RepetitionCard =. repetitionCard] -- To make sure that it goes through a reading and writing cycle
 
 type DB a = ReaderT ConnectionPool IO a
 
