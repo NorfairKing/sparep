@@ -142,13 +142,10 @@ instance Validity Card
 hashCard :: Card -> CardId
 hashCard Card {..} =
   let bs =
-        SB.concat $
-          concat
-            [ [ TE.encodeUtf8 (T.strip cardFront),
-                TE.encodeUtf8 (T.strip cardBack)
-              ],
-              [TE.encodeUtf8 ins | ins <- maybeToList cardInstructions]
-            ]
+        SB.concat
+          [ TE.encodeUtf8 (T.strip cardFront),
+            TE.encodeUtf8 (T.strip cardBack)
+          ]
    in CardId
         { cardIdSha256 = SHA256.hash bs,
           cardIdLength = fromIntegral $ SB.length bs
