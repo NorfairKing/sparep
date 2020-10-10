@@ -251,7 +251,7 @@ hashCard :: Card -> CardId
 hashCard Card {..} =
   let sideBytes = \case
         TextSide t -> TE.encodeUtf8 (T.strip t)
-        SoundSide afp _ -> TE.encodeUtf8 $ T.pack $ "sound: " <> fromAbsFile afp
+        SoundSide _ contents -> contents
       bs =
         SB.concat
           [ sideBytes cardFront,
