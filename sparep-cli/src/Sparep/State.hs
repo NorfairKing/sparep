@@ -18,20 +18,20 @@ data State
 
 data MenuState
   = MenuState
-      { menuStateDecks :: [Deck],
+      { menuStateDecks :: [RootedDeck],
         menuStateSelection :: Loading (Selection Card)
       }
   deriving (Show, Eq)
 
 data DecksState
   = DecksState
-      { decksStateCursor :: !(Maybe (NonEmptyCursor (Deck, Loading (Selection Card))))
+      { decksStateCursor :: !(Maybe (NonEmptyCursor (RootedDeck, Loading (Selection Card))))
       }
   deriving (Show, Eq)
 
 data CardsState
   = CardsState
-      { cardsStateDeck :: !Deck,
+      { cardsStateDeck :: !RootedDeck,
         cardsStateCursor :: !(Maybe (NonEmptyCursor (Card, Loading (Maybe (UTCTime, UTCTime)))))
       }
   deriving (Show, Eq)

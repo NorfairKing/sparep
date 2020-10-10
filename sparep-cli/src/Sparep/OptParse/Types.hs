@@ -48,7 +48,7 @@ instance YamlSchema Configuration where
 
 data Settings
   = Settings
-      { setDecks :: [Deck],
+      { setDecks :: [RootedDeck],
         setRepetitionDb :: Path Abs File
       }
   deriving (Show, Eq, Generic)

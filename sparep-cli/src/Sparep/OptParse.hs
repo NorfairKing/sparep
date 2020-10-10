@@ -11,7 +11,6 @@ module Sparep.OptParse where
 import Control.Monad
 import Data.Maybe
 import qualified Data.Text as T
-import qualified Data.Yaml as Yaml
 import qualified Env
 import Options.Applicative
 import qualified Options.Applicative.Help as OptParse
@@ -34,7 +33,7 @@ getSettings = do
 combineToInstructions ::
   Flags -> Environment -> Maybe Configuration -> IO Settings
 combineToInstructions Flags {..} Environment {..} mConf = do
-  decksFromFlags <- mapM (readDeckOrDie <=< resolveFile') flagDecks
+  decksFromFlags <- mapM (readRootedDeckOrDie <=< resolveFile') flagDecks
   setDecks <-
     (decksFromFlags ++) . concat <$> mapM parseDecks (fromMaybe [] (mc confSpecifications))
   setRepetitionDb <-
@@ -51,13 +50,13 @@ combineToInstructions Flags {..} Environment {..} mConf = do
     mmc :: (Configuration -> Maybe a) -> Maybe a
     mmc f = mConf >>= f
 
-parseDecks :: FilePath -> IO [Deck]
+parseDecks :: FilePath -> IO [RootedDeck]
 parseDecks fp = do
   fileExists <- FP.doesFileExist fp
   if fileExists
     then do
       p <- resolveFile' fp
-      maybeToList <$> YamlParse.readConfigFile p
+      maybeToList <$> readRootedDeck p
     else do
       dirExists <- FP.doesDirectoryExist fp
       if dirExists
@@ -67,8 +66,8 @@ parseDecks fp = do
           fmap catMaybes
             $ forM fs
             $ \f -> do
-              errOrDefs <- Yaml.decodeFileEither (fromAbsFile f)
-              pure $ either (const Nothing) Just errOrDefs
+              errOrDefs <- readRootedDeckOrErr f
+              pure $ either (const Nothing) Just =<< errOrDefs
         else pure []
 
 readDeckOrDie :: Path Abs File -> IO Deck

@@ -66,9 +66,10 @@ drawDecksState DecksState {..} =
           Nothing -> str "No decks"
           Just cursor ->
             padBottom Max $
-              let go (Deck {..}, ls) =
+              let go (RootedDeck p Deck {..}, ls) =
                     concat
-                      [ [txt $ fromMaybe "No Name" deckName],
+                      [ [str $ fromAbsFile p],
+                        [txt $ fromMaybe "No Name" deckName],
                         case ls of
                           Loading ->
                             [ str "Loading",
@@ -114,7 +115,7 @@ drawCardsState CardsState {..} =
 cardSideDescription :: CardSide -> Text
 cardSideDescription = \case
   TextSide t -> t
-  SoundSide fp -> T.pack $ fromRelFile $ filename fp
+  SoundSide fp _ -> T.pack $ fromRelFile $ filename fp
 
 drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
@@ -151,14 +152,14 @@ drawCardStudy fb Card {..} =
             $ concat
               [ [ padAll 1 $ case cardFront of
                     TextSide t -> txt t
-                    SoundSide fp -> str $ "Press 'f' to play " <> fromAbsFile fp
+                    SoundSide _ _ -> str "Press 'f' to play sound"
                 ],
                 case fb of
                   Front -> []
                   Back ->
                     [ padAll 1 $ case cardBack of
                         TextSide t -> txt t
-                        SoundSide fp -> str $ "Press 'b' to play " <> fromAbsFile fp
+                        SoundSide _ _ -> str "Press 'b' to play sound"
                     ]
               ]
         ]

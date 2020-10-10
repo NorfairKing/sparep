@@ -61,13 +61,13 @@ sparep = do
 type DB a = ReaderT ConnectionPool IO a
 
 data Query
-  = QueryGetDeckSelection Deck
-  | QueryGetDecksSelection [Deck]
+  = QueryGetDeckSelection RootedDeck
+  | QueryGetDecksSelection [RootedDeck]
   | QueryGetCardDates Card
-  | QueryGetStudyCards [Deck] Word
+  | QueryGetStudyCards [RootedDeck] Word
 
 data Response
-  = ResponseGetDeckSelection Deck (Selection Card)
+  = ResponseGetDeckSelection RootedDeck (Selection Card)
   | ResponseGetDecksSelection (Selection Card)
   | ResponseGetCardDates Card (Maybe (UTCTime, UTCTime))
   | ResponseGetStudyCards [Card]
@@ -77,14 +77,14 @@ dbWorker qChan rChan = forever $ do
   query <- liftIO $ readBChan qChan
   response <- case query of
     QueryGetDeckSelection d -> do
-      cs <- resolveDeck d
+      cs <- resolveRootedDeck d
       runDB $ ResponseGetDeckSelection d <$> generateStudySelection cs
     QueryGetDecksSelection ds -> do
-      cs <- concat <$> mapM resolveDeck ds
+      cs <- concat <$> mapM resolveRootedDeck ds
       runDB $ ResponseGetDecksSelection <$> generateStudySelection cs
     QueryGetCardDates c -> runDB $ ResponseGetCardDates c <$> getCardDates c
     QueryGetStudyCards ds w -> do
-      cs <- concat <$> mapM resolveDeck ds
+      cs <- concat <$> mapM resolveRootedDeck ds
       runDB $ ResponseGetStudyCards <$> generateStudyDeck cs w
   liftIO $ writeBChan rChan response
 
@@ -103,7 +103,7 @@ tuiApp qChan =
       appAttrMap = const $ attrMap (fg brightWhite) []
     }
 
-buildInitialState :: BChan Query -> [Deck] -> IO State
+buildInitialState :: BChan Query -> [RootedDeck] -> IO State
 buildInitialState qChan decks = do
   writeBChan qChan $ QueryGetDecksSelection decks
   pure $ StateMenu $
@@ -131,7 +131,7 @@ handleMenuEvent qChan s e =
         EvKey (KChar 'd') [] -> do
           let decks = menuStateDecks s
           forM_ decks $ \d -> liftIO $ writeBChan qChan $ QueryGetDeckSelection d
-          let decksStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\d -> (d, Loading)) $ sortOn deckName decks)
+          let decksStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\d -> (d, Loading)) $ sortOn (deckName . rootedDeckDeck) decks)
           continue $ StateDecks DecksState {..}
         EvKey KEnter [] -> handleStudy qChan (menuStateDecks s)
         _ -> continue $ StateMenu s
@@ -157,7 +157,7 @@ handleDecksEvent qChan s e = case decksStateCursor s of
           EvKey (KChar 'q') [] -> halt $ StateDecks s
           EvKey (KChar 'c') [] -> do
             let cardsStateDeck = fst (nonEmptyCursorCurrent cursor)
-            cards <- resolveDeck cardsStateDeck
+            cards <- resolveRootedDeck cardsStateDeck
             forM_ cards $ \c -> liftIO $ writeBChan qChan $ QueryGetCardDates c
             let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\c -> (c, Loading)) cards)
             continue $ StateCards $ CardsState {..}
@@ -213,7 +213,7 @@ handleStudyEvent s e =
                           Back -> cardBack cur
                     case side of
                       TextSide _ -> pure ()
-                      SoundSide fp -> runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "play" [fromAbsFile fp]
+                      SoundSide fp _ -> runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "play" [fromAbsFile fp]
                     continue s
                in case studyStateFrontBack s of
                     Front ->
@@ -259,7 +259,7 @@ handleStudyEvent s e =
         _ -> continue s
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
-handleStudy :: BChan Query -> [Deck] -> EventM n (Next State)
+handleStudy :: BChan Query -> [RootedDeck] -> EventM n (Next State)
 handleStudy qChan decks = do
   liftIO $ writeBChan qChan $ QueryGetStudyCards decks 25
   let studyStateRepetitions = []
