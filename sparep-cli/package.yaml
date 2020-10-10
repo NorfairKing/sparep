@@ -35,6 +35,7 @@ library:
   - safe
   - text
   - time
+  - typed-process
   - validity
   - validity-bytestring
   - validity-containers

@@ -11,10 +11,13 @@ import Brick.Widgets.Core
 import Cursor.Brick
 import Cursor.Simple.List.NonEmpty
 import Data.Maybe
+import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time
 import Sparep.Card
 import Sparep.Repetition
 import Sparep.State
+import qualified System.FilePath as FP
 
 drawTui :: State -> [Widget ResourceName]
 drawTui =
@@ -107,8 +110,8 @@ drawCardsState CardsState {..} =
             let showTime = formatTime defaultTimeLocale "%F %R"
                 go (Card {..}, lTimes) =
                   concat
-                    [ [ txt cardFront,
-                        txt cardBack
+                    [ [ txt $ cardSideDescription cardFront,
+                        txt $ cardSideDescription cardBack
                       ],
                       case lTimes of
                         Loading -> [str "Loading"]
@@ -122,6 +125,11 @@ drawCardsState CardsState {..} =
       ]
   ]
 
+cardSideDescription :: CardSide -> Text
+cardSideDescription = \case
+  TextSide t -> t
+  SoundSide fp -> T.pack $ FP.takeFileName fp
+
 drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
   [ case studyStateCursor of
@@ -130,29 +138,42 @@ drawStudyState StudyState {..} =
         case mCursor of
           Nothing -> centerLayer $ str "Done"
           Just cursor ->
-            let Card {..} = nonEmptyCursorCurrent cursor
-             in vBox
-                  [ hCenterLayer
-                      $ str
-                      $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
-                    vCenterLayer $ vBox
-                      $ map hCenterLayer
-                      $ concat
-                        [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
-                          [ padAll 1
-                              $ border
-                              $ vBox
-                              $ concat
-                                [ [padAll 1 $ txt cardFront],
-                                  case studyStateFrontBack of
-                                    Front -> []
-                                    Back -> [padAll 1 $ txt cardBack]
-                                ],
-                            padLeftRight 3 $
-                              case studyStateFrontBack of
-                                Front -> str "Show back: space"
-                                Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
-                          ]
-                        ]
-                  ]
+            vBox
+              [ hCenterLayer
+                  $ str
+                  $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
+                vCenterLayer $ vBox $
+                  map
+                    hCenterLayer
+                    [ drawCardStudy studyStateFrontBack (nonEmptyCursorCurrent cursor),
+                      padLeftRight 3 $
+                        case studyStateFrontBack of
+                          Front -> str "Show back: space"
+                          Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
+                    ]
+              ]
   ]
+
+drawCardStudy :: FrontBack -> Card -> Widget ResourceName
+drawCardStudy fb Card {..} =
+  vBox $
+    concat
+      [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
+        [ padAll 1
+            $ border
+            $ vBox
+            $ concat
+              [ [ padAll 1 $ case cardFront of
+                    TextSide t -> txt t
+                    SoundSide fp -> str $ "Press 'f' to play " <> fp
+                ],
+                case fb of
+                  Front -> []
+                  Back ->
+                    [ padAll 1 $ case cardBack of
+                        TextSide t -> txt t
+                        SoundSide fp -> str $ "Press 'b' to play " <> fp
+                    ]
+              ]
+        ]
+      ]

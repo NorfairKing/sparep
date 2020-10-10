@@ -34,6 +34,7 @@ import Sparep.OptParse
 import Sparep.OptParse.Types
 import Sparep.Repetition
 import Sparep.State
+import System.Process.Typed
 
 sparep :: IO ()
 sparep = do
@@ -198,44 +199,57 @@ handleStudyEvent s e =
           case mCursor of
             Nothing -> halt s
             Just cursor ->
-              case studyStateFrontBack s of
-                Front ->
-                  case vtye of
-                    EvKey (KChar 'q') [] -> halt s
-                    EvKey (KChar ' ') [] -> continue $ s {studyStateFrontBack = Back}
-                    _ -> continue s
-                Back ->
-                  let finishCard :: Difficulty -> EventM n (Next StudyState)
-                      finishCard difficulty = do
-                        let cur = nonEmptyCursorCurrent cursor
-                        now <- liftIO getCurrentTime
-                        let rep =
-                              Repetition
-                                { repetitionCard = hashCard cur,
-                                  repetitionDifficulty = difficulty,
-                                  repetitionTimestamp = now
-                                }
-                        let mcursor' = nonEmptyCursorSelectNext cursor
-                        let mcursor'' =
-                              -- Require re-studying incorrect cards
-                              if difficulty == CardIncorrect
-                                then Just $ case mcursor' of
-                                  Nothing -> singletonNonEmptyCursor cur
-                                  Just cursor' -> nonEmptyCursorAppendAtEnd cur cursor'
-                                else mcursor'
-                        continue $
-                          s
-                            { studyStateCursor = Loaded mcursor'',
-                              studyStateFrontBack = Front,
-                              studyStateRepetitions = rep : studyStateRepetitions s
-                            }
-                   in case vtye of
+              let tryPlay :: FrontBack -> EventM n (Next StudyState)
+                  tryPlay fb = do
+                    let cur = nonEmptyCursorCurrent cursor
+                    let side = case fb of
+                          Front -> cardFront cur
+                          Back -> cardBack cur
+                    case side of
+                      TextSide _ -> pure ()
+                      SoundSide fp -> runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "play" [fp]
+                    continue s
+               in case studyStateFrontBack s of
+                    Front ->
+                      case vtye of
+                        EvKey (KChar 'f') [] -> tryPlay Front
                         EvKey (KChar 'q') [] -> halt s
-                        EvKey (KChar 'i') [] -> finishCard CardIncorrect
-                        EvKey (KChar 'h') [] -> finishCard CardHard
-                        EvKey (KChar 'g') [] -> finishCard CardGood
-                        EvKey (KChar 'e') [] -> finishCard CardEasy
+                        EvKey (KChar ' ') [] -> continue $ s {studyStateFrontBack = Back}
                         _ -> continue s
+                    Back ->
+                      let finishCard :: Difficulty -> EventM n (Next StudyState)
+                          finishCard difficulty = do
+                            let cur = nonEmptyCursorCurrent cursor
+                            now <- liftIO getCurrentTime
+                            let rep =
+                                  Repetition
+                                    { repetitionCard = hashCard cur,
+                                      repetitionDifficulty = difficulty,
+                                      repetitionTimestamp = now
+                                    }
+                            let mcursor' = nonEmptyCursorSelectNext cursor
+                            let mcursor'' =
+                                  -- Require re-studying incorrect cards
+                                  if difficulty == CardIncorrect
+                                    then Just $ case mcursor' of
+                                      Nothing -> singletonNonEmptyCursor cur
+                                      Just cursor' -> nonEmptyCursorAppendAtEnd cur cursor'
+                                    else mcursor'
+                            continue $
+                              s
+                                { studyStateCursor = Loaded mcursor'',
+                                  studyStateFrontBack = Front,
+                                  studyStateRepetitions = rep : studyStateRepetitions s
+                                }
+                       in case vtye of
+                            EvKey (KChar 'f') [] -> tryPlay Front
+                            EvKey (KChar 'b') [] -> tryPlay Back
+                            EvKey (KChar 'q') [] -> halt s
+                            EvKey (KChar 'i') [] -> finishCard CardIncorrect
+                            EvKey (KChar 'h') [] -> finishCard CardHard
+                            EvKey (KChar 'g') [] -> finishCard CardGood
+                            EvKey (KChar 'e') [] -> finishCard CardEasy
+                            _ -> continue s
         _ -> continue s
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.

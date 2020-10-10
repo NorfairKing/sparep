@@ -75,8 +75,8 @@ instance FromJSON CardDef where
 
 data CardFrontBackDef
   = CardFrontBackDef
-      { cardFrontBackDefFront :: !Text,
-        cardFrontBackDefBack :: !Text,
+      { cardFrontBackDefFront :: !CardSide,
+        cardFrontBackDefBack :: !CardSide,
         cardFrontBackDefReverse :: !(Maybe Bool),
         cardFrontBackDefInstructions :: !(Maybe Instructions)
       }
@@ -109,7 +109,7 @@ instance FromJSON Instructions where
 
 data CardManySidedDef
   = CardManySidedDef
-      { cardManySidedDefSides :: !(Map Text Text),
+      { cardManySidedDefSides :: !(Map Text CardSide),
         cardManySidedDefInstructions :: Maybe Instructions
       }
   deriving (Show, Eq, Generic)
@@ -122,6 +122,27 @@ instance YamlSchema CardManySidedDef where
       CardManySidedDef
         <$> requiredField "sides" "The sides of the many-sided card"
         <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
+
+data CardSide
+  = TextSide Text
+  | SoundSide FilePath
+  deriving (Show, Eq, Generic)
+
+instance Validity CardSide
+
+instance YamlSchema CardSide where
+  yamlSchema =
+    alternatives
+      [ TextSide <$> yamlSchema,
+        objectParser "SoundSide" $
+          ( SoundSide
+              <$ requiredFieldWith "type" "Declare that it's a sound" (literalString "sound")
+          )
+            <*> requiredField "path" "The path to the sound file, from the deck definition"
+      ]
+
+instance FromJSON CardSide where
+  parseJSON = viaYamlSchema
 
 resolveDeck :: Deck -> [Card]
 resolveDeck Deck {..} =
@@ -172,8 +193,8 @@ resolveCardManySidedDef mDefaultInstructions CardManySidedDef {..} = do
 data Card
   = Card
       { cardInstructions :: !(Maybe Text),
-        cardFront :: !Text,
-        cardBack :: !Text
+        cardFront :: !CardSide,
+        cardBack :: !CardSide
       }
   deriving (Show, Eq, Generic)
 
@@ -181,10 +202,13 @@ instance Validity Card
 
 hashCard :: Card -> CardId
 hashCard Card {..} =
-  let bs =
+  let sideText = \case
+        TextSide t -> T.strip t
+        SoundSide fp -> "sound: " <> T.pack fp
+      bs =
         SB.concat
-          [ TE.encodeUtf8 (T.strip cardFront),
-            TE.encodeUtf8 (T.strip cardBack)
+          [ TE.encodeUtf8 (sideText cardFront),
+            TE.encodeUtf8 (sideText cardBack)
           ]
    in CardId
         { cardIdSha256 = SHA256.hash bs,
