@@ -13,6 +13,8 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString as SB
 import qualified Data.ByteString.Builder as SBB
 import qualified Data.ByteString.Lazy as LB
+import qualified Data.Map as M
+import Data.Map (Map)
 import Data.Maybe
 import Data.Proxy
 import qualified Data.Text as T
@@ -20,6 +22,7 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as TE
 import Data.Validity
 import Data.Validity.ByteString ()
+import Data.Validity.Containers ()
 import Data.Validity.Text ()
 import Data.Word
 import Data.Yaml
@@ -54,80 +57,117 @@ instance FromJSON Deck where
   parseJSON = viaYamlSchema
 
 data CardDef
-  = CardDef
-      { cardDefFront :: !Text,
-        cardDefBack :: !Text,
-        cardDefReverse :: !(Maybe Bool),
-        cardDefInstructions :: !(Maybe Instructions)
-      }
+  = CardFrontBack CardFrontBackDef
+  | CardManySided CardManySidedDef
   deriving (Show, Eq, Generic)
 
 instance Validity CardDef
 
 instance YamlSchema CardDef where
   yamlSchema =
-    objectParser "CardDef" $
-      CardDef
+    alternatives
+      [ CardFrontBack <$> yamlSchema,
+        CardManySided <$> yamlSchema
+      ]
+
+instance FromJSON CardDef where
+  parseJSON = viaYamlSchema
+
+data CardFrontBackDef
+  = CardFrontBackDef
+      { cardFrontBackDefFront :: !Text,
+        cardFrontBackDefBack :: !Text,
+        cardFrontBackDefReverse :: !(Maybe Bool),
+        cardFrontBackDefInstructions :: !(Maybe Instructions)
+      }
+  deriving (Show, Eq, Generic)
+
+instance Validity CardFrontBackDef
+
+instance YamlSchema CardFrontBackDef where
+  yamlSchema =
+    objectParser "CardFrontBackDef" $
+      CardFrontBackDef
         <$> requiredField "front" "The front of the card"
         <*> requiredField "back" "The back of the card"
         <*> optionalField "reverse" "Whether to also generate the reverse card"
         <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
 
-instance FromJSON CardDef where
+instance FromJSON CardFrontBackDef where
   parseJSON = viaYamlSchema
 
-data Instructions
-  = InstructionsBoth !Text
-  | InstructionsSeparate !Text !Text
+newtype Instructions = Instructions {unInstructions :: Text}
   deriving (Show, Eq, Generic)
 
 instance Validity Instructions
 
 instance YamlSchema Instructions where
-  yamlSchema =
-    alternatives
-      [ InstructionsBoth <$> yamlSchema,
-        objectParser "InstructionsSeparate" $
-          InstructionsSeparate
-            <$> requiredField "normal" "The instructions for front-to-back study"
-            <*> requiredField "reverse" "The instructions for studying a card in reverse"
-      ]
+  yamlSchema = Instructions <$> yamlSchema
 
 instance FromJSON Instructions where
   parseJSON = viaYamlSchema
+
+data CardManySidedDef
+  = CardManySidedDef
+      { cardManySidedDefSides :: !(Map Text Text),
+        cardManySidedDefInstructions :: Maybe Instructions
+      }
+  deriving (Show, Eq, Generic)
+
+instance Validity CardManySidedDef
+
+instance YamlSchema CardManySidedDef where
+  yamlSchema =
+    objectParser "CardManySidedDef" $
+      CardManySidedDef
+        <$> requiredField "sides" "The sides of the many-sided card"
+        <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
 
 resolveDeck :: Deck -> [Card]
 resolveDeck Deck {..} =
   concatMap (resolveCardDef deckReverse deckInstructions) deckCards
 
 resolveCardDef :: Maybe Bool -> Maybe Instructions -> CardDef -> [Card]
-resolveCardDef mDefaultReverse defaultInstructions CardDef {..} =
-  let mInstructions = cardDefInstructions <|> defaultInstructions
+resolveCardDef mDefaultReverse mDefaultInstructions = \case
+  CardFrontBack cfbd -> resolveCardFrontBackDef mDefaultReverse mDefaultInstructions cfbd
+  CardManySided cmsd -> resolveCardManySidedDef mDefaultInstructions cmsd
+
+resolveCardFrontBackDef :: Maybe Bool -> Maybe Instructions -> CardFrontBackDef -> [Card]
+resolveCardFrontBackDef mDefaultReverse mDefaultInstructions CardFrontBackDef {..} =
+  let mInstructions = cardFrontBackDefInstructions <|> mDefaultInstructions
       defaultReverse = fromMaybe False mDefaultReverse
       rightWayRoundCard =
         Card
-          { cardInstructions =
-              ( \case
-                  InstructionsBoth t -> t
-                  InstructionsSeparate t _ -> t
-              )
-                <$> mInstructions,
-            cardFront = cardDefFront,
-            cardBack = cardDefBack
+          { cardInstructions = unInstructions <$> mInstructions,
+            cardFront = cardFrontBackDefFront,
+            cardBack = cardFrontBackDefBack
           }
       reversedCard =
         Card
-          { cardInstructions =
-              ( \case
-                  InstructionsBoth t -> t
-                  InstructionsSeparate _ t -> t
-              )
-                <$> mInstructions,
-            cardFront = cardDefBack,
-            cardBack = cardDefFront
+          { cardInstructions = unInstructions <$> mInstructions,
+            cardFront = cardFrontBackDefBack,
+            cardBack = cardFrontBackDefFront
           }
-      doReversal = fromMaybe defaultReverse cardDefReverse
+      doReversal = fromMaybe defaultReverse cardFrontBackDefReverse
    in rightWayRoundCard : [reversedCard | doReversal]
+
+resolveCardManySidedDef :: Maybe Instructions -> CardManySidedDef -> [Card]
+resolveCardManySidedDef mDefaultInstructions CardManySidedDef {..} = do
+  let mInstructions = cardManySidedDefInstructions <|> mDefaultInstructions
+  let sidesList = M.toList cardManySidedDefSides
+  s1@(side1Name, side1) <- sidesList
+  (side2Name, side2) <- filter (/= s1) sidesList
+  pure $
+    Card
+      { cardInstructions =
+          Just $ T.unwords $
+            concat
+              [ [unInstructions i | i <- maybeToList mInstructions],
+                ["(", side1Name, "->", side2Name, ")"]
+              ],
+        cardFront = side1,
+        cardBack = side2
+      }
 
 data Card
   = Card
@@ -189,7 +229,6 @@ parseCardId sb =
     l -> Left $ "Invalid card id length: " <> T.pack (show l)
 
 instance PersistField CardId where
-
   toPersistValue = toPersistValue . renderCardId
 
   fromPersistValue = fromPersistValue >=> parseCardId
@@ -225,7 +264,6 @@ parseDifficulty =
     _ -> Left "Unknown Difficulty"
 
 instance PersistField Difficulty where
-
   toPersistValue = toPersistValue . renderDifficulty
 
   fromPersistValue = fromPersistValue >=> parseDifficulty

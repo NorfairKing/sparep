@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 09459ee953a69d1bcb9cad08a0e384fd95ad3e899a49c50786d135162a2bcdbd
+-- hash: 20de7af3619c5bf99a62b2fac017b3be1ce32bed31b24959a2dc8d656a3a0e76
 
 name:           sparep-cli
 version:        0.0.0.0
@@ -39,6 +39,7 @@ library
     , base >=4.7 && <5
     , brick
     , bytestring
+    , containers
     , cryptohash-sha256
     , cursor
     , cursor-brick
@@ -60,6 +61,7 @@ library
     , time
     , validity
     , validity-bytestring
+    , validity-containers
     , validity-text
     , vty
     , yaml
@@ -92,6 +94,7 @@ test-suite sparep-cli-test
       base >=4.7 && <5
     , genvalidity
     , genvalidity-bytestring
+    , genvalidity-containers
     , genvalidity-hspec
     , genvalidity-hspec-persistent
     , genvalidity-text

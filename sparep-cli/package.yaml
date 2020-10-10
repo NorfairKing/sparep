@@ -15,6 +15,7 @@ library:
   - async
   - brick
   - bytestring
+  - containers
   - cryptohash-sha256
   - cursor
   - cursor-brick
@@ -36,6 +37,7 @@ library:
   - time
   - validity
   - validity-bytestring
+  - validity-containers
   - validity-text
   - vty
   - yaml
@@ -63,6 +65,7 @@ tests:
     dependencies:
     - genvalidity
     - genvalidity-bytestring
+    - genvalidity-containers
     - genvalidity-hspec
     - genvalidity-hspec-persistent
     - genvalidity-text

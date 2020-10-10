@@ -29,7 +29,6 @@ mkYesod
 |]
 
 instance Yesod App where
-
   shouldLogIO app _ ll = pure $ ll >= appLogLevel app
 
   defaultLayout widget = do
