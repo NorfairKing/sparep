@@ -69,7 +69,7 @@ drawDecksState DecksState {..} =
               let go (RootedDeck p Deck {..}, ls) =
                     concat
                       [ [str $ fromAbsFile p],
-                        [txt $ fromMaybe "No Name" deckName],
+                        [txt $ fromMaybe " " deckName],
                         case ls of
                           Loading ->
                             [ str "Loading",
@@ -82,7 +82,7 @@ drawDecksState DecksState {..} =
                               str (show (length selectionNew))
                             ]
                       ]
-               in verticalNonEmptyCursorTableWithHeader go go go [str "Name", str "Done", str "Ready", str "New"] cursor,
+               in verticalNonEmptyCursorTableWithHeader go go go [str "Path", str "Name", str "Done", str "Ready", str "New"] cursor,
         str "Press enter to study the selected deck",
         str "Press c to show the cards in the selected deck"
       ]
