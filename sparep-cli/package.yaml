@@ -21,6 +21,7 @@ library:
   - cursor-brick
   - directory
   - envparse
+  - filelock
   - filepath
   - monad-logger
   - mtl

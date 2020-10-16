@@ -36,29 +36,37 @@ import Sparep.OptParse
 import Sparep.OptParse.Types
 import Sparep.Repetition
 import Sparep.State
+import System.Exit
+import System.FileLock
 import System.Process.Typed
 
 sparep :: IO ()
 sparep = do
   Settings {..} <- getSettings
   ensureDir $ parent setRepetitionDb
-  runNoLoggingT
-    $ withSqlitePool (T.pack $ fromAbsFile setRepetitionDb) 1
-    $ \pool -> do
-      runSqlPool migrateSparep pool
-      liftIO $ do
-        qChan <- newBChan 1000
-        rChan <- newBChan 1000
-        initialState <- buildInitialState qChan setDecks
-        let vtyBuilder = mkVty defaultConfig
-        firstVty <- vtyBuilder
-        Right endState <-
-          race -- Race works because the dbworker never stops
-            (runReaderT (dbWorker qChan rChan) pool)
-            (customMain firstVty vtyBuilder (Just rChan) (tuiApp qChan) initialState)
-        case endState of
-          StateStudy ss -> runSqlPool (insertMany_ (studyStateRepetitions ss)) pool
-          _ -> pure ()
+  let dbFile = fromAbsFile setRepetitionDb
+  let lockFile = dbFile ++ ".lock"
+  mLocked <- withTryFileLock lockFile Exclusive $ \fl ->
+    runNoLoggingT
+      $ withSqlitePool (T.pack dbFile) 1
+      $ \pool -> do
+        runSqlPool migrateSparep pool
+        liftIO $ do
+          qChan <- newBChan 1000
+          rChan <- newBChan 1000
+          initialState <- buildInitialState qChan setDecks
+          let vtyBuilder = mkVty defaultConfig
+          firstVty <- vtyBuilder
+          Right endState <-
+            race -- Race works because the dbworker never stops
+              (runReaderT (dbWorker qChan rChan) pool)
+              (customMain firstVty vtyBuilder (Just rChan) (tuiApp qChan) initialState)
+          case endState of
+            StateStudy ss -> runSqlPool (insertMany_ (studyStateRepetitions ss)) pool
+            _ -> pure ()
+  case mLocked of
+    Just () -> pure () -- Everything went file
+    Nothing -> die "Unable to lock repetitions database."
 
 migrateSparep :: MonadIO m => SqlPersistT m ()
 migrateSparep = do

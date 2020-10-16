@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d3e05ba010af3a312c45f875247ef60ddef88c2f51358f2dcdee275682cdebe8
+-- hash: 3c14719e5b3e6cfc84e87255c16672c978c4d586b2c5dbd8bf77465947aa1b11
 
 name:           sparep-cli
 version:        0.0.0.0
@@ -45,6 +45,7 @@ library
     , cursor-brick
     , directory
     , envparse
+    , filelock
     , filepath
     , monad-logger
     , mtl
