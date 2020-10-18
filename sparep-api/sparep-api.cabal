@@ -1,0 +1,40 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           sparep-api
+version:        0.0.0.0
+homepage:       https://github.com/NorfairKing/sparep-api-cli-login#readme
+bug-reports:    https://github.com/NorfairKing/sparep-api-cli-login/issues
+author:         Tom Sydney Kerckhove
+maintainer:     syd@cs-syd.eu
+copyright:      Copyright (c) 2020 Tom Sydney Kerckhove
+license:        AllRightsReserved
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/NorfairKing/sparep-api-cli-login
+
+library
+  exposed-modules:
+      Sparep.API
+      Sparep.Data
+  other-modules:
+      Paths_sparep_api
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , jose
+    , persistent
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , text
+    , validity
+    , validity-text
+  default-language: Haskell2010

@@ -1,5 +1,9 @@
 resolver: lts-15.15
 packages:
+- sparep-api
+- sparep-api-gen
+- sparep-api-server
+- sparep-client
 - sparep-cli
 - sparep-web-server
 extra-deps:
@@ -13,6 +17,10 @@ extra-deps:
   commit: a7b47b03c8c5525234aaccc0c372e49a80134b9d
   subdirs:
   - cursor-brick
+- servant-auth-client-0.4.1.0@sha256:a93f041c3c293eca6e2e2e1a2ed97e58fbbd0e123caeff9e484a68d56272632f,3342
+
 nix:
   packages:
     - zlib
+    - haskellPackages.autoexporter
+    - killall
