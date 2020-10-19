@@ -29,9 +29,9 @@ import Graphics.Vty.Attributes
 import Graphics.Vty.Input
 import Path
 import Path.IO
+import Sparep.Client.Data
 import Sparep.Data
 import Sparep.TUI.Card
-import Sparep.TUI.DB
 import Sparep.TUI.Draw
 import Sparep.TUI.OptParse
 import Sparep.TUI.OptParse.Types

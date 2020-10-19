@@ -22,7 +22,6 @@ library
   exposed-modules:
       Sparep.TUI
       Sparep.TUI.Card
-      Sparep.TUI.DB
       Sparep.TUI.Draw
       Sparep.TUI.OptParse
       Sparep.TUI.OptParse.Types
@@ -56,6 +55,7 @@ library
     , pretty-show
     , random-shuffle
     , safe
+    , sparep-client-data
     , sparep-data
     , text
     , time

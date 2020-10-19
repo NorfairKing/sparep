@@ -27,6 +27,7 @@ with final.haskell.lib;
         "sparep-api-server" = sparepPkgWithOwnComp "sparep-api-server";
         "sparep-cli" = sparepPkgWithComp "sparep" "sparep-tui";
         "sparep-client" = sparepPkg "sparep-client";
+        "sparep-client-data" = sparepPkg "sparep-client-data";
         "sparep-data" = sparepPkg "sparep-data";
         "sparep-data-gen" = sparepPkg "sparep-data-gen";
         "sparep-web-server" = sparepPkgWithOwnComp "sparep-web-server";
@@ -66,10 +67,21 @@ with final.haskell.lib;
                       sha256 = "sha256:1wk2sixf1ld48j6a14zgfadg41si6rl8gwmwdlkn0cqjiw9n7f4p";
                     };
                   cursorBrickPkg = self.callCabal2nix "cursor-brick" (cursorBrickRepo + "/cursor-brick") {};
+                  appendfulRepo =
+                    final.fetchFromGitHub {
+                      owner = "NorfairKing";
+                      repo = "appendful";
+                      rev = "fac6474856726fc507c42779955a75a12ef98cc7";
+                      sha256 = "sha256:1vf3vlpcnnjmcbb27qazrzqp89bjrjjhiiksm09mcywrqlmpa2q0";
+                    };
+                  appendfulPkg = name: self.callCabal2nix "appendful" (appendfulRepo + "/${name}") {};
                 in
                   final.sparepPackages // {
                     envparse = envparsePkg;
                     cursor-brick = cursorBrickPkg;
+                    appendful = appendfulPkg "appendful";
+                    appendful-persistent = appendfulPkg "appendful-persistent";
+                    genvalidity-appendful = appendfulPkg "genvalidity-appendful";
                   }
             );
         }

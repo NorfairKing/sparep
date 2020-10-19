@@ -2,9 +2,9 @@ module Sparep.TUI.State where
 
 import Cursor.Simple.List.NonEmpty
 import Data.Time
+import Sparep.Client.Data
 import Sparep.Data
 import Sparep.TUI.Card
-import Sparep.TUI.DB
 import Sparep.TUI.Repetition
 
 data Loading a = Loading | Loaded a

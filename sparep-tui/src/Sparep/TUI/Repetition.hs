@@ -11,9 +11,9 @@ import Data.Ord
 import Data.Time
 import Database.Persist.Sql
 import Safe
+import Sparep.Client.Data
 import Sparep.Data
 import Sparep.TUI.Card
-import Sparep.TUI.DB
 import System.Random.Shuffle
 
 getCardDates :: Card -> SqlPersistT IO (Maybe (UTCTime, UTCTime))

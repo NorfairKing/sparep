@@ -4,6 +4,7 @@ packages:
 - sparep-api-gen
 - sparep-api-server
 - sparep-client
+- sparep-client-data
 - sparep-data
 - sparep-data-gen
 - sparep-tui

@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Sparep.TUI.DB where
+module Sparep.Client.Data.DB where
 
 import Data.Time
 import Database.Persist.Sqlite
@@ -30,7 +30,7 @@ ClientRepetition
 clientMakeRepetition :: ClientRepetition -> Repetition
 clientMakeRepetition ClientRepetition {..} = Repetition {..}
   where
-    repetitionCard = clientRepetitionCard
+    repetitionCardId = clientRepetitionCard
     repetitionDifficulty = clientRepetitionDifficulty
     repetitionTimestamp = clientRepetitionTimestamp
 
