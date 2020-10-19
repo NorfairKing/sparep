@@ -12,15 +12,17 @@ library:
   source-dirs: src
   dependencies:
   - data-default
-  - yaml
   - envparse
   - monad-logger
   - optparse-applicative
   - path
   - path-io
   - shakespeare
+  - sparep-api
+  - sparep-client
   - template-haskell
   - text
+  - yaml
   - yamlparse-applicative
   - yesod
 

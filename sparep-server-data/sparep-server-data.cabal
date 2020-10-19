@@ -1,0 +1,62 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           sparep-server-data
+version:        0.0.0.0
+homepage:       https://github.com/NorfairKing/sparep#readme
+bug-reports:    https://github.com/NorfairKing/sparep/issues
+author:         Tom Sydney Kerckhove
+maintainer:     syd@cs-syd.eu
+copyright:      Copyright (c) 2020 Tom Sydney Kerckhove
+license:        AllRightsReserved
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/NorfairKing/sparep
+
+library
+  exposed-modules:
+      Sparep.Server.Data
+      Sparep.Server.Data.DB
+      Sparep.Server.Data.Username
+  other-modules:
+      Paths_sparep_server_data
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson
+    , appendful
+    , appendful-persistent
+    , base >=4.7 && <5
+    , password
+    , password-instances
+    , persistent
+    , persistent-sqlite
+    , persistent-template
+    , sparep-data
+    , text
+    , time
+    , validity
+    , validity-text
+  default-language: Haskell2010
+
+test-suite sparep-server-data-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_sparep_server_data
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck
+    , base >=4.7 && <5
+    , genvalidity-hspec
+    , hspec
+    , persistent
+    , persistent-sqlite
+  default-language: Haskell2010
