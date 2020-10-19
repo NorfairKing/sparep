@@ -14,4 +14,3 @@ spec :: Spec
 spec = do
   genValidSpec @RegistrationForm
   genValidSpec @LoginForm
-  genValidSpec @Username

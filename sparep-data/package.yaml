@@ -13,7 +13,7 @@ library:
   source-dirs: src
   dependencies:
     - aeson
-    - base16-bytestring >= 1.0
+    - base16
     - bytestring
     - cryptohash-sha256
     - path

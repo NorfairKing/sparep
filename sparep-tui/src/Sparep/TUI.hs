@@ -46,8 +46,8 @@ sparepTUI = do
   Settings {..} <- getSettings
   ensureDir $ parent setRepetitionDb
   let dbFile = fromAbsFile setRepetitionDb
-  let lockFile = dbFile ++ ".lock"
-  mLocked <- withTryFileLock lockFile Exclusive $ \fl ->
+  let lockFilePath = dbFile ++ ".lock"
+  mLocked <- withTryFileLock lockFilePath Exclusive $ \_ ->
     runNoLoggingT
       $ withSqlitePool (T.pack dbFile) 1
       $ \pool -> do
@@ -77,7 +77,7 @@ migrateSparep = do
 migrateRepetition :: MonadIO m => SqlPersistT m ()
 migrateRepetition = do
   rs <- selectList [] []
-  forM_ rs $ \(Entity rid ClientRepetition {..}) -> do
+  forM_ rs $ \(Entity rid ClientRepetition {..}) ->
     update
       rid
       [ ClientRepetitionCard =. clientRepetitionCard,

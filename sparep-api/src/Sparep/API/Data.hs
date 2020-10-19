@@ -1,10 +1,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -15,8 +13,6 @@ module Sparep.API.Data where
 import Data.Aeson
 import qualified Data.Appendful as Appendful
 import Data.Functor.Contravariant
-import Data.Int
-import qualified Data.Text as T
 import Data.Text (Text)
 import Data.Validity
 import Data.Validity.Text ()

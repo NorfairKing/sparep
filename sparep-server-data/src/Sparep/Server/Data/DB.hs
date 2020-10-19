@@ -9,6 +9,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Sparep.Server.Data.DB where
 
@@ -16,7 +17,7 @@ import Data.Password
 import Data.Password.Instances ()
 import Data.Time
 import Data.Validity
-import Data.Validity.Persist
+import Data.Validity.Persist ()
 import Database.Persist.Sqlite
 import Database.Persist.TH
 import GHC.Generics (Generic)

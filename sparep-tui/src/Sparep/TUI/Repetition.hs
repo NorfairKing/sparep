@@ -13,7 +13,6 @@ import Database.Persist.Sql
 import Safe
 import Sparep.Client.Data
 import Sparep.Data
-import Sparep.TUI.Card
 import System.Random.Shuffle
 
 getCardDates :: Card -> SqlPersistT IO (Maybe (UTCTime, UTCTime))

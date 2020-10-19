@@ -1,4 +1,9 @@
-module Sparep.Data.Gen (module X) where
+{-# OPTIONS_GHC -fno-warn-dodgy-exports #-}
+
+module Sparep.Data.Gen
+  ( module X,
+  )
+where
 
 import Sparep.Data.Card.Gen as X ()
 import Sparep.Data.CardId.Gen as X ()

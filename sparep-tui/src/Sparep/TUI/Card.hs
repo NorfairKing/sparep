@@ -8,24 +8,18 @@ module Sparep.TUI.Card where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
-import Crypto.Hash.SHA256 as SHA256
-import Data.ByteString (ByteString)
 import qualified Data.ByteString as SB
 import qualified Data.Map as M
 import Data.Map (Map)
 import Data.Maybe
-import Data.Proxy
 import qualified Data.Text as T
 import Data.Text (Text)
-import qualified Data.Text.Encoding as TE
 import Data.Validity
 import Data.Validity.ByteString ()
 import Data.Validity.Containers ()
 import Data.Validity.Path ()
 import Data.Validity.Text ()
 import Data.Yaml as Yaml
-import Database.Persist
-import Database.Persist.Sql
 import GHC.Generics (Generic)
 import Path
 import Path.IO

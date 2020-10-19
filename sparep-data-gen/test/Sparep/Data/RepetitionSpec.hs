@@ -11,5 +11,5 @@ import Test.Hspec
 import Test.Validity
 
 spec :: Spec
-spec = do
+spec =
   genValidSpec @Repetition

@@ -6,15 +6,15 @@ import Sparep.API.Data
 import Sparep.API.Data.Gen ()
 import Sparep.API.Server.TestUtils
 import Sparep.Client
-import Sparep.Data
 import Test.Hspec
 import Test.QuickCheck
 import Test.Validity
 
 spec :: Spec
 spec = serverSpec $ do
-  describe "PostRegister" $ do
-    it "does not crash" $ \cenv ->
+  describe "PostRegister"
+    $ it "does not crash"
+    $ \cenv ->
       forAllValid $ \rf -> do
         NoContent <- testClientOrErr cenv $ postRegister sparepClient rf
         pure ()

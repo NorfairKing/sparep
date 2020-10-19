@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Sparep.API.Server.Env where
 
 import Control.Monad.IO.Class

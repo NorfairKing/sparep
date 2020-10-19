@@ -8,7 +8,7 @@ import Data.GenValidity
 import Data.GenValidity.Persist ()
 import Data.GenValidity.Text ()
 import Data.Password
-import Sparep.Data.Gen
+import Sparep.Data.Gen ()
 import Sparep.Server.Data
 import Test.QuickCheck
 

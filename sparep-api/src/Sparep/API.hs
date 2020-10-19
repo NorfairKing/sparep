@@ -1,8 +1,5 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Sparep.API where
@@ -14,7 +11,6 @@ import Servant.API
 import Servant.API.Generic
 import Servant.Auth
 import Sparep.API.Data
-import Sparep.Data
 
 sparepAPI :: Proxy SparepAPI
 sparepAPI = Proxy

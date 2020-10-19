@@ -29,7 +29,8 @@ extra-deps:
   - appendful-persistent
   - genvalidity-appendful
 - servant-auth-client-0.4.1.0@sha256:a93f041c3c293eca6e2e2e1a2ed97e58fbbd0e123caeff9e484a68d56272632f,3342
-- base16-bytestring-1.0.0.0@sha256:3291e9bd0f018af1855176d9169663261fa60ecced9c68bad6b9cd5a87abd59a,2749
+- base16-0.3.0.1@sha256:9ceab7e77e998c4324c11e4fae884fe11dceaba354bd291dab6913898420cce7,2422
+
 - github: NorfairKing/validity
   commit: 2ef8be2fba631460d770d8cbc7dd67709400fe3d
   subdirs:

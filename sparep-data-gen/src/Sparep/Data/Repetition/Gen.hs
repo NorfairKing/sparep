@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Sparep.Data.Repetition.Gen where
 
 import Data.GenValidity

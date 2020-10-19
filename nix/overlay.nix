@@ -24,14 +24,14 @@ with final.haskell.lib;
       {
         "sparep-api" = sparepPkg "sparep-api";
         "sparep-api-gen" = sparepPkg "sparep-api-gen";
-        "sparep-api-server" = sparepPkgWithOwnComp "sparep-api-server";
-        "sparep-cli" = sparepPkgWithComp "sparep" "sparep-tui";
+        "sparep-api-server" = sparepPkg "sparep-api-server"; # TODO: add completion once we use optparse-applicative
+        "sparep-tui" = sparepPkgWithComp "sparep" "sparep-tui";
         "sparep-client" = sparepPkg "sparep-client";
         "sparep-client-data" = sparepPkg "sparep-client-data";
         "sparep-data" = sparepPkg "sparep-data";
         "sparep-data-gen" = sparepPkg "sparep-data-gen";
         "sparep-server-data" = sparepPkg "sparep-server-data";
-        "sparep-server-data-gen" = sparepPkg "sparep-server-data";
+        "sparep-server-data-gen" = sparepPkg "sparep-server-data-gen";
         "sparep-web-server" = sparepPkgWithOwnComp "sparep-web-server";
       };
   haskellPackages =
@@ -77,6 +77,15 @@ with final.haskell.lib;
                       sha256 = "sha256:1vf3vlpcnnjmcbb27qazrzqp89bjrjjhiiksm09mcywrqlmpa2q0";
                     };
                   appendfulPkg = name: self.callCabal2nix "appendful" (appendfulRepo + "/${name}") {};
+                  base16Repo =
+                    final.fetchFromGitHub {
+                      owner = "emilypi";
+                      repo = "base16";
+                      rev = "f340b4a9a496320010930368e503ba6b7907f725";
+                      sha256 = "sha256:1c6910h9y3nmj2277d7bif3nilgacp4qafl4g5b3r2c0295hbq7z";
+                    };
+                  base16Pkg = self.callCabal2nix "base16" base16Repo {};
+
                 in
                   final.sparepPackages // {
                     envparse = envparsePkg;
@@ -84,6 +93,7 @@ with final.haskell.lib;
                     appendful = appendfulPkg "appendful";
                     appendful-persistent = appendfulPkg "appendful-persistent";
                     genvalidity-appendful = appendfulPkg "genvalidity-appendful";
+                    base16 = base16Pkg;
                   }
             );
         }

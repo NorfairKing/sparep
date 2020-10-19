@@ -5,13 +5,12 @@
 
 module Sparep.Data.CardId where
 
-import Control.Arrow
 import Control.Monad
 import Crypto.Hash.SHA256 as SHA256
 import Data.Aeson
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as SB
-import Data.ByteString.Base16 as Base16
+import Data.ByteString.Base16
 import Data.Proxy
 import Data.Text
 import qualified Data.Text as T
@@ -23,7 +22,6 @@ import Data.Validity.Text ()
 import Database.Persist
 import Database.Persist.Sql
 import GHC.Generics (Generic)
-import Path
 import Sparep.Data.Card
 
 hashCard :: Card -> CardId
@@ -53,10 +51,10 @@ instance Validity CardId where
       ]
 
 renderCardIdHex :: CardId -> Text
-renderCardIdHex = TE.decodeUtf8 . Base16.encode . cardIdSha256
+renderCardIdHex = encodeBase16 . cardIdSha256
 
 parseCardIdHex :: Text -> Either Text CardId
-parseCardIdHex = fmap CardId . left T.pack . Base16.decode . TE.encodeUtf8
+parseCardIdHex = fmap CardId . decodeBase16 . TE.encodeUtf8
 
 instance FromJSON CardId where
   parseJSON = withText "CardId" $ \t -> case parseCardIdHex t of

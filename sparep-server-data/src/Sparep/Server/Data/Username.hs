@@ -1,14 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Sparep.Server.Data.Username where
 
 import Data.Aeson
-import qualified Data.Appendful as Appendful
-import Data.Int
 import qualified Data.Text as T
 import Data.Text (Text)
 import Data.Validity
@@ -16,7 +13,6 @@ import Data.Validity.Text ()
 import Database.Persist
 import Database.Persist.Sql
 import GHC.Generics (Generic)
-import Sparep.Data
 
 newtype Username
   = Username

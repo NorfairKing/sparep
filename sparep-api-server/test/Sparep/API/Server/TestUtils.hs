@@ -6,9 +6,6 @@ module Sparep.API.Server.TestUtils where
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Logger
-import qualified Data.ByteString as SB
-import qualified Data.ByteString.Builder as SBB
-import qualified Data.ByteString.Lazy as LB
 import Data.List
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -39,7 +36,7 @@ serverSpec =
     . modifyMaxShrinks (const 0) -- Shrinks are broken when using 'around'
 
 withTestServer :: (ClientEnv -> IO a) -> (HTTP.Manager -> IO a)
-withTestServer func man = do
+withTestServer func man =
   runNoLoggingT $ withSqlitePool ":memory:" 1 $ \pool -> do
     void $ runSqlPool (runMigrationQuiet migrateAll) pool
     liftIO $ do
