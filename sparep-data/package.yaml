@@ -1,6 +1,6 @@
-name:                sparep-api
+name:                sparep-data
 version:             0.0.0.0
-github:              "NorfairKing/sparep-api-cli-login"
+github:              "NorfairKing/sparep"
 license:             AllRightsReserved
 author:              "Tom Sydney Kerckhove"
 maintainer:          "syd@cs-syd.eu"
@@ -13,13 +13,15 @@ library:
   source-dirs: src
   dependencies:
     - aeson
-    - appendful
-    - jose
+    - base16-bytestring >= 1.0
+    - bytestring
+    - cryptohash-sha256
+    - path
     - persistent
-    - servant
-    - servant-auth
-    - servant-auth-server
-    - sparep-data
     - text
+    - time
     - validity
+    - validity-bytestring
+    - validity-path
     - validity-text
+    - validity-time

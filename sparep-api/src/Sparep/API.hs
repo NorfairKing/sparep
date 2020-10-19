@@ -13,6 +13,7 @@ import Data.Validity.Text ()
 import Servant.API
 import Servant.API.Generic
 import Servant.Auth
+import Sparep.API.Data
 import Sparep.Data
 
 sparepAPI :: Proxy SparepAPI
@@ -24,7 +25,7 @@ data SparepRoutes route
   = SparepRoutes
       { postRegister :: !(route :- PostRegister),
         postLogin :: !(route :- PostLogin),
-        getGreeting :: !(route :- GetGreeting)
+        postSync :: !(route :- PostSync)
       }
   deriving (Generic)
 
@@ -40,8 +41,8 @@ type PostLogin =
 
 type ProtectAPI = Auth '[JWT] AuthCookie
 
-type GetGreeting =
+type PostSync =
   ProtectAPI
-    :> "greet"
-    :> QueryParam "greeting" Text
-    :> Get '[JSON] Text
+    :> "sync"
+    :> ReqBody '[JSON] SyncRequest
+    :> Get '[JSON] SyncResponse

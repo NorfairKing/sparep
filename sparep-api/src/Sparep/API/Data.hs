@@ -5,9 +5,11 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Sparep.Data where
+module Sparep.API.Data where
 
 import Data.Aeson
+import qualified Data.Appendful as Appendful
+import Data.Int
 import qualified Data.Text as T
 import Data.Text (Text)
 import Data.Validity
@@ -16,6 +18,7 @@ import Database.Persist
 import Database.Persist.Sql
 import Servant.API.Generic
 import Servant.Auth.Server
+import Sparep.Data
 
 data RegistrationForm
   = RegistrationForm
@@ -98,3 +101,9 @@ instance PersistFieldSql Username where
 
 parseUsername :: Text -> Maybe Username
 parseUsername = constructValid . Username
+
+-- FIXME The client Id should be a 'RepititionID' but then we need to rearrange some dependencies
+-- FIXME The server Id should be a 'RepititionID' as well but then we need to rearrange even more dependencies
+type SyncRequest = Appendful.SyncRequest Int64 Int64 Repetition
+
+type SyncResponse = Appendful.SyncResponse Int64 Int64 Repetition

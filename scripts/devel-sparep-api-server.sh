@@ -2,4 +2,4 @@
 
 stack install sparep-api-server \
   --file-watch \
-  --exec='./scripts/restart.sh'
+  --exec='./scripts/restart-sparep-api-server.sh'

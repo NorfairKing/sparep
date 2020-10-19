@@ -12,6 +12,8 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+    - appendful
+    - appendful-persistent
     - monad-logger
     - mtl
     - password
@@ -22,7 +24,9 @@ library:
     - servant-auth-server
     - servant-server
     - sparep-api
+    - sparep-data
     - text
+    - time
     - wai
     - warp
 
@@ -58,6 +62,9 @@ tests:
     - servant-client
     - sparep-api
     - sparep-api-gen
+    - sparep-api-gen
     - sparep-api-server
     - sparep-client
+    - sparep-data
+    - sparep-data-gen
     - warp

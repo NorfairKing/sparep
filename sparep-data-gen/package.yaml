@@ -1,6 +1,6 @@
-name:                sparep-api-gen
+name:                sparep-data-gen
 version:             0.0.0.0
-github:              "NorfairKing/sparep-api-cli-login"
+github:              "NorfairKing/sparep"
 license:             AllRightsReserved
 author:              "Tom Sydney Kerckhove"
 maintainer:          "syd@cs-syd.eu"
@@ -13,13 +13,15 @@ library:
   source-dirs: src
   dependencies:
     - genvalidity
-    - genvalidity-appendful
+    - genvalidity-bytestring
+    - genvalidity-path
     - genvalidity-text
-    - sparep-api
+    - genvalidity-time
+    - sparep-data
     - text
 
 tests:
-  sparep-api-test:
+  sparep-data-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -29,5 +31,5 @@ tests:
     dependencies:
     - genvalidity-hspec
     - hspec
-    - sparep-api
-    - sparep-api-gen
+    - sparep-data
+    - sparep-data-gen

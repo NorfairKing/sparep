@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           sparep-api-gen
+name:           sparep-data-gen
 version:        0.0.0.0
-homepage:       https://github.com/NorfairKing/sparep-api-cli-login#readme
-bug-reports:    https://github.com/NorfairKing/sparep-api-cli-login/issues
+homepage:       https://github.com/NorfairKing/sparep#readme
+bug-reports:    https://github.com/NorfairKing/sparep/issues
 author:         Tom Sydney Kerckhove
 maintainer:     syd@cs-syd.eu
 copyright:      Copyright (c) 2020 Tom Sydney Kerckhove
@@ -16,30 +16,39 @@ build-type:     Simple
 
 source-repository head
   type: git
-  location: https://github.com/NorfairKing/sparep-api-cli-login
+  location: https://github.com/NorfairKing/sparep
 
 library
   exposed-modules:
-      Sparep.API.Data.Gen
+      Sparep.Data.Card.Gen
+      Sparep.Data.CardId.Gen
+      Sparep.Data.Difficulty.Gen
+      Sparep.Data.Gen
+      Sparep.Data.Repetition.Gen
   other-modules:
-      Paths_sparep_api_gen
+      Paths_sparep_data_gen
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
     , genvalidity
-    , genvalidity-appendful
+    , genvalidity-bytestring
+    , genvalidity-path
     , genvalidity-text
-    , sparep-api
+    , genvalidity-time
+    , sparep-data
     , text
   default-language: Haskell2010
 
-test-suite sparep-api-test
+test-suite sparep-data-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Sparep.API.DataSpec
-      Paths_sparep_api_gen
+      Sparep.Data.CardIdSpec
+      Sparep.Data.CardSpec
+      Sparep.Data.DifficultySpec
+      Sparep.Data.RepetitionSpec
+      Paths_sparep_data_gen
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
@@ -47,6 +56,6 @@ test-suite sparep-api-test
       base >=4.7 && <5
     , genvalidity-hspec
     , hspec
-    , sparep-api
-    , sparep-api-gen
+    , sparep-data
+    , sparep-data-gen
   default-language: Haskell2010

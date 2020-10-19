@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeApplications #-}
 
-module Sparep.DataSpec
+module Sparep.API.DataSpec
   ( spec,
   )
 where

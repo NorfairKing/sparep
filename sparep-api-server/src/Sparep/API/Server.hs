@@ -46,7 +46,7 @@ sparepHandlers =
   SparepRoutes
     { postRegister = handlePostRegister,
       postLogin = handlePostLogin,
-      getGreeting = protected handleGetGreeting
+      postSync = protected handlePostSync
     }
 
 protected :: ThrowAll m => (authCookie -> m) -> AuthResult authCookie -> m

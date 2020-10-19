@@ -38,23 +38,3 @@ instance GenValid Instructions where
   genValid = genValidStructurallyWithoutExtraChecking
 
   shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
-
-instance GenValid Card where
-  genValid = genValidStructurallyWithoutExtraChecking
-
-  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
-
-instance GenValid CardSide where
-  genValid = genValidStructurallyWithoutExtraChecking
-
-  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
-
-instance GenValid CardId where
-  genValid = hashCard <$> genValid
-
-  shrinkValid _ = []
-
-instance GenValid Difficulty where
-  genValid = genValidStructurallyWithoutExtraChecking
-
-  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
