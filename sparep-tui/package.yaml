@@ -49,7 +49,7 @@ library:
   - yamlparse-applicative
 
 executables:
-  sparep:
+  sparep-tui:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
