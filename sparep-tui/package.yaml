@@ -1,4 +1,4 @@
-name:                sparep-cli
+name:                sparep-tui
 version:             0.0.0.0
 github:              "NorfairKing/sparep"
 license:             AllRightsReserved
@@ -34,13 +34,14 @@ library:
   - pretty-show
   - random-shuffle
   - safe
+  - sparep-data
   - text
   - time
   - typed-process
   - validity
-  - validity-path
   - validity-bytestring
   - validity-containers
+  - validity-path
   - validity-text
   - vty
   - yaml
@@ -55,10 +56,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - sparep-cli
+    - sparep-tui
 
 tests:
-  sparep-cli-test:
+  sparep-tui-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -74,4 +75,4 @@ tests:
     - genvalidity-path
     - genvalidity-text
     - hspec
-    - sparep-cli
+    - sparep-tui

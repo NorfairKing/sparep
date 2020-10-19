@@ -7,7 +7,7 @@ import Data.GenValidity.ByteString ()
 import Data.GenValidity.Containers ()
 import Data.GenValidity.Path ()
 import Data.GenValidity.Text ()
-import Sparep.Card
+import Sparep.TUI.Card
 
 instance GenValid Deck where
   genValid = genValidStructurallyWithoutExtraChecking

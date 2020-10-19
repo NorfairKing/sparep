@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Sparep.Draw where
+module Sparep.TUI.Draw where
 
 import Brick.Types
 import Brick.Widgets.Border
@@ -15,9 +15,10 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import Path
-import Sparep.Card
-import Sparep.Repetition
-import Sparep.State
+import Sparep.Data
+import Sparep.TUI.Card
+import Sparep.TUI.Repetition
+import Sparep.TUI.State
 
 drawTui :: State -> [Widget ResourceName]
 drawTui =

@@ -22,11 +22,13 @@ with final.haskell.lib;
 
     in
       {
-        "sparep-cli" = sparepPkgWithComp "sparep" "sparep-cli";
-        "sparep-client" = sparepPkg;
-        "sparep-api" = sparepPkg;
-        "sparep-api-gen" = sparepPkg;
+        "sparep-api" = sparepPkg "sparep-api";
+        "sparep-api-gen" = sparepPkg "sparep-api-gen";
         "sparep-api-server" = sparepPkgWithOwnComp "sparep-api-server";
+        "sparep-cli" = sparepPkgWithComp "sparep" "sparep-tui";
+        "sparep-client" = sparepPkg "sparep-client";
+        "sparep-data" = sparepPkg "sparep-data";
+        "sparep-data-gen" = sparepPkg "sparep-data-gen";
         "sparep-web-server" = sparepPkgWithOwnComp "sparep-web-server";
       };
   haskellPackages =

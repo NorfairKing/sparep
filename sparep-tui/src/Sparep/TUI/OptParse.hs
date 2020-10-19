@@ -6,7 +6,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Sparep.OptParse where
+module Sparep.TUI.OptParse where
 
 import Control.Monad
 import Data.Maybe
@@ -16,8 +16,8 @@ import Options.Applicative
 import qualified Options.Applicative.Help as OptParse
 import Path
 import Path.IO
-import Sparep.Card
-import Sparep.OptParse.Types
+import Sparep.TUI.Card
+import Sparep.TUI.OptParse.Types
 import qualified System.Directory as FP
 import qualified System.Environment as System
 import System.Exit

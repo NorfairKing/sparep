@@ -1,10 +1,11 @@
-module Sparep.State where
+module Sparep.TUI.State where
 
 import Cursor.Simple.List.NonEmpty
 import Data.Time
-import Sparep.Card
-import Sparep.DB
-import Sparep.Repetition
+import Sparep.Data
+import Sparep.TUI.Card
+import Sparep.TUI.DB
+import Sparep.TUI.Repetition
 
 data Loading a = Loading | Loaded a
   deriving (Show, Eq)
@@ -40,7 +41,7 @@ data StudyState
   = StudyState
       { studyStateCursor :: !(Loading (Maybe (NonEmptyCursor Card))),
         studyStateFrontBack :: !FrontBack,
-        studyStateRepetitions :: ![Repetition]
+        studyStateRepetitions :: ![ClientRepetition]
       }
   deriving (Show, Eq)
 

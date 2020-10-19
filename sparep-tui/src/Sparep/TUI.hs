@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Sparep
-  ( sparep,
+module Sparep.TUI
+  ( sparepTUI,
   )
 where
 
@@ -29,19 +29,20 @@ import Graphics.Vty.Attributes
 import Graphics.Vty.Input
 import Path
 import Path.IO
-import Sparep.Card
-import Sparep.DB
-import Sparep.Draw
-import Sparep.OptParse
-import Sparep.OptParse.Types
-import Sparep.Repetition
-import Sparep.State
+import Sparep.Data
+import Sparep.TUI.Card
+import Sparep.TUI.DB
+import Sparep.TUI.Draw
+import Sparep.TUI.OptParse
+import Sparep.TUI.OptParse.Types
+import Sparep.TUI.Repetition
+import Sparep.TUI.State
 import System.Exit
 import System.FileLock
 import System.Process.Typed
 
-sparep :: IO ()
-sparep = do
+sparepTUI :: IO ()
+sparepTUI = do
   Settings {..} <- getSettings
   ensureDir $ parent setRepetitionDb
   let dbFile = fromAbsFile setRepetitionDb
@@ -71,13 +72,18 @@ sparep = do
 migrateSparep :: MonadIO m => SqlPersistT m ()
 migrateSparep = do
   runMigration migrateAll
-  migrateHashSize
+  migrateRepetition
 
-migrateHashSize :: MonadIO m => SqlPersistT m ()
-migrateHashSize = do
+migrateRepetition :: MonadIO m => SqlPersistT m ()
+migrateRepetition = do
   rs <- selectList [] []
-  forM_ rs $ \(Entity rid Repetition {..}) ->
-    update rid [RepetitionCard =. repetitionCard] -- To make sure that it goes through a reading and writing cycle
+  forM_ rs $ \(Entity rid ClientRepetition {..}) -> do
+    update
+      rid
+      [ ClientRepetitionCard =. clientRepetitionCard,
+        ClientRepetitionDifficulty =. clientRepetitionDifficulty,
+        ClientRepetitionTimestamp =. clientRepetitionTimestamp
+      ] -- To make sure that it goes through a reading and writing cycle
 
 type DB a = ReaderT ConnectionPool IO a
 
@@ -249,10 +255,10 @@ handleStudyEvent s e =
                             let cur = nonEmptyCursorCurrent cursor
                             now <- liftIO getCurrentTime
                             let rep =
-                                  Repetition
-                                    { repetitionCard = hashCard cur,
-                                      repetitionDifficulty = difficulty,
-                                      repetitionTimestamp = now
+                                  ClientRepetition
+                                    { clientRepetitionCard = hashCard cur,
+                                      clientRepetitionDifficulty = difficulty,
+                                      clientRepetitionTimestamp = now
                                     }
                             let mcursor' = nonEmptyCursorSelectNext cursor
                             let mcursor'' =

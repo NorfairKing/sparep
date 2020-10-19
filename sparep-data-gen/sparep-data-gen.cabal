@@ -55,6 +55,7 @@ test-suite sparep-data-test
   build-depends:
       base >=4.7 && <5
     , genvalidity-hspec
+    , genvalidity-hspec-persistent
     , hspec
     , sparep-data
     , sparep-data-gen

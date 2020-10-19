@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Sparep.Card where
+module Sparep.TUI.Card where
 
 import Control.Applicative
 import Control.Monad
@@ -29,6 +29,7 @@ import Database.Persist.Sql
 import GHC.Generics (Generic)
 import Path
 import Path.IO
+import Sparep.Data
 import System.Exit
 import YamlParse.Applicative as YamlParse
 
@@ -232,99 +233,3 @@ resolveCardSideDef dfp = \case
     afp <- resolveFile (parent dfp) fp
     contents <- SB.readFile $ fromAbsFile afp
     pure $ SoundSide afp contents
-
-data Card
-  = Card
-      { cardInstructions :: !(Maybe Text),
-        cardFront :: !CardSide,
-        cardBack :: !CardSide
-      }
-  deriving (Show, Eq, Generic)
-
-instance Validity Card
-
-hashCard :: Card -> CardId
-hashCard Card {..} =
-  let sideBytes = \case
-        TextSide t -> TE.encodeUtf8 (T.strip t)
-        SoundSide _ contents -> contents
-      bs =
-        SB.concat
-          [ sideBytes cardFront,
-            sideBytes cardBack
-          ]
-   in CardId {cardIdSha256 = SHA256.hash bs}
-
-data CardSide
-  = TextSide Text
-  | SoundSide (Path Abs File) ByteString
-  deriving (Show, Eq, Generic)
-
-instance Validity CardSide
-
-newtype CardId = CardId {cardIdSha256 :: ByteString}
-  deriving (Show, Eq, Generic)
-
-instance Validity CardId where
-  validate cid@CardId {..} =
-    mconcat
-      [ genericValidate cid,
-        declare "The length of the sha256 hash bytestring is 32 bytes" $
-          SB.length cardIdSha256 == 32
-      ]
-
-renderCardId :: CardId -> ByteString
-renderCardId CardId {..} = cardIdSha256
-
-parseCardId :: ByteString -> Either Text CardId
-parseCardId sb =
-  case SB.length sb of
-    32 ->
-      pure CardId {cardIdSha256 = sb}
-    l
-      | l > 32 ->
-        pure CardId {cardIdSha256 = SB.take 32 sb}
-      | otherwise -> Left $ "Invalid card id length: " <> T.pack (show l)
-
-instance PersistField CardId where
-  toPersistValue = toPersistValue . renderCardId
-
-  fromPersistValue = fromPersistValue >=> parseCardId
-
-instance PersistFieldSql CardId where
-  sqlType Proxy = sqlType (Proxy :: Proxy ByteString)
-
-data Difficulty
-  = CardIncorrect
-  | CardHard
-  | CardGood
-  | CardEasy
-  deriving (Show, Eq, Generic)
-
-instance Validity Difficulty
-
-renderDifficulty :: Difficulty -> Text
-renderDifficulty =
-  \case
-    CardIncorrect -> "Incorrect"
-    CardHard -> "Hard"
-    CardGood -> "Good"
-    CardEasy -> "Easy"
-
-parseDifficulty :: Text -> Either Text Difficulty
-parseDifficulty =
-  \case
-    "Incorrect" -> Right CardIncorrect
-    "Hard" -> Right CardHard
-    "Good" -> Right CardGood
-    "Correct" -> Right CardGood
-    "Easy" -> Right CardEasy
-    _ -> Left "Unknown Difficulty"
-
-instance PersistField Difficulty where
-  toPersistValue = toPersistValue . renderDifficulty
-
-  fromPersistValue = fromPersistValue >=> parseDifficulty
-
-instance PersistFieldSql Difficulty where
-  sqlType Proxy = sqlType (Proxy :: Proxy Text)

@@ -1,12 +1,12 @@
 resolver: lts-15.15
 packages:
-- sparep-data
-- sparep-data-gen
 - sparep-api
 - sparep-api-gen
 - sparep-api-server
 - sparep-client
-- sparep-cli
+- sparep-data
+- sparep-data-gen
+- sparep-tui
 - sparep-web-server
 extra-deps:
 - github: NorfairKing/yamlparse-applicative

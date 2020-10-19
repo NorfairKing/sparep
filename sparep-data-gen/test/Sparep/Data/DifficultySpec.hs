@@ -5,11 +5,13 @@ module Sparep.Data.DifficultySpec
   )
 where
 
-import Sparep.Data.CardId
-import Sparep.Data.CardId.Gen ()
+import Sparep.Data.Difficulty
+import Sparep.Data.Difficulty.Gen ()
 import Test.Hspec
 import Test.Validity
+import Test.Validity.Persist
 
 spec :: Spec
 spec = do
-  genValidSpec @CardId
+  genValidSpec @Difficulty
+  persistSpecOnValid @Difficulty

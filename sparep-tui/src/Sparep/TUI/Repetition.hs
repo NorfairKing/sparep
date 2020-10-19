@@ -2,7 +2,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Sparep.Repetition where
+module Sparep.TUI.Repetition where
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -11,13 +11,14 @@ import Data.Ord
 import Data.Time
 import Database.Persist.Sql
 import Safe
-import Sparep.Card
-import Sparep.DB
+import Sparep.Data
+import Sparep.TUI.Card
+import Sparep.TUI.DB
 import System.Random.Shuffle
 
 getCardDates :: Card -> SqlPersistT IO (Maybe (UTCTime, UTCTime))
 getCardDates card = do
-  reps <- map entityVal <$> selectList [RepetitionCard ==. hashCard card] [Desc RepetitionTimestamp]
+  reps <- map (clientMakeRepetition . entityVal) <$> selectList [ClientRepetitionCard ==. hashCard card] [Desc ClientRepetitionTimestamp]
   pure $ (,) <$> (repetitionTimestamp <$> headMay reps) <*> nextRepititionSM2 reps
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
@@ -29,10 +30,10 @@ generateStudySelection cards = do
   cardData <-
     forM cards $ \c ->
       (,) c
-        . map entityVal
+        . map (clientMakeRepetition . entityVal)
         <$> selectList
-          [RepetitionCard ==. hashCard c]
-          [Desc RepetitionTimestamp]
+          [ClientRepetitionCard ==. hashCard c]
+          [Desc ClientRepetitionTimestamp]
   now <- liftIO getCurrentTime
   pure $ decideStudyDeckSM2 now cardData
 

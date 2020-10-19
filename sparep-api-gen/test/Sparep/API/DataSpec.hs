@@ -5,8 +5,8 @@ module Sparep.API.DataSpec
   )
 where
 
-import Sparep.Data
-import Sparep.Data.Gen ()
+import Sparep.API.Data
+import Sparep.API.Data.Gen ()
 import Test.Hspec
 import Test.Validity
 

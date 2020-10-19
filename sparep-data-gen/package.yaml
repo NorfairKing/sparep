@@ -30,6 +30,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - genvalidity-hspec
+    - genvalidity-hspec-persistent
     - hspec
     - sparep-data
     - sparep-data-gen

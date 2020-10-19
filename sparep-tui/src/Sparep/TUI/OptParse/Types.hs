@@ -3,12 +3,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Sparep.OptParse.Types where
+module Sparep.TUI.OptParse.Types where
 
 import Data.Yaml as Yaml hiding (object)
 import GHC.Generics (Generic)
 import Path
-import Sparep.Card
+import Sparep.TUI.Card
 import YamlParse.Applicative
 
 data Flags
