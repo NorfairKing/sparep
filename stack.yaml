@@ -6,6 +6,7 @@ packages:
 - sparep-client
 - sparep-client-data
 - sparep-server-data
+- sparep-server-data-gen
 - sparep-data
 - sparep-data-gen
 - sparep-tui
@@ -29,6 +30,43 @@ extra-deps:
   - genvalidity-appendful
 - servant-auth-client-0.4.1.0@sha256:a93f041c3c293eca6e2e2e1a2ed97e58fbbd0e123caeff9e484a68d56272632f,3342
 - base16-bytestring-1.0.0.0@sha256:3291e9bd0f018af1855176d9169663261fa60ecced9c68bad6b9cd5a87abd59a,2749
+- github: NorfairKing/validity
+  commit: 2ef8be2fba631460d770d8cbc7dd67709400fe3d
+  subdirs:
+  - validity
+  - validity-aeson
+  - validity-bytestring
+  - validity-containers
+  - validity-path
+  - validity-persistent
+  - validity-primitive
+  - validity-scientific
+  - validity-text
+  - validity-time
+  - validity-unordered-containers
+  - validity-uuid
+  - validity-vector
+  - genvalidity
+  - genvalidity-aeson
+  - genvalidity-bytestring
+  - genvalidity-containers
+  - genvalidity-criterion
+  - genvalidity-hspec
+  - genvalidity-hspec-aeson
+  - genvalidity-hspec-binary
+  - genvalidity-hspec-cereal
+  - genvalidity-hspec-hashable
+  - genvalidity-hspec-optics
+  - genvalidity-hspec-persistent
+  - genvalidity-path
+  - genvalidity-persistent
+  - genvalidity-property
+  - genvalidity-scientific
+  - genvalidity-text
+  - genvalidity-time
+  - genvalidity-unordered-containers
+  - genvalidity-uuid
+  - genvalidity-vector
 
 
 nix:

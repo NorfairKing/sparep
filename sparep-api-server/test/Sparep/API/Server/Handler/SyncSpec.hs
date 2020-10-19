@@ -16,8 +16,6 @@ spec :: Spec
 spec = serverSpec $ do
   describe "PostSync"
     $ it "does not crash"
-    $ \cenv ->
-      forAllValid $ \req -> do
-        let token = undefined
-        resp <- testClientOrErr cenv $ postSync sparepClient token req
-        shouldBeValid resp
+    $ \cenv -> forAllValid $ \req -> withAnyNewUser cenv $ \token -> do
+      resp <- testClientOrErr cenv $ postSync sparepClient token req
+      shouldBeValid resp

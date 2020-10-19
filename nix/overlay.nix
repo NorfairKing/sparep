@@ -31,6 +31,7 @@ with final.haskell.lib;
         "sparep-data" = sparepPkg "sparep-data";
         "sparep-data-gen" = sparepPkg "sparep-data-gen";
         "sparep-server-data" = sparepPkg "sparep-server-data";
+        "sparep-server-data-gen" = sparepPkg "sparep-server-data";
         "sparep-web-server" = sparepPkgWithOwnComp "sparep-web-server";
       };
   haskellPackages =

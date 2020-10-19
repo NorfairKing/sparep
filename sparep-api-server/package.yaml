@@ -14,6 +14,7 @@ library:
   dependencies:
     - appendful
     - appendful-persistent
+    - bytestring
     - monad-logger
     - mtl
     - password
@@ -25,6 +26,7 @@ library:
     - servant-server
     - sparep-api
     - sparep-data
+    - sparep-server-data
     - text
     - time
     - wai
@@ -51,6 +53,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - QuickCheck
+    - bytestring
+    - cookie
     - genvalidity-hspec
     - hspec
     - http-client
@@ -58,6 +62,8 @@ tests:
     - monad-logger
     - persistent
     - persistent-sqlite
+    - servant
+    - servant-auth-client
     - servant-auth-server
     - servant-client
     - sparep-api
@@ -67,4 +73,7 @@ tests:
     - sparep-client
     - sparep-data
     - sparep-data-gen
+    - sparep-server-data
+    - sparep-server-data-gen
+    - text
     - warp

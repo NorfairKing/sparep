@@ -41,10 +41,5 @@ spec = serverSpec $ do
       forAllValid $ \rf -> do
         _ <- testClientOrErr cenv $ do
           NoContent <- postRegister sparepClient rf
-          let lf =
-                LoginForm
-                  { loginFormUsername = registrationFormUsername rf,
-                    loginFormPassword = registrationFormPassword rf
-                  }
-          postLogin sparepClient lf
+          postLogin sparepClient $ registrationFormToLoginForm rf
         pure ()

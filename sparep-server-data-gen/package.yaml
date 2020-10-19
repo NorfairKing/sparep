@@ -1,4 +1,4 @@
-name:                sparep-server-data
+name:                sparep-server-data-gen
 version:             0.0.0.0
 github:              "NorfairKing/sparep"
 license:             AllRightsReserved
@@ -12,21 +12,15 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-    - aeson
-    - appendful
-    - appendful-persistent
+    - QuickCheck
+    - bytestring
+    - genvalidity
+    - genvalidity-persistent
+    - genvalidity-text
     - password
-    - password-instances
-    - persistent
-    - persistent-sqlite
-    - persistent-template
-    - sparep-data
-    - sparep-data
+    - sparep-data-gen
+    - sparep-server-data
     - text
-    - time
-    - validity
-    - validity-persistent
-    - validity-text
 
 tests:
   sparep-server-data-test:
@@ -37,8 +31,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - QuickCheck
     - genvalidity-hspec
     - hspec
-    - persistent
-    - persistent-sqlite
+    - sparep-server-data
+    - sparep-server-data-gen

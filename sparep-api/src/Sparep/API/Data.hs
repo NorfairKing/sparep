@@ -1,14 +1,20 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Sparep.API.Data where
 
 import Data.Aeson
 import qualified Data.Appendful as Appendful
+import Data.Functor.Contravariant
 import Data.Int
 import qualified Data.Text as T
 import Data.Text (Text)
@@ -18,7 +24,9 @@ import Database.Persist
 import Database.Persist.Sql
 import Servant.API.Generic
 import Servant.Auth.Server
+import Sparep.Client.Data
 import Sparep.Data
+import Sparep.Server.Data
 
 data RegistrationForm
   = RegistrationForm
@@ -75,35 +83,12 @@ instance FromJWT AuthCookie
 
 instance ToJWT AuthCookie
 
-newtype Username
-  = Username
-      { usernameText :: Text
-      }
-  deriving (Show, Eq, Ord, Generic, FromJSONKey, ToJSONKey, FromJSON, ToJSON)
+type SyncRequest = Appendful.SyncRequest ClientRepetitionId ServerRepetitionId Repetition
 
-instance Validity Username where
-  validate (Username t) =
-    mconcat
-      [ check (not (T.null t)) "The username is not empty.",
-        check (T.length t >= 3) "The username is at least three characters long."
-      ]
+type SyncResponse = Appendful.SyncResponse ClientRepetitionId ServerRepetitionId Repetition
 
-instance PersistField Username where
-  toPersistValue (Username t) = PersistText t
-  fromPersistValue (PersistText t) =
-    case parseUsername t of
-      Nothing -> Left "Text isn't a valid username"
-      Just un -> Right un
-  fromPersistValue _ = Left "Not text"
+instance (PersistEntity a, ToBackendKey SqlBackend a) => ToJSONKey (Key a) where
+  toJSONKey = contramap fromSqlKey toJSONKey
 
-instance PersistFieldSql Username where
-  sqlType _ = SqlString
-
-parseUsername :: Text -> Maybe Username
-parseUsername = constructValid . Username
-
--- FIXME The client Id should be a 'RepititionID' but then we need to rearrange some dependencies
--- FIXME The server Id should be a 'RepititionID' as well but then we need to rearrange even more dependencies
-type SyncRequest = Appendful.SyncRequest Int64 Int64 Repetition
-
-type SyncResponse = Appendful.SyncResponse Int64 Int64 Repetition
+instance (PersistEntity a, ToBackendKey SqlBackend a) => FromJSONKey (Key a) where
+  fromJSONKey = toSqlKey <$> fromJSONKey
