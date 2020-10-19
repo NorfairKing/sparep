@@ -1,6 +1,6 @@
 name:                sparep-client
 version:             0.0.0.0
-github:              "NorfairKing/sparep-api-cli-login"
+github:              "NorfairKing/sparep"
 license:             AllRightsReserved
 author:              "Tom Sydney Kerckhove"
 maintainer:          "syd@cs-syd.eu"

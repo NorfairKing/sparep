@@ -16,7 +16,6 @@ import qualified Data.Text as T
 import Data.Time
 import Path
 import Sparep.Data
-import Sparep.TUI.Card
 import Sparep.TUI.Repetition
 import Sparep.TUI.State
 

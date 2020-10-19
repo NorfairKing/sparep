@@ -6,8 +6,8 @@ cabal-version: 1.12
 
 name:           sparep-client
 version:        0.0.0.0
-homepage:       https://github.com/NorfairKing/sparep-api-cli-login#readme
-bug-reports:    https://github.com/NorfairKing/sparep-api-cli-login/issues
+homepage:       https://github.com/NorfairKing/sparep#readme
+bug-reports:    https://github.com/NorfairKing/sparep/issues
 author:         Tom Sydney Kerckhove
 maintainer:     syd@cs-syd.eu
 copyright:      Copyright (c) 2020 Tom Sydney Kerckhove
@@ -16,7 +16,7 @@ build-type:     Simple
 
 source-repository head
   type: git
-  location: https://github.com/NorfairKing/sparep-api-cli-login
+  location: https://github.com/NorfairKing/sparep
 
 library
   exposed-modules:

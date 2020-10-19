@@ -15,13 +15,19 @@ library:
     - aeson
     - base16
     - bytestring
+    - containers
     - cryptohash-sha256
     - path
+    - path
+    - path-io
     - persistent
     - text
     - time
     - validity
     - validity-bytestring
+    - validity-containers
     - validity-path
     - validity-text
     - validity-time
+    - yaml
+    - yamlparse-applicative

@@ -8,7 +8,7 @@ module Sparep.TUI.OptParse.Types where
 import Data.Yaml as Yaml hiding (object)
 import GHC.Generics (Generic)
 import Path
-import Sparep.TUI.Card
+import Sparep.Data
 import YamlParse.Applicative
 
 data Flags

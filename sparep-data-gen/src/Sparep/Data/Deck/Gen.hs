@@ -1,13 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Sparep.Card.Gen where
+module Sparep.Data.Deck.Gen where
 
 import Data.GenValidity
 import Data.GenValidity.ByteString ()
 import Data.GenValidity.Containers ()
 import Data.GenValidity.Path ()
 import Data.GenValidity.Text ()
-import Sparep.TUI.Card
+import Sparep.Data.Deck
 
 instance GenValid Deck where
   genValid = genValidStructurallyWithoutExtraChecking

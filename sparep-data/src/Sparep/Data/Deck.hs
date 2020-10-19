@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Sparep.TUI.Card where
+module Sparep.Data.Deck where
 
 import Control.Applicative
 import Control.Monad
@@ -23,7 +23,7 @@ import Data.Yaml as Yaml
 import GHC.Generics (Generic)
 import Path
 import Path.IO
-import Sparep.Data
+import Sparep.Data.Card
 import System.Exit
 import YamlParse.Applicative as YamlParse
 

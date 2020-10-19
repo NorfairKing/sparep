@@ -23,6 +23,7 @@ library
       Sparep.Data
       Sparep.Data.Card
       Sparep.Data.CardId
+      Sparep.Data.Deck
       Sparep.Data.Difficulty
       Sparep.Data.Repetition
   other-modules:
@@ -34,14 +35,19 @@ library
     , base >=4.7 && <5
     , base16
     , bytestring
+    , containers
     , cryptohash-sha256
     , path
+    , path-io
     , persistent
     , text
     , time
     , validity
     , validity-bytestring
+    , validity-containers
     , validity-path
     , validity-text
     , validity-time
+    , yaml
+    , yamlparse-applicative
   default-language: Haskell2010

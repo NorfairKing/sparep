@@ -22,6 +22,7 @@ library
   exposed-modules:
       Sparep.Data.Card.Gen
       Sparep.Data.CardId.Gen
+      Sparep.Data.Deck.Gen
       Sparep.Data.Difficulty.Gen
       Sparep.Data.Gen
       Sparep.Data.Repetition.Gen
@@ -33,6 +34,7 @@ library
       base >=4.7 && <5
     , genvalidity
     , genvalidity-bytestring
+    , genvalidity-containers
     , genvalidity-path
     , genvalidity-text
     , genvalidity-time

@@ -21,7 +21,6 @@ source-repository head
 library
   exposed-modules:
       Sparep.TUI
-      Sparep.TUI.Card
       Sparep.TUI.Draw
       Sparep.TUI.OptParse
       Sparep.TUI.OptParse.Types
@@ -86,7 +85,6 @@ test-suite sparep-tui-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Sparep.Card.Gen
       Paths_sparep_tui
   hs-source-dirs:
       test

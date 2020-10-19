@@ -16,7 +16,7 @@ import Options.Applicative
 import qualified Options.Applicative.Help as OptParse
 import Path
 import Path.IO
-import Sparep.TUI.Card
+import Sparep.Data
 import Sparep.TUI.OptParse.Types
 import qualified System.Directory as FP
 import qualified System.Environment as System
