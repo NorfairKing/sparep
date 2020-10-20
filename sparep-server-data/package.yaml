@@ -27,6 +27,7 @@ library:
     - validity
     - validity-persistent
     - validity-text
+    - yamlparse-applicative
 
 tests:
   sparep-server-data-test:

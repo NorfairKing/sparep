@@ -43,6 +43,7 @@ library
     , validity
     , validity-persistent
     , validity-text
+    , yamlparse-applicative
   default-language: Haskell2010
 
 test-suite sparep-server-data-test

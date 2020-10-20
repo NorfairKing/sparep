@@ -13,6 +13,7 @@ import Data.Validity.Text ()
 import Database.Persist
 import Database.Persist.Sql
 import GHC.Generics (Generic)
+import YamlParse.Applicative
 
 newtype Username
   = Username
@@ -38,5 +39,11 @@ instance PersistField Username where
 instance PersistFieldSql Username where
   sqlType _ = SqlString
 
+instance YamlSchema Username where
+  yamlSchema = eitherParser parseUsernameOrErr yamlSchema
+
 parseUsername :: Text -> Maybe Username
 parseUsername = constructValid . Username
+
+parseUsernameOrErr :: Text -> Either String Username
+parseUsernameOrErr = prettyValidate . Username

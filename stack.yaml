@@ -3,6 +3,7 @@ packages:
 - sparep-api
 - sparep-api-gen
 - sparep-api-server
+- sparep-cli
 - sparep-client
 - sparep-client-data
 - sparep-server-data
