@@ -75,8 +75,8 @@ with final.haskell.lib;
                     final.fetchFromGitHub {
                       owner = "NorfairKing";
                       repo = "appendful";
-                      rev = "fac6474856726fc507c42779955a75a12ef98cc7";
-                      sha256 = "sha256:1vf3vlpcnnjmcbb27qazrzqp89bjrjjhiiksm09mcywrqlmpa2q0";
+                      rev = "98d1a191941f94fa0379d5c08371ba0963d3462e";
+                      sha256 = "sha256:1lkxhpn1cvxjqa4v45k9b0n9hgw1psvs40abp09gqrc3009v974l";
                     };
                   appendfulPkg = name: self.callCabal2nix "appendful" (appendfulRepo + "/${name}") {};
                   base16Repo =

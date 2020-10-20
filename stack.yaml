@@ -25,7 +25,7 @@ extra-deps:
   subdirs:
   - cursor-brick
 - github: NorfairKing/appendful
-  commit: fac6474856726fc507c42779955a75a12ef98cc7
+  commit: 98d1a191941f94fa0379d5c08371ba0963d3462e
   subdirs:
   - appendful
   - appendful-persistent
