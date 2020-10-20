@@ -88,10 +88,7 @@ environmentParser =
   Env.prefixed "SPAREP_" $
     Environment
       <$> Env.var (fmap Just . Env.str) "CONFIG_FILE" (mE <> Env.help "Config file")
-      <*> Env.var
-        (fmap Just . Env.str)
-        "REPETITION_DATABASE"
-        (mE <> Env.help "The file to store the repetition database in")
+      <*> Env.var (fmap Just . Env.str) "DATABASE" (mE <> Env.help "The file to store the repetition database in")
   where
     mE = Env.def Nothing
 
@@ -143,7 +140,7 @@ parseFlags =
     <*> optional
       ( strOption
           ( mconcat
-              [ long "repetition-database",
+              [ long "database",
                 help "The path to store the repetition database in",
                 metavar "FILEPATH"
               ]

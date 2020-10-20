@@ -12,13 +12,19 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+    - aeson
     - appendful
     - appendful-persistent
     - bytestring
+    - envparse
+    - jose
     - monad-logger
     - mtl
+    - optparse-applicative
     - password
     - password-instances
+    - path
+    - path-io
     - persistent
     - persistent-sqlite
     - persistent-template
@@ -31,6 +37,8 @@ library:
     - time
     - wai
     - warp
+    - yaml
+    - yamlparse-applicative
 
 executables:
   sparep-api-server:

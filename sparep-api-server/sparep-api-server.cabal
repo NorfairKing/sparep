@@ -26,19 +26,27 @@ library
       Sparep.API.Server.Handler.Auth
       Sparep.API.Server.Handler.Import
       Sparep.API.Server.Handler.Sync
+      Sparep.API.Server.OptParse
+      Sparep.API.Server.SigningKey
   other-modules:
       Paths_sparep_api_server
   hs-source-dirs:
       src
   build-depends:
-      appendful
+      aeson
+    , appendful
     , appendful-persistent
     , base >=4.7 && <5
     , bytestring
+    , envparse
+    , jose
     , monad-logger
     , mtl
+    , optparse-applicative
     , password
     , password-instances
+    , path
+    , path-io
     , persistent
     , persistent-sqlite
     , persistent-template
@@ -51,6 +59,8 @@ library
     , time
     , wai
     , warp
+    , yaml
+    , yamlparse-applicative
   default-language: Haskell2010
 
 executable sparep-api-server

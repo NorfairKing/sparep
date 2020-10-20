@@ -27,7 +27,7 @@ in
                   hosts =
                     mkOption {
                       type = types.listOf (types.str);
-                      example = "api.sparep.online";
+                      example = "api.sparep.cs-syd.eu";
                       description = "The host to serve api requests on";
                     };
                   port =
@@ -67,7 +67,7 @@ in
                   api-url =
                     mkOption {
                       type = types.str;
-                      example = "api.sparep.online";
+                      example = "api.sparep.cs-syd.eu.eu";
                       description = "The url for the api to use";
                     };
                   log-level =
@@ -80,7 +80,7 @@ in
                   hosts =
                     mkOption {
                       type = types.listOf (types.str);
-                      example = "sparep.online";
+                      example = "sparep.cs-syd.eu";
                       description = "The host to serve web requests on";
                     };
                   port =
@@ -109,7 +109,7 @@ in
     };
   config =
     let
-      sparepPkgs = (import ./pkgs.nix {}).sparepPackages;
+      sparepPkgs = (import ./pkgs.nix).sparepPackages;
       working-dir = "/www/sparep/${envname}/";
       # The docs server
       api-server-working-dir = working-dir + "api-server/";
@@ -127,17 +127,16 @@ in
                   "${builtins.toString log-level}";
                 "SPAREP_API_SERVER_PORT" =
                   "${builtins.toString port}";
-                "SPAREP_API_SERVER_DATABASE_FILE" = api-server-database-file;
+                "SPAREP_API_SERVER_DATABASE" = api-server-database-file;
               };
             script =
               ''
                 mkdir -p "${api-server-working-dir}"
-                ${sparepPkgs.sparep-server}/bin/sparep-api-server \
-                  serve
+                cd ${api-server-working-dir};
+                ${sparepPkgs.sparep-api-server}/bin/sparep-api-server
               '';
             serviceConfig =
               {
-                WorkingDirectory = api-server-working-dir;
                 Restart = "always";
                 RestartSec = 1;
                 Nice = 15;
