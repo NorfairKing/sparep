@@ -21,7 +21,7 @@ share
   [mkPersist sqlSettings, mkMigrate "clientMigration"]
   [persistLowerCase|
 
-ClientRepetition
+ClientRepetition sql=repetition
     card CardId
     difficulty Difficulty
     timestamp UTCTime

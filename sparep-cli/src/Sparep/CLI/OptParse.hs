@@ -17,6 +17,8 @@ where
 
 import Control.Applicative
 import Control.Arrow
+import Control.Monad.Logger
+import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Yaml
@@ -47,7 +49,8 @@ data Settings
       { settingBaseUrl :: Maybe BaseUrl,
         settingUsername :: Maybe Username,
         settingPassword :: Maybe Text,
-        settingDbFile :: Path Abs File
+        settingDbFile :: Path Abs File,
+        settingLogLevel :: LogLevel
       }
   deriving (Show, Eq, Generic)
 
@@ -70,6 +73,7 @@ combineToInstructions (Arguments cmd Flags {..}) Environment {..} mConf = do
   settingDbFile <- case flagDbFile <|> envDbFile <|> mc configDbFile of
     Nothing -> getDefaultClientDatabase
     Just dbf -> resolveFile' dbf
+  let settingLogLevel = fromMaybe LevelWarn $ flagLogLevel <|> envLogLevel <|> mc configLogLevel
   let sets = Settings {..}
   disp <-
     -- Resolve the command-specific settings for each command
@@ -95,25 +99,19 @@ getDefaultConfigFile = do
   xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|sparep|])
   resolveFile xdgConfigDir "config.yaml"
 
--- | What we find in the configuration variable.
---
--- Do nothing clever here, just represent the configuration file.
--- For example, use 'Maybe FilePath', not 'Path Abs File'.
---
--- Use 'YamlParse.readConfigFile' or 'YamlParse.readFirstConfigFile' to read a configuration.
 data Configuration
   = Configuration
       { configBaseUrl :: Maybe BaseUrl,
         configUsername :: Maybe Username,
         configPassword :: Maybe Text,
-        configDbFile :: Maybe FilePath
+        configDbFile :: Maybe FilePath,
+        configLogLevel :: Maybe LogLevel
       }
   deriving (Show, Eq, Generic)
 
 instance FromJSON Configuration where
   parseJSON = viaYamlSchema
 
--- | We use 'yamlparse-applicative' for parsing a YAML config.
 instance YamlSchema Configuration where
   yamlSchema =
     objectParser "Configuration" $
@@ -122,6 +120,7 @@ instance YamlSchema Configuration where
         <*> optionalField "username" "Server account username"
         <*> optionalField "password" "Server account password"
         <*> optionalField "database" "The path to the database"
+        <*> optionalFieldWith "log-level" "The minimal severity for log messages" viaRead
 
 -- | Get the configuration
 --
@@ -145,7 +144,8 @@ data Environment
         envBaseUrl :: Maybe BaseUrl,
         envUsername :: Maybe Username,
         envPassword :: Maybe Text,
-        envDbFile :: Maybe FilePath
+        envDbFile :: Maybe FilePath,
+        envLogLevel :: Maybe LogLevel
       }
   deriving (Show, Eq, Generic)
 
@@ -162,6 +162,7 @@ environmentParser =
       <*> Env.var (fmap Just . left Env.unread . parseUsernameOrErr . T.pack) "USERNAME" (mE <> Env.help "Server account username")
       <*> Env.var (fmap Just . Env.str) "PASSWORD" (mE <> Env.help "Server account password")
       <*> Env.var (fmap Just . Env.str) "DATABASE" (mE <> Env.help "Path to the database")
+      <*> Env.var (fmap Just . Env.auto) "LOG_LEVEL" (mE <> Env.help "Minimal severity for log messages")
   where
     mE = Env.def Nothing
 
@@ -243,7 +244,8 @@ data Flags
         flagBaseUrl :: Maybe BaseUrl,
         flagUsername :: Maybe Username,
         flagPassword :: Maybe Text,
-        flagDbFile :: Maybe FilePath
+        flagDbFile :: Maybe FilePath,
+        flagLogLevel :: Maybe LogLevel
       }
   deriving (Show, Eq, Generic)
 
@@ -294,6 +296,16 @@ parseFlags =
               [ long "database",
                 help "Path to the database",
                 metavar "FILEPATH"
+              ]
+          )
+      )
+    <*> optional
+      ( option
+          auto
+          ( mconcat
+              [ long "log-level",
+                help "Minimal severity level for log messages",
+                metavar "LOG_LEVEL"
               ]
           )
       )

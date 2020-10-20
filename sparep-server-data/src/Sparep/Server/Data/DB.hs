@@ -37,7 +37,7 @@ User
   deriving Show Eq Ord Generic
 
 
-ServerRepetition
+ServerRepetition sql=repetition
   user UserId
   card CardId
   difficulty Difficulty
