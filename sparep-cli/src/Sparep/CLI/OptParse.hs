@@ -17,7 +17,6 @@ where
 
 import Control.Applicative
 import Control.Arrow
-import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Yaml
@@ -28,7 +27,6 @@ import qualified Options.Applicative.Help as OptParse (string)
 import Path
 import Path.IO
 import Servant.Client
-import Sparep.API
 import Sparep.Server.Data
 import YamlParse.Applicative as YamlParse
 

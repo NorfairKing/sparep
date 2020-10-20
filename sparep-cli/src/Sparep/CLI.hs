@@ -16,7 +16,6 @@ import Path
 import Path.IO
 import Servant.Client
 import Sparep.CLI.Commands
-import Sparep.CLI.OptParse
 import Sparep.Client.Data
 import System.FileLock
 

@@ -9,14 +9,12 @@ import Data.List
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Database.Persist
 import Database.Persist.Sql
 import Servant.API
 import Servant.Auth.Client
 import Servant.Client
 import Sparep.API
 import Sparep.API.Data
-import Sparep.CLI.OptParse
 import Sparep.Client
 import Sparep.Server.Data
 import System.Exit
