@@ -12,16 +12,26 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+  - appendful
+  - appendful-persistent
+  - cookie
   - envparse
+  - filelock
   - http-client
   - http-client-tls
+  - monad-logger
   - mtl
   - optparse-applicative
   - path
   - path-io
+  - persistent
+  - persistent-sqlite
+  - servant
+  - servant-auth-client
   - servant-client
   - sparep-api
   - sparep-client
+  - sparep-client-data
   - sparep-server-data
   - text
   - yaml
@@ -50,6 +60,8 @@ tests:
     - genvalidity
     - genvalidity-hspec
     - hspec
+    - path
+    - path-io
     - servant-client
     - sparep-api
     - sparep-api-server-gen

@@ -9,6 +9,9 @@ module Sparep.CLI.OptParse
     Instructions (..),
     Dispatch (..),
     Settings (..),
+    getDefaultClientDatabase,
+    getDefaultDataDir,
+    getDefaultConfigFile,
   )
 where
 
@@ -45,7 +48,8 @@ data Settings
   = Settings
       { settingBaseUrl :: Maybe BaseUrl,
         settingUsername :: Maybe Username,
-        settingPassword :: Maybe Text
+        settingPassword :: Maybe Text,
+        settingDbFile :: Path Abs File
       }
   deriving (Show, Eq, Generic)
 
@@ -65,6 +69,9 @@ combineToInstructions (Arguments cmd Flags {..}) Environment {..} mConf = do
   let settingBaseUrl = flagBaseUrl <|> envBaseUrl <|> mc configBaseUrl
   let settingUsername = flagUsername <|> envUsername <|> mc configUsername
   let settingPassword = flagPassword <|> envPassword <|> mc configPassword
+  settingDbFile <- case flagDbFile <|> envDbFile <|> mc configDbFile of
+    Nothing -> getDefaultClientDatabase
+    Just dbf -> resolveFile' dbf
   let sets = Settings {..}
   disp <-
     -- Resolve the command-specific settings for each command
@@ -77,6 +84,19 @@ combineToInstructions (Arguments cmd Flags {..}) Environment {..} mConf = do
     mc :: (Configuration -> Maybe a) -> Maybe a
     mc f = mConf >>= f
 
+getDefaultClientDatabase :: IO (Path Abs File)
+getDefaultClientDatabase = do
+  dataDir <- getDefaultDataDir
+  resolveFile dataDir "repetition-data.sqlite3"
+
+getDefaultDataDir :: IO (Path Abs Dir)
+getDefaultDataDir = getXdgDir XdgData (Just [reldir|sparep|])
+
+getDefaultConfigFile :: IO (Path Abs File)
+getDefaultConfigFile = do
+  xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|sparep|])
+  resolveFile xdgConfigDir "config.yaml"
+
 -- | What we find in the configuration variable.
 --
 -- Do nothing clever here, just represent the configuration file.
@@ -87,7 +107,8 @@ data Configuration
   = Configuration
       { configBaseUrl :: Maybe BaseUrl,
         configUsername :: Maybe Username,
-        configPassword :: Maybe Text
+        configPassword :: Maybe Text,
+        configDbFile :: Maybe FilePath
       }
   deriving (Show, Eq, Generic)
 
@@ -102,6 +123,7 @@ instance YamlSchema Configuration where
         <$> optionalFieldWith "server-url" "Server base url" (maybeParser parseBaseUrl yamlSchema)
         <*> optionalField "username" "Server account username"
         <*> optionalField "password" "Server account password"
+        <*> optionalField "database" "The path to the database"
 
 -- | Get the configuration
 --
@@ -110,19 +132,10 @@ instance YamlSchema Configuration where
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of
-    Nothing -> defaultConfigFile >>= YamlParse.readConfigFile
+    Nothing -> getDefaultConfigFile >>= YamlParse.readConfigFile
     Just cf -> do
       afp <- resolveFile' cf
       YamlParse.readConfigFile afp
-
--- | Where to get the configuration file by default.
---
--- This uses the XDG base directory specifictation:
--- https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-defaultConfigFile :: IO (Path Abs File)
-defaultConfigFile = do
-  xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|sparep|])
-  resolveFile xdgConfigDir "config.yaml"
 
 -- | What we find in the configuration variable.
 --
@@ -133,7 +146,8 @@ data Environment
       { envConfigFile :: Maybe FilePath,
         envBaseUrl :: Maybe BaseUrl,
         envUsername :: Maybe Username,
-        envPassword :: Maybe Text
+        envPassword :: Maybe Text,
+        envDbFile :: Maybe FilePath
       }
   deriving (Show, Eq, Generic)
 
@@ -149,6 +163,7 @@ environmentParser =
       <*> Env.var (fmap Just . maybe (Left $ Env.unread "unable to parse base url") Right . parseBaseUrl) "SERVER_URL" (mE <> Env.help "Server base url")
       <*> Env.var (fmap Just . left Env.unread . parseUsernameOrErr . T.pack) "USERNAME" (mE <> Env.help "Server account username")
       <*> Env.var (fmap Just . Env.str) "PASSWORD" (mE <> Env.help "Server account password")
+      <*> Env.var (fmap Just . Env.str) "DATABASE" (mE <> Env.help "Path to the database")
   where
     mE = Env.def Nothing
 
@@ -229,7 +244,8 @@ data Flags
       { flagConfigFile :: Maybe FilePath,
         flagBaseUrl :: Maybe BaseUrl,
         flagUsername :: Maybe Username,
-        flagPassword :: Maybe Text
+        flagPassword :: Maybe Text,
+        flagDbFile :: Maybe FilePath
       }
   deriving (Show, Eq, Generic)
 
@@ -260,7 +276,8 @@ parseFlags =
           (eitherReader $ parseUsernameOrErr . T.pack)
           ( mconcat
               [ long "username",
-                help "Server account username"
+                help "Server account username",
+                metavar "USERNAME"
               ]
           )
       )
@@ -268,7 +285,17 @@ parseFlags =
       ( strOption
           ( mconcat
               [ long "password",
-                help "Server account password"
+                help "Server account password",
+                metavar "PASSWORD"
+              ]
+          )
+      )
+    <*> optional
+      ( strOption
+          ( mconcat
+              [ long "database",
+                help "Path to the database",
+                metavar "FILEPATH"
               ]
           )
       )

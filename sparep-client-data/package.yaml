@@ -16,6 +16,7 @@ library:
   - persistent-sqlite
   - persistent-template
   - sparep-data
+  - sparep-server-data
   - time
 
 tests:

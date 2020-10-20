@@ -15,15 +15,17 @@ import Data.Time
 import Database.Persist.Sqlite
 import Database.Persist.TH
 import Sparep.Data
+import Sparep.Server.Data
 
 share
-  [mkPersist sqlSettings, mkMigrate "migrateAll"]
+  [mkPersist sqlSettings, mkMigrate "clientMigration"]
   [persistLowerCase|
 
 ClientRepetition
     card CardId
     difficulty Difficulty
     timestamp UTCTime
+    serverId ServerRepetitionId Maybe
     deriving Show Eq
 |]
 
@@ -34,8 +36,14 @@ clientMakeRepetition ClientRepetition {..} = Repetition {..}
     repetitionDifficulty = clientRepetitionDifficulty
     repetitionTimestamp = clientRepetitionTimestamp
 
-makeClientRepetition :: Repetition -> ClientRepetition
-makeClientRepetition Repetition {..} = ClientRepetition {..}
+makeSyncedClientRepetition :: ServerRepetitionId -> Repetition -> ClientRepetition
+makeSyncedClientRepetition sid = makeClientRepetition (Just sid)
+
+makeUnsyncedClientRepetition :: Repetition -> ClientRepetition
+makeUnsyncedClientRepetition = makeClientRepetition Nothing
+
+makeClientRepetition :: Maybe ServerRepetitionId -> Repetition -> ClientRepetition
+makeClientRepetition clientRepetitionServerId Repetition {..} = ClientRepetition {..}
   where
     clientRepetitionCard = repetitionCardId
     clientRepetitionDifficulty = repetitionDifficulty

@@ -1,8 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 
@@ -16,6 +14,7 @@ import Options.Applicative
 import qualified Options.Applicative.Help as OptParse
 import Path
 import Path.IO
+import Sparep.CLI.OptParse (getDefaultClientDatabase, getDefaultConfigFile)
 import Sparep.Data
 import Sparep.TUI.OptParse.Types
 import qualified System.Directory as FP
@@ -36,13 +35,9 @@ combineToInstructions Flags {..} Environment {..} mConf = do
   decksFromFlags <- mapM (readRootedDeckOrDie <=< resolveFile') flagDecks
   setDecks <-
     (decksFromFlags ++) . concat <$> mapM parseDecks (fromMaybe [] (mc confSpecifications))
-  setRepetitionDb <-
-    case flagRepetitionDbFile <|> envRepetitionDbFile
-      <|> mmc confRepetitionDbFile of
-      Nothing -> do
-        dataDir <- defaultDataDir
-        resolveFile dataDir "repetition-data.sqlite3"
-      Just fp -> resolveFile' fp
+  setRepetitionDb <- case flagRepetitionDbFile <|> envRepetitionDbFile <|> mmc confRepetitionDbFile of
+    Nothing -> getDefaultClientDatabase
+    Just fp -> resolveFile' fp
   pure Settings {..}
   where
     mc :: (Configuration -> a) -> Maybe a
@@ -80,18 +75,10 @@ readDeckOrDie p = do
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of
-    Nothing -> defaultConfigFile >>= YamlParse.readConfigFile
+    Nothing -> getDefaultConfigFile >>= YamlParse.readConfigFile
     Just cf -> do
       afp <- resolveFile' cf
       YamlParse.readConfigFile afp
-
-defaultConfigFile :: IO (Path Abs File)
-defaultConfigFile = do
-  xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|sparep|])
-  resolveFile xdgConfigDir "config.yaml"
-
-defaultDataDir :: IO (Path Abs Dir)
-defaultDataDir = getXdgDir XdgData (Just [reldir|sparep|])
 
 getEnvironment :: IO Environment
 getEnvironment = Env.parse (Env.header "Environment") environmentParser

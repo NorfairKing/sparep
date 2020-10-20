@@ -38,7 +38,7 @@ serverSpec =
 withTestServer :: (ClientEnv -> IO a) -> (HTTP.Manager -> IO a)
 withTestServer func man =
   runNoLoggingT $ withSqlitePool ":memory:" 1 $ \pool -> do
-    void $ runSqlPool (runMigrationQuiet migrateAll) pool
+    void $ runSqlPool (runMigrationQuiet serverMigration) pool
     liftIO $ do
       jwk <- generateKey
       let serverEnv =

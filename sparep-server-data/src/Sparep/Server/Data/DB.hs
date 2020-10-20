@@ -25,7 +25,7 @@ import Sparep.Data
 import Sparep.Server.Data.Username
 
 share
-  [mkPersist sqlSettings, mkMigrate "migrateAll"]
+  [mkPersist sqlSettings, mkMigrate "serverMigration"]
   [persistLowerCase|
 
 User

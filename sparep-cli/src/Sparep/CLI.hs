@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Sparep.CLI
@@ -6,11 +7,18 @@ module Sparep.CLI
   )
 where
 
+import Control.Monad.Logger
+import qualified Data.Text as T
+import Database.Persist.Sqlite
 import Network.HTTP.Client as HTTP
 import Network.HTTP.Client.TLS as HTTP
+import Path
+import Path.IO
 import Servant.Client
 import Sparep.CLI.Commands
 import Sparep.CLI.OptParse
+import Sparep.Client.Data
+import System.FileLock
 
 sparepCLI :: IO ()
 sparepCLI = do
@@ -18,13 +26,19 @@ sparepCLI = do
   mCenv <- forM settingBaseUrl $ \burl -> do
     man <- HTTP.newManager HTTP.tlsManagerSettings
     pure $ mkClientEnv man burl
-  let env =
-        Env
-          { envClientEnv = mCenv,
-            envUsername = settingUsername,
-            envPassword = settingPassword
-          }
-  runReaderT (dispatch disp) env
+  ensureDir $ parent settingDbFile
+  -- Block until locking succeeds
+  withFileLock (fromAbsFile settingDbFile ++ ".lock") Exclusive $ \_ ->
+    runStderrLoggingT $ withSqlitePool (T.pack (fromAbsFile settingDbFile)) 1 $ \pool -> do
+      runSqlPool (runMigration clientMigration) pool
+      let env =
+            Env
+              { envClientEnv = mCenv,
+                envUsername = settingUsername,
+                envPassword = settingPassword,
+                envConnectionPool = pool
+              }
+      liftIO $ runReaderT (dispatch disp) env
 
 dispatch :: Dispatch -> C ()
 dispatch = \case

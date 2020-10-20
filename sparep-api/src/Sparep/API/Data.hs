@@ -14,6 +14,7 @@ import Data.Aeson
 import qualified Data.Appendful as Appendful
 import Data.Functor.Contravariant
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Validity
 import Data.Validity.Text ()
 import Database.Persist
@@ -31,7 +32,12 @@ data RegistrationForm
       }
   deriving (Show, Eq, Ord, Generic)
 
-instance Validity RegistrationForm
+instance Validity RegistrationForm where
+  validate rf@RegistrationForm {..} =
+    mconcat
+      [ genericValidate rf,
+        declare "The password is nonempty" $ not $ T.null registrationFormPassword
+      ]
 
 instance ToJSON RegistrationForm where
   toJSON RegistrationForm {..} =

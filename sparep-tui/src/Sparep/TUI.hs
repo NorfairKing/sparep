@@ -70,7 +70,7 @@ sparepTUI = do
 
 migrateSparep :: MonadIO m => SqlPersistT m ()
 migrateSparep = do
-  runMigration migrateAll
+  runMigration clientMigration
   migrateRepetition
 
 migrateRepetition :: MonadIO m => SqlPersistT m ()
@@ -257,7 +257,8 @@ handleStudyEvent s e =
                                   ClientRepetition
                                     { clientRepetitionCard = hashCard cur,
                                       clientRepetitionDifficulty = difficulty,
-                                      clientRepetitionTimestamp = now
+                                      clientRepetitionTimestamp = now,
+                                      clientRepetitionServerId = Nothing
                                     }
                             let mcursor' = nonEmptyCursorSelectNext cursor
                             let mcursor'' =

@@ -54,6 +54,7 @@ library
     , pretty-show
     , random-shuffle
     , safe
+    , sparep-cli
     , sparep-client-data
     , sparep-data
     , text

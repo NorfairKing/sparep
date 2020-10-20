@@ -20,7 +20,7 @@ import Sparep.API.Server.Handler
 sparepAPIServer :: IO ()
 sparepAPIServer =
   runStderrLoggingT $ withSqlitePool "sparep.sqlite3" 1 $ \pool -> do
-    runSqlPool (runMigration migrateAll) pool
+    runSqlPool (runMigration serverMigration) pool
     liftIO $ do
       jwk <- generateKey
       let serverEnv =
