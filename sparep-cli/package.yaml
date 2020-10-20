@@ -1,0 +1,55 @@
+name:                sparep-cli
+version:             0.0.0.0
+github:              "NorfairKing/sparep"
+license:             AllRightsReserved
+author:              "Tom Sydney Kerckhove"
+maintainer:          "syd@cs-syd.eu"
+copyright:           "Copyright (c) 2020 Tom Sydney Kerckhove"
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  dependencies:
+  - envparse
+  - mtl
+  - optparse-applicative
+  - path
+  - path-io
+  - servant-client
+  - sparep-api
+  - sparep-server-data
+  - text
+  - yaml
+  - yamlparse-applicative
+
+executables:
+  sparep:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - sparep-cli
+
+tests:
+  sparep-cli-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - genvalidity
+    - genvalidity-hspec
+    - hspec
+    - servant-client
+    - sparep-api
+    - sparep-api-server-gen
+    - sparep-cli
+    - sparep-server-data
+    - text
