@@ -1,7 +1,13 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Sparep.CLI.Commands.Register where
 
 import Sparep.CLI.Commands.Import
 
 register :: C ()
-register = do
+register = withClient $ \cenv -> do
+  registrationFormUsername <- getEnvUsername
+  registrationFormPassword <- getEnvPassword
+  let rf = RegistrationForm {..}
+  NoContent <- runClientOrDie cenv $ postRegister sparepClient rf
   pure ()

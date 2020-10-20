@@ -13,12 +13,15 @@ library:
   source-dirs: src
   dependencies:
   - envparse
+  - http-client
+  - http-client-tls
   - mtl
   - optparse-applicative
   - path
   - path-io
   - servant-client
   - sparep-api
+  - sparep-client
   - sparep-server-data
   - text
   - yaml

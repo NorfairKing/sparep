@@ -4,7 +4,13 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Sparep.CLI.OptParse where
+module Sparep.CLI.OptParse
+  ( getInstructions,
+    Instructions (..),
+    Dispatch (..),
+    Settings (..),
+  )
+where
 
 import Control.Applicative
 import Control.Arrow
