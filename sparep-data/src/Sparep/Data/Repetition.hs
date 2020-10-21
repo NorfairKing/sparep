@@ -14,9 +14,9 @@ import Sparep.Data.Difficulty
 
 data Repetition
   = Repetition
-      { repetitionCardId :: CardId,
-        repetitionDifficulty :: Difficulty,
-        repetitionTimestamp :: UTCTime
+      { repetitionCardId :: !CardId,
+        repetitionDifficulty :: !Difficulty,
+        repetitionTimestamp :: !UTCTime
       }
   deriving (Show, Eq, Ord, Generic)
 

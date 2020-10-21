@@ -81,8 +81,8 @@ instance FromJSON Deck where
   parseJSON = viaYamlSchema
 
 data CardDef
-  = CardFrontBack CardFrontBackDef
-  | CardManySided CardManySidedDef
+  = CardFrontBack !CardFrontBackDef
+  | CardManySided !CardManySidedDef
   deriving (Show, Eq, Generic)
 
 instance Validity CardDef
@@ -134,7 +134,7 @@ instance FromJSON Instructions where
 data CardManySidedDef
   = CardManySidedDef
       { cardManySidedDefSides :: !(Map Text CardSideDef),
-        cardManySidedDefInstructions :: Maybe Instructions
+        cardManySidedDefInstructions :: !(Maybe Instructions)
       }
   deriving (Show, Eq, Generic)
 
@@ -148,8 +148,8 @@ instance YamlSchema CardManySidedDef where
         <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
 
 data CardSideDef
-  = TextSideDef Text
-  | SoundSideDef FilePath
+  = TextSideDef !Text
+  | SoundSideDef !FilePath
   deriving (Show, Eq, Generic)
 
 instance Validity CardSideDef
