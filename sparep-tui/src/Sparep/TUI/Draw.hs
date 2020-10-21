@@ -174,8 +174,9 @@ drawCardDetails :: Card -> Loading (Maybe (UTCTime, UTCTime)) -> Widget n
 drawCardDetails c@Card {..} lTimes =
   vBox $
     concat
-      [ [ txt $ "Id: " <> renderCardIdHex (hashCard c),
-          hCenterLayer $ padAll 1 $ hLimit 40 $ border $
+      [ [txt $ "Id: " <> renderCardIdHex (hashCard c)],
+        [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | ins <- maybeToList cardInstructions],
+        [ hCenterLayer $ padAll 1 $ hLimit 40 $ border $
             vBox
               [ padAll 1 $ drawFrontSide cardFront,
                 hBorder,
@@ -211,11 +212,10 @@ drawStudyState StudyState {..} =
               [ hCenterLayer
                   $ str
                   $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
-                vCenterLayer $ vBox $
-                  map
-                    hCenterLayer
+                vCenterLayer $
+                  vBox
                     [ drawCardStudy studyStateFrontBack (nonEmptyCursorCurrent cursor),
-                      padLeftRight 3 $
+                      hCenterLayer $ padLeftRight 3 $
                         case studyStateFrontBack of
                           Front -> str "Show back: space"
                           Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
@@ -227,8 +227,8 @@ drawCardStudy :: FrontBack -> Card -> Widget n
 drawCardStudy fb Card {..} =
   vBox $
     concat
-      [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
-        [ padAll 1 $ hLimit 40
+      [ [hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | ins <- maybeToList cardInstructions],
+        [ hCenterLayer $ padAll 1 $ hLimit 40
             $ border
             $ vBox
             $ concat
@@ -245,12 +245,12 @@ drawCardStudy fb Card {..} =
       ]
 
 drawFrontSide :: CardSide -> Widget n
-drawFrontSide = \case
+drawFrontSide = withAttr sideAttr . \case
   TextSide t -> txtWrap t
   SoundSide _ _ -> str "Press 'f' to play sound"
 
 drawBackSide :: CardSide -> Widget n
-drawBackSide = \case
+drawBackSide = withAttr sideAttr . \case
   TextSide t -> txtWrap t
   SoundSide _ _ -> str "Press 'b' to play sound"
 
@@ -259,3 +259,9 @@ headingAttr = "heading"
 
 selectedAttr :: AttrName
 selectedAttr = "selected"
+
+sideAttr :: AttrName
+sideAttr = "side"
+
+instructionsAttr :: AttrName
+instructionsAttr = "instructions"

@@ -114,7 +114,9 @@ tuiApp qChan =
           attrMap
             (bg brightBlack)
             [ (selectedAttr, fg brightWhite),
-              (headingAttr, defAttr `withStyle` underline)
+              (headingAttr, defAttr `withStyle` underline),
+              (instructionsAttr, fg yellow),
+              (sideAttr, fg brightWhite)
             ]
     }
 
