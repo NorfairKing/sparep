@@ -112,8 +112,9 @@ tuiApp qChan =
       appAttrMap =
         const $
           attrMap
-            mempty
-            [ (selectedAttr, fg brightWhite)
+            (bg brightBlack)
+            [ (selectedAttr, fg brightWhite),
+              (headingAttr, defAttr `withStyle` underline)
             ]
     }
 

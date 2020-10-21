@@ -67,27 +67,74 @@ drawDecksState DecksState {..} =
           Nothing -> str "No decks"
           Just cursor ->
             padBottom Max $
-              let go (RootedDeck _ Deck {..}, ls) =
-                    concat
-                      [ [ padRight Max $ txt $ fromMaybe " " deckName
-                        ],
-                        case ls of
-                          Loading ->
-                            [ str "Loading",
-                              str "Loading",
-                              str "Loading"
-                            ]
-                          Loaded Selection {..} ->
-                            [ str (show (length selectionTooSoon)),
-                              str (show (length selectionReady)),
-                              str (show (length selectionNew))
-                            ]
-                      ]
-               in verticalNonEmptyCursorTableWithHeader go (map (forceAttr selectedAttr) . go) go [str "Name", str "Done", str "Ready", str "New"] cursor,
-        str "Press enter to study the selected deck",
-        str "Press c to show the cards in the selected deck"
+              hBox
+                [ padAll 1 $ drawDeckList cursor,
+                  vBorder,
+                  padAll 1 $ uncurry drawDeckDetails (nonEmptyCursorCurrent cursor)
+                ],
+        hBorder,
+        hCenterLayer $
+          vBox
+            [ str "Press enter to study the selected deck",
+              str "Press c to show the cards in the selected deck"
+            ]
       ]
   ]
+
+drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection Card)) -> Widget ResourceName
+drawDeckList =
+  verticalNonEmptyCursorTableWithHeader
+    go
+    (map (withAttr selectedAttr) . go)
+    go
+    ( map
+        (withAttr headingAttr)
+        [ str "Name",
+          str "Done",
+          str "Ready",
+          str "New"
+        ]
+    )
+  where
+    go (RootedDeck _ Deck {..}, ls) =
+      concat
+        [ [ padRight Max $ txt $ fromMaybe " " deckName
+          ],
+          case ls of
+            Loading ->
+              [ str "Loading",
+                str "Loading",
+                str "Loading"
+              ]
+            Loaded Selection {..} ->
+              [ str (show (length selectionTooSoon)),
+                str (show (length selectionReady)),
+                str (show (length selectionNew))
+              ]
+        ]
+
+drawDeckDetails :: RootedDeck -> Loading (Selection Card) -> Widget ResourceName
+drawDeckDetails (RootedDeck _ Deck {..}) ls =
+  vBox $
+    concat
+      [ [ maybe emptyWidget (txtWrap . ("Name: " <>)) deckName,
+          maybe emptyWidget (txtWrap . ("Description: " <>)) deckDescription,
+          str " "
+        ],
+        case ls of
+          Loading ->
+            [ str "Loading",
+              str "Loading",
+              str "Loading",
+              str "Loading"
+            ]
+          Loaded Selection {..} ->
+            [ str ("Total:  " <> show (length selectionTooSoon + length selectionReady + length selectionNew)),
+              str ("Done:  " <> show (length selectionTooSoon)),
+              str ("Ready: " <> show (length selectionReady)),
+              str ("New:   " <> show (length selectionNew))
+            ]
+      ]
 
 drawCardsState :: CardsState -> [Widget ResourceName]
 drawCardsState CardsState {..} =
@@ -106,7 +153,7 @@ drawCardsState CardsState {..} =
                           Nothing -> [str " ", str " "]
                           Just (prevTime, nextTime) -> [str $ showTime prevTime, str $ showTime nextTime]
                     ]
-             in verticalNonEmptyCursorTableWithHeader go (map (forceAttr selectedAttr) . go) go [str "Id", str "Last Study", str "Next Study"] cursor,
+             in verticalNonEmptyCursorTableWithHeader go (map (withAttr selectedAttr) . go) go [str "Id", str "Last Study", str "Next Study"] cursor,
         str "Press Enter to study this deck",
         str "Press Escape to exit"
       ]
@@ -164,6 +211,9 @@ drawCardStudy fb Card {..} =
               ]
         ]
       ]
+
+headingAttr :: AttrName
+headingAttr = "heading"
 
 selectedAttr :: AttrName
 selectedAttr = "selected"
