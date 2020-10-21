@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Sparep.TUI
@@ -19,6 +20,7 @@ import Control.Monad.Reader
 import Cursor.Simple.List.NonEmpty
 import Data.List
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe
 import qualified Data.Text as T
 import Data.Time
 import Database.Persist
@@ -126,7 +128,12 @@ tuiApp qChan =
       appChooseCursor = showFirstCursor,
       appHandleEvent = handleTuiEvent qChan,
       appStartEvent = pure,
-      appAttrMap = const $ attrMap (fg brightWhite) []
+      appAttrMap =
+        const $
+          attrMap
+            mempty
+            [ (selectedAttr, fg brightWhite)
+            ]
     }
 
 buildInitialState :: BChan Query -> [RootedDeck] -> IO State
@@ -179,16 +186,23 @@ handleDecksEvent qChan s e = case decksStateCursor s of
   Just cursor ->
     case e of
       VtyEvent vtye ->
-        case vtye of
-          EvKey (KChar 'q') [] -> halt $ StateDecks s
-          EvKey (KChar 'c') [] -> do
-            let cardsStateDeck = fst (nonEmptyCursorCurrent cursor)
-            cards <- resolveRootedDeck cardsStateDeck
-            forM_ cards $ \c -> liftIO $ writeBChan qChan $ QueryGetCardDates c
-            let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\c -> (c, Loading)) cards)
-            continue $ StateCards $ CardsState {..}
-          EvKey KEnter [] -> handleStudy qChan [fst (nonEmptyCursorCurrent cursor)]
-          _ -> continue $ StateDecks s
+        let mDo func =
+              let cursor' = fromMaybe cursor $ func cursor
+               in continue $ StateDecks $ s {decksStateCursor = Just cursor'}
+         in case vtye of
+              EvKey (KChar 'q') [] -> halt $ StateDecks s
+              EvKey KUp [] -> mDo nonEmptyCursorSelectPrev
+              EvKey (KChar 'k') [] -> mDo nonEmptyCursorSelectPrev
+              EvKey KDown [] -> mDo nonEmptyCursorSelectNext
+              EvKey (KChar 'j') [] -> mDo nonEmptyCursorSelectNext
+              EvKey (KChar 'c') [] -> do
+                let cardsStateDeck = fst (nonEmptyCursorCurrent cursor)
+                cards <- resolveRootedDeck cardsStateDeck
+                forM_ cards $ \c -> liftIO $ writeBChan qChan $ QueryGetCardDates c
+                let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\c -> (c, Loading)) cards)
+                continue $ StateCards $ CardsState {..}
+              EvKey KEnter [] -> handleStudy qChan [fst (nonEmptyCursorCurrent cursor)]
+              _ -> continue $ StateDecks s
       AppEvent (ResponseGetDeckSelection d sel) -> do
         let mCursor' = flip fmap (decksStateCursor s) $ mapNonEmptyCursor (\t@(d', _) -> if d == d' then (d', Loaded sel) else t)
         let s' = s {decksStateCursor = mCursor'}
@@ -200,11 +214,20 @@ handleCardsEvent ::
 handleCardsEvent qChan s e =
   case e of
     VtyEvent vtye ->
-      case vtye of
-        EvKey (KChar 'q') [] -> halt $ StateCards s
-        EvKey KEsc [] -> halt $ StateCards s
-        EvKey KEnter [] -> handleStudy qChan [cardsStateDeck s]
-        _ -> continue $ StateCards s
+      let mDo func =
+            let mcursor' = case cardsStateCursor s of
+                  Nothing -> Nothing
+                  Just cursor -> Just $ fromMaybe cursor $ func cursor
+             in continue $ StateCards $ s {cardsStateCursor = mcursor'}
+       in case vtye of
+            EvKey (KChar 'q') [] -> halt $ StateCards s
+            EvKey KUp [] -> mDo nonEmptyCursorSelectPrev
+            EvKey (KChar 'k') [] -> mDo nonEmptyCursorSelectPrev
+            EvKey KDown [] -> mDo nonEmptyCursorSelectNext
+            EvKey (KChar 'j') [] -> mDo nonEmptyCursorSelectNext
+            EvKey KEsc [] -> halt $ StateCards s
+            EvKey KEnter [] -> handleStudy qChan [cardsStateDeck s]
+            _ -> continue $ StateCards s
     AppEvent (ResponseGetCardDates c dates) -> do
       let mCursor' = flip fmap (cardsStateCursor s) $ mapNonEmptyCursor (\t@(c', _) -> if c == c' then (c', Loaded dates) else t)
       let s' = s {cardsStateCursor = mCursor'}

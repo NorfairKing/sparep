@@ -4,6 +4,7 @@
 
 module Sparep.TUI.Draw where
 
+import Brick.AttrMap
 import Brick.Types
 import Brick.Widgets.Border
 import Brick.Widgets.Center
@@ -68,8 +69,8 @@ drawDecksState DecksState {..} =
             padBottom Max $
               let go (RootedDeck p Deck {..}, ls) =
                     concat
-                      [ [str $ fromAbsFile p],
-                        [txt $ fromMaybe " " deckName],
+                      [ [ padRight Max $ txt $ fromMaybe " " deckName
+                        ],
                         case ls of
                           Loading ->
                             [ str "Loading",
@@ -82,7 +83,7 @@ drawDecksState DecksState {..} =
                               str (show (length selectionNew))
                             ]
                       ]
-               in verticalNonEmptyCursorTableWithHeader go go go [str "Path", str "Name", str "Done", str "Ready", str "New"] cursor,
+               in verticalNonEmptyCursorTableWithHeader go (map (forceAttr selectedAttr) . go) go [str "Name", str "Done", str "Ready", str "New"] cursor,
         str "Press enter to study the selected deck",
         str "Press c to show the cards in the selected deck"
       ]
@@ -95,18 +96,17 @@ drawCardsState CardsState {..} =
           Nothing -> str "No cards"
           Just cursor ->
             let showTime = formatTime defaultTimeLocale "%F %R"
-                go (Card {..}, lTimes) =
+                go (c@Card {..}, lTimes) =
                   concat
-                    [ [ txt $ cardSideDescription cardFront,
-                        txt $ cardSideDescription cardBack
+                    [ [ padRight Max $ txt $ renderCardIdHex $ hashCard c
                       ],
                       case lTimes of
-                        Loading -> [str "Loading"]
+                        Loading -> [str "Loading", str "Loading"]
                         Loaded mTimes -> case mTimes of
                           Nothing -> [str " ", str " "]
                           Just (prevTime, nextTime) -> [str $ showTime prevTime, str $ showTime nextTime]
                     ]
-             in verticalNonEmptyCursorTableWithHeader go go go [str "Front", str "Back", str "Last Study", str "Next Study"] cursor,
+             in verticalNonEmptyCursorTableWithHeader go (map (forceAttr selectedAttr) . go) go [str "Id", str "Last Study", str "Next Study"] cursor,
         str "Press Enter to study this deck",
         str "Press Escape to exit"
       ]
@@ -164,3 +164,6 @@ drawCardStudy fb Card {..} =
               ]
         ]
       ]
+
+selectedAttr :: AttrName
+selectedAttr = "selected"
