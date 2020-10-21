@@ -29,7 +29,7 @@ import qualified Options.Applicative.Help as OptParse (string)
 import Path
 import Path.IO
 import Servant.Client
-import Sparep.Server.Data
+import Sparep.API.Server.Data
 import YamlParse.Applicative as YamlParse
 
 data Instructions

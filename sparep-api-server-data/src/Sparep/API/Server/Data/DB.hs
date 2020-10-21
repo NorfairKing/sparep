@@ -11,7 +11,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Sparep.Server.Data.DB where
+module Sparep.API.Server.Data.DB where
 
 import Data.Password
 import Data.Password.Instances ()
@@ -21,8 +21,8 @@ import Data.Validity.Persist ()
 import Database.Persist.Sqlite
 import Database.Persist.TH
 import GHC.Generics (Generic)
+import Sparep.API.Server.Data.Username
 import Sparep.Data
-import Sparep.Server.Data.Username
 
 share
   [mkPersist sqlSettings, mkMigrate "serverMigration"]

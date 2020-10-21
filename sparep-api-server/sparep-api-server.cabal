@@ -53,8 +53,8 @@ library
     , servant-auth-server
     , servant-server
     , sparep-api
+    , sparep-api-server-data
     , sparep-data
-    , sparep-server-data
     , text
     , time
     , wai

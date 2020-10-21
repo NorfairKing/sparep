@@ -31,8 +31,8 @@ library
     , persistent
     , persistent-sqlite
     , persistent-template
+    , sparep-api-server-data
     , sparep-data
-    , sparep-server-data
     , time
   default-language: Haskell2010
 

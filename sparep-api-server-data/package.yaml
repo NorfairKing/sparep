@@ -1,4 +1,4 @@
-name:                sparep-server-data
+name:                sparep-api-server-data
 version:             0.0.0.0
 github:              "NorfairKing/sparep"
 license:             AllRightsReserved
@@ -28,18 +28,3 @@ library:
     - validity-persistent
     - validity-text
     - yamlparse-applicative
-
-tests:
-  sparep-server-data-test:
-    main:                Spec.hs
-    source-dirs:         test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - QuickCheck
-    - genvalidity-hspec
-    - hspec
-    - persistent
-    - persistent-sqlite

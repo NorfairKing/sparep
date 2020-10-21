@@ -6,7 +6,7 @@ import Data.GenValidity
 import Data.GenValidity.Appendful ()
 import Data.GenValidity.Text ()
 import Sparep.API.Data
-import Sparep.Server.Data.Gen ()
+import Sparep.API.Server.Data.Gen ()
 
 instance GenValid RegistrationForm where
   genValid = genValidStructurally

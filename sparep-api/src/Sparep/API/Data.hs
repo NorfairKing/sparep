@@ -21,9 +21,9 @@ import Database.Persist
 import Database.Persist.Sql
 import Servant.API.Generic
 import Servant.Auth.Server
+import Sparep.API.Server.Data
 import Sparep.Client.Data
 import Sparep.Data
-import Sparep.Server.Data
 
 data RegistrationForm
   = RegistrationForm

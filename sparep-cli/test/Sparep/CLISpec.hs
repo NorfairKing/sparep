@@ -5,9 +5,9 @@ import Path
 import Path.IO
 import Servant.Client
 import Sparep.API.Data
+import Sparep.API.Server.Data
 import Sparep.API.Server.TestUtils
 import Sparep.CLI
-import Sparep.Server.Data
 import System.Environment
 import Test.Hspec
 import Test.Validity

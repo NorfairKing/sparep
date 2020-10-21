@@ -14,8 +14,8 @@ module Sparep.Client.Data.DB where
 import Data.Time
 import Database.Persist.Sqlite
 import Database.Persist.TH
+import Sparep.API.Server.Data
 import Sparep.Data
-import Sparep.Server.Data
 
 share
   [mkPersist sqlSettings, mkMigrate "clientMigration"]

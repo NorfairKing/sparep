@@ -15,8 +15,8 @@ import Servant.Auth.Client
 import Servant.Client
 import Sparep.API
 import Sparep.API.Data
+import Sparep.API.Server.Data
 import Sparep.Client
-import Sparep.Server.Data
 import System.Exit
 import Web.Cookie
 

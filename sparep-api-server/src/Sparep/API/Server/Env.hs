@@ -5,7 +5,7 @@ import Control.Monad.Reader
 import Database.Persist.Sql
 import Servant
 import Servant.Auth.Server
-import Sparep.Server.Data
+import Sparep.API.Server.Data
 
 type H = ReaderT Env Handler
 

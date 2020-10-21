@@ -21,7 +21,7 @@ library:
     - servant-auth-server
     - sparep-client-data
     - sparep-data
-    - sparep-server-data
+    - sparep-api-server-data
     - text
     - validity
     - validity-text

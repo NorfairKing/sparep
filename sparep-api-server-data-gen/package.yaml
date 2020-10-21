@@ -1,4 +1,4 @@
-name:                sparep-server-data-gen
+name:                sparep-api-server-data-gen
 version:             0.0.0.0
 github:              "NorfairKing/sparep"
 license:             AllRightsReserved
@@ -19,11 +19,11 @@ library:
     - genvalidity-text
     - password
     - sparep-data-gen
-    - sparep-server-data
+    - sparep-api-server-data
     - text
 
 tests:
-  sparep-server-data-test:
+  sparep-api-server-data-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -33,5 +33,5 @@ tests:
     dependencies:
     - genvalidity-hspec
     - hspec
-    - sparep-server-data
-    - sparep-server-data-gen
+    - sparep-api-server-data
+    - sparep-api-server-data-gen

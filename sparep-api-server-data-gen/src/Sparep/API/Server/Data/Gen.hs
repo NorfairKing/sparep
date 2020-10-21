@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Sparep.Server.Data.Gen where
+module Sparep.API.Server.Data.Gen where
 
 import Control.Monad
 import qualified Data.ByteString as SB
@@ -8,8 +8,8 @@ import Data.GenValidity
 import Data.GenValidity.Persist ()
 import Data.GenValidity.Text ()
 import Data.Password
+import Sparep.API.Server.Data
 import Sparep.Data.Gen ()
-import Sparep.Server.Data
 import Test.QuickCheck
 
 instance GenValid Salt where

@@ -44,11 +44,11 @@ library
     , sparep-api
     , sparep-api-gen
     , sparep-api-server
+    , sparep-api-server-data
+    , sparep-api-server-data-gen
     , sparep-client
     , sparep-data
     , sparep-data-gen
-    , sparep-server-data
-    , sparep-server-data-gen
     , text
     , warp
   default-language: Haskell2010
@@ -82,12 +82,12 @@ test-suite sparep-api-server-tests
     , sparep-api
     , sparep-api-gen
     , sparep-api-server
+    , sparep-api-server-data
+    , sparep-api-server-data-gen
     , sparep-api-server-gen
     , sparep-client
     , sparep-data
     , sparep-data-gen
-    , sparep-server-data
-    , sparep-server-data-gen
     , text
     , warp
   default-language: Haskell2010

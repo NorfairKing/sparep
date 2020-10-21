@@ -32,7 +32,7 @@ library:
   - sparep-api
   - sparep-client
   - sparep-client-data
-  - sparep-server-data
+  - sparep-api-server-data
   - text
   - yaml
   - yamlparse-applicative
@@ -66,5 +66,5 @@ tests:
     - sparep-api
     - sparep-api-server-gen
     - sparep-cli
-    - sparep-server-data
+    - sparep-api-server-data
     - text

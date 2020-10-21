@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Sparep.Server.Data.Username where
+module Sparep.API.Server.Data.Username where
 
 import Data.Aeson
 import qualified Data.Text as T

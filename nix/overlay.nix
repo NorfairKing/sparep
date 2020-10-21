@@ -24,7 +24,9 @@ with final.haskell.lib;
       {
         "sparep-api" = sparepPkg "sparep-api";
         "sparep-api-gen" = sparepPkg "sparep-api-gen";
-        "sparep-api-server" = sparepPkg "sparep-api-server"; # TODO: add completion once we use optparse-applicative
+        "sparep-api-server" = sparepPkgWithOwnComp "sparep-api-server";
+        "sparep-api-server-data" = sparepPkg "sparep-api-server-data";
+        "sparep-api-server-data-gen" = sparepPkg "sparep-api-server-data-gen";
         "sparep-api-server-gen" = sparepPkg "sparep-api-server-gen";
         "sparep-tui" = sparepPkgWithOwnComp "sparep-tui";
         "sparep-cli" = sparepPkgWithComp "sparep" "sparep-cli";
@@ -32,8 +34,6 @@ with final.haskell.lib;
         "sparep-client-data" = sparepPkg "sparep-client-data";
         "sparep-data" = sparepPkg "sparep-data";
         "sparep-data-gen" = sparepPkg "sparep-data-gen";
-        "sparep-server-data" = sparepPkg "sparep-server-data";
-        "sparep-server-data-gen" = sparepPkg "sparep-server-data-gen";
         "sparep-web-server" = sparepPkgWithOwnComp "sparep-web-server";
       };
   haskellPackages =

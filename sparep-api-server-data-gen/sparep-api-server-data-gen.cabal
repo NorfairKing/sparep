@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           sparep-server-data-gen
+name:           sparep-api-server-data-gen
 version:        0.0.0.0
 homepage:       https://github.com/NorfairKing/sparep#readme
 bug-reports:    https://github.com/NorfairKing/sparep/issues
@@ -20,9 +20,9 @@ source-repository head
 
 library
   exposed-modules:
-      Sparep.Server.Data.Gen
+      Sparep.API.Server.Data.Gen
   other-modules:
-      Paths_sparep_server_data_gen
+      Paths_sparep_api_server_data_gen
   hs-source-dirs:
       src
   build-depends:
@@ -33,16 +33,16 @@ library
     , genvalidity-persistent
     , genvalidity-text
     , password
+    , sparep-api-server-data
     , sparep-data-gen
-    , sparep-server-data
     , text
   default-language: Haskell2010
 
-test-suite sparep-server-data-test
+test-suite sparep-api-server-data-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_sparep_server_data_gen
+      Paths_sparep_api_server_data_gen
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
@@ -50,6 +50,6 @@ test-suite sparep-server-data-test
       base >=4.7 && <5
     , genvalidity-hspec
     , hspec
-    , sparep-server-data
-    , sparep-server-data-gen
+    , sparep-api-server-data
+    , sparep-api-server-data-gen
   default-language: Haskell2010

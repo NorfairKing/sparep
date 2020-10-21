@@ -20,9 +20,9 @@ import Sparep.API
 import Sparep.API.Data
 import Sparep.API.Data.Gen ()
 import Sparep.API.Server
+import Sparep.API.Server.Data
 import Sparep.API.Server.Env
 import Sparep.Client
-import Sparep.Server.Data
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck

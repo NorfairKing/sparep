@@ -35,9 +35,9 @@ library
     , servant
     , servant-auth
     , servant-auth-server
+    , sparep-api-server-data
     , sparep-client-data
     , sparep-data
-    , sparep-server-data
     , text
     , validity
     , validity-text

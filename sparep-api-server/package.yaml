@@ -32,7 +32,7 @@ library:
     - servant-server
     - sparep-api
     - sparep-data
-    - sparep-server-data
+    - sparep-api-server-data
     - text
     - time
     - wai

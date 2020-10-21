@@ -16,7 +16,7 @@ library:
     - genvalidity-appendful
     - genvalidity-text
     - sparep-api
-    - sparep-server-data-gen
+    - sparep-api-server-data-gen
     - text
 
 tests:
