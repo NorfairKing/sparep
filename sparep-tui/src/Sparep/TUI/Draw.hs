@@ -20,7 +20,7 @@ import Sparep.Data
 import Sparep.TUI.Repetition
 import Sparep.TUI.State
 
-drawTui :: State -> [Widget ResourceName]
+drawTui :: State -> [Widget n]
 drawTui =
   \case
     StateMenu ms -> drawMenuState ms
@@ -28,39 +28,36 @@ drawTui =
     StateCards ds -> drawCardsState ds
     StateStudy ss -> drawStudyState ss
 
-drawMenuState :: MenuState -> [Widget ResourceName]
+drawMenuState :: MenuState -> [Widget n]
 drawMenuState MenuState {..} =
-  [ centerLayer
-      $ border
-      $ padAll 1
-      $ vBox
-      $ concat
-        [ [ str "Sparep",
-            str " "
-          ],
-          case menuStateSelection of
-            Loading -> []
-            Loaded Selection {..} ->
-              [ str " ",
-                str $
-                  unwords
-                    [ "Done:",
-                      show (length selectionTooSoon),
-                      " Ready:",
-                      show (length selectionReady),
-                      " New:",
-                      show (length selectionNew)
-                    ]
-              ],
-          [ str " ",
-            str "Press enter to study now",
-            str " ",
-            str "Press d to show decks"
-          ]
-        ]
+  [ vBox
+      [ centerLayer $ withAttr headingAttr (str "SPAREP"),
+        centerLayer
+          $ border
+          $ padAll 1
+          $ vBox
+          $ concat
+            [ case menuStateSelection of
+                Loading -> []
+                Loaded Selection {..} ->
+                  [ str $
+                      unwords
+                        [ "Done:",
+                          show (length selectionTooSoon),
+                          " Ready:",
+                          show (length selectionReady),
+                          " New:",
+                          show (length selectionNew)
+                        ]
+                  ],
+              [ padTop (Pad 1) $ str "Press enter to study now",
+                str "Press d to show decks"
+              ]
+            ]
+      ]
   ]
 
-drawDecksState :: DecksState -> [Widget ResourceName]
+drawDecksState :: DecksState -> [Widget n]
 drawDecksState DecksState {..} =
   [ vBox
       [ case decksStateCursor of
@@ -81,7 +78,7 @@ drawDecksState DecksState {..} =
       ]
   ]
 
-drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection Card)) -> Widget ResourceName
+drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection Card)) -> Widget n
 drawDeckList =
   verticalNonEmptyCursorTableWithHeader
     go
@@ -113,7 +110,7 @@ drawDeckList =
               ]
         ]
 
-drawDeckDetails :: RootedDeck -> Loading (Selection Card) -> Widget ResourceName
+drawDeckDetails :: RootedDeck -> Loading (Selection Card) -> Widget n
 drawDeckDetails (RootedDeck _ Deck {..}) ls =
   vBox $
     concat
@@ -136,35 +133,73 @@ drawDeckDetails (RootedDeck _ Deck {..}) ls =
             ]
       ]
 
-drawCardsState :: CardsState -> [Widget ResourceName]
+drawCardsState :: CardsState -> [Widget n]
 drawCardsState CardsState {..} =
   [ vBox
-      [ padBottom Max $ case cardsStateCursor of
-          Nothing -> str "No cards"
-          Just cursor ->
-            let showTime = formatTime defaultTimeLocale "%F %R"
-                go (c@Card {..}, lTimes) =
-                  concat
-                    [ [ padRight Max $ txt $ renderCardIdHex $ hashCard c
-                      ],
-                      case lTimes of
-                        Loading -> [str "Loading", str "Loading"]
-                        Loaded mTimes -> case mTimes of
-                          Nothing -> [str " ", str " "]
-                          Just (prevTime, nextTime) -> [str $ showTime prevTime, str $ showTime nextTime]
-                    ]
-             in verticalNonEmptyCursorTableWithHeader go (map (withAttr selectedAttr) . go) go [str "Id", str "Last Study", str "Next Study"] cursor,
-        str "Press Enter to study this deck",
-        str "Press Escape to exit"
+      [ padBottom Max $
+          case cardsStateCursor of
+            Nothing -> str "No cards"
+            Just cursor ->
+              hBox
+                [ padAll 1 $ hLimit 16 $ drawCardList cursor,
+                  vBorder,
+                  padAll 1 $ uncurry drawCardDetails (nonEmptyCursorCurrent cursor)
+                ],
+        hBorder,
+        hCenterLayer $
+          vBox
+            [ str "Press Enter to study this deck",
+              str "Press Escape to exit"
+            ]
       ]
   ]
+
+drawCardList :: NonEmptyCursor (Card, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
+drawCardList =
+  verticalNonEmptyCursorTableWithHeader
+    go
+    (map (withAttr selectedAttr) . go)
+    go
+    ( map
+        (withAttr headingAttr)
+        [ str "Id"
+        ]
+    )
+  where
+    go (c@Card {..}, _) =
+      [ padRight Max $ txt $ renderCardIdHex $ hashCard c
+      ]
+
+drawCardDetails :: Card -> Loading (Maybe (UTCTime, UTCTime)) -> Widget n
+drawCardDetails c@Card {..} lTimes =
+  vBox $
+    concat
+      [ [ txt $ "Id: " <> renderCardIdHex (hashCard c),
+          hCenterLayer $ padAll 1 $ hLimit 40 $ border $
+            vBox
+              [ padAll 1 $ drawFrontSide cardFront,
+                hBorder,
+                padAll 1 $ drawBackSide cardBack
+              ]
+        ],
+        case lTimes of
+          Loading -> [str "Loading", str "Loading"]
+          Loaded mTimes -> case mTimes of
+            Nothing -> [str " ", str " "]
+            Just (prevTime, nextTime) ->
+              [ str $ "Last studied: " <> showTime prevTime,
+                str $ "Next study: " <> showTime nextTime
+              ]
+      ]
+  where
+    showTime = formatTime defaultTimeLocale "%F %R"
 
 cardSideDescription :: CardSide -> Text
 cardSideDescription = \case
   TextSide t -> t
   SoundSide fp _ -> T.pack $ fromRelFile $ filename fp
 
-drawStudyState :: StudyState -> [Widget ResourceName]
+drawStudyState :: StudyState -> [Widget n]
 drawStudyState StudyState {..} =
   [ case studyStateCursor of
       Loading -> centerLayer $ str "Loading cards to study..."
@@ -188,29 +223,36 @@ drawStudyState StudyState {..} =
               ]
   ]
 
-drawCardStudy :: FrontBack -> Card -> Widget ResourceName
+drawCardStudy :: FrontBack -> Card -> Widget n
 drawCardStudy fb Card {..} =
   vBox $
     concat
       [ [padLeftRight 3 $ txt ins | ins <- maybeToList cardInstructions],
-        [ padAll 1
+        [ padAll 1 $ hLimit 40
             $ border
             $ vBox
             $ concat
-              [ [ padAll 1 $ case cardFront of
-                    TextSide t -> txt t
-                    SoundSide _ _ -> str "Press 'f' to play sound"
+              [ [ padAll 1 $ drawFrontSide cardFront
                 ],
                 case fb of
                   Front -> []
                   Back ->
-                    [ padAll 1 $ case cardBack of
-                        TextSide t -> txt t
-                        SoundSide _ _ -> str "Press 'b' to play sound"
+                    [ hBorder,
+                      padAll 1 $ drawBackSide cardBack
                     ]
               ]
         ]
       ]
+
+drawFrontSide :: CardSide -> Widget n
+drawFrontSide = \case
+  TextSide t -> txtWrap t
+  SoundSide _ _ -> str "Press 'f' to play sound"
+
+drawBackSide :: CardSide -> Widget n
+drawBackSide = \case
+  TextSide t -> txtWrap t
+  SoundSide _ _ -> str "Press 'b' to play sound"
 
 headingAttr :: AttrName
 headingAttr = "heading"
