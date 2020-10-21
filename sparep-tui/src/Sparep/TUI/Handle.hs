@@ -4,39 +4,22 @@
 
 module Sparep.TUI.Handle where
 
-import Brick.AttrMap
 import Brick.BChan
 import Brick.Main
 import Brick.Types
-import Brick.Util
-import Control.Concurrent.Async
 import Control.Monad
 import Control.Monad.IO.Class
-import Control.Monad.Logger
-import Control.Monad.Reader
 import Cursor.Simple.List.NonEmpty
 import Data.List
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
-import qualified Data.Text as T
 import Data.Time
-import Database.Persist
-import Database.Persist.Sql
-import Database.Persist.Sqlite
-import Graphics.Vty (defaultConfig, mkVty)
-import Graphics.Vty.Attributes
 import Graphics.Vty.Input
 import Path
-import Path.IO
 import Sparep.Client.Data
 import Sparep.Data
-import Sparep.TUI.Draw
-import Sparep.TUI.OptParse
-import Sparep.TUI.OptParse.Types
 import Sparep.TUI.Repetition
 import Sparep.TUI.State
-import System.Exit
-import System.FileLock
 import System.Process.Typed
 
 data Query

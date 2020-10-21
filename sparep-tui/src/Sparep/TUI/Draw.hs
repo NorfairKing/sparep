@@ -67,7 +67,7 @@ drawDecksState DecksState {..} =
           Nothing -> str "No decks"
           Just cursor ->
             padBottom Max $
-              let go (RootedDeck p Deck {..}, ls) =
+              let go (RootedDeck _ Deck {..}, ls) =
                     concat
                       [ [ padRight Max $ txt $ fromMaybe " " deckName
                         ],
