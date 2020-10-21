@@ -22,6 +22,7 @@ library
   exposed-modules:
       Sparep.TUI
       Sparep.TUI.Draw
+      Sparep.TUI.Handle
       Sparep.TUI.OptParse
       Sparep.TUI.OptParse.Types
       Sparep.TUI.Repetition
