@@ -102,7 +102,7 @@ password: "${cfg.sync.password}"
         {
           Unit =
             {
-              Description = "Sync sparep every five minutes for";
+              Description = "Sync sparep every day";
             };
           Install =
             {
@@ -110,7 +110,7 @@ password: "${cfg.sync.password}"
             };
           Timer =
             {
-              OnCalendar = "*:0/5";
+              OnCalendar = "daily";
               Persistent = true;
               Unit = "${syncSparepName}.service";
             };
