@@ -108,12 +108,27 @@ handleCardsEvent qChan s e =
                   Nothing -> Nothing
                   Just cursor -> Just $ fromMaybe cursor $ func cursor
              in continue $ StateCards $ s {cardsStateCursor = mcursor'}
+          tryPlay :: FrontBack -> EventM n (Next State)
+          tryPlay fb =
+            case cardsStateCursor s of
+              Nothing -> continue $ StateCards s
+              Just cursor -> do
+                let card = fst (nonEmptyCursorCurrent cursor)
+                    side = case fb of
+                      Front -> cardFront card
+                      Back -> cardBack card
+                case side of
+                  TextSide _ -> pure ()
+                  SoundSide fp _ -> playSoundFile fp
+                continue $ StateCards s
        in case vtye of
             EvKey (KChar 'q') [] -> halt $ StateCards s
             EvKey KUp [] -> mDo nonEmptyCursorSelectPrev
             EvKey (KChar 'k') [] -> mDo nonEmptyCursorSelectPrev
             EvKey KDown [] -> mDo nonEmptyCursorSelectNext
             EvKey (KChar 'j') [] -> mDo nonEmptyCursorSelectNext
+            EvKey (KChar 'f') [] -> tryPlay Front
+            EvKey (KChar 'b') [] -> tryPlay Back
             EvKey KEsc [] -> halt $ StateCards s
             EvKey KEnter [] -> handleStudy qChan [cardsStateDeck s]
             _ -> continue $ StateCards s
@@ -151,7 +166,7 @@ handleStudyEvent s e =
                           Back -> cardBack cur
                     case side of
                       TextSide _ -> pure ()
-                      SoundSide fp _ -> runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "play" [fromAbsFile fp]
+                      SoundSide fp _ -> playSoundFile fp
                     continue s
                in case studyStateFrontBack s of
                     Front ->
@@ -205,3 +220,6 @@ handleStudy qChan decks = do
   let studyStateFrontBack = Front
   let studyStateCursor = Loading
   continue $ StateStudy $ StudyState {..}
+
+playSoundFile :: Path Abs File -> EventM n ()
+playSoundFile p = runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "play" [fromAbsFile p]
