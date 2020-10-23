@@ -59,23 +59,24 @@ drawMenuState MenuState {..} =
 
 drawDecksState :: DecksState -> [Widget n]
 drawDecksState DecksState {..} =
-  [ vBox
-      [ case decksStateCursor of
-          Nothing -> str "No decks"
-          Just cursor ->
-            padBottom Max $
-              hBox
-                [ padAll 1 $ drawDeckList cursor,
-                  vBorder,
-                  padAll 1 $ uncurry drawDeckDetails (nonEmptyCursorCurrent cursor)
-                ],
-        hBorder,
-        hCenterLayer $
-          vBox
-            [ str "Press enter to study the selected deck",
-              str "Press c to show the cards in the selected deck"
-            ]
-      ]
+  [ joinBorders $
+      vBox
+        [ case decksStateCursor of
+            Nothing -> str "No decks"
+            Just cursor ->
+              padBottom Max $
+                hBox
+                  [ padAll 1 $ drawDeckList cursor,
+                    vBorder,
+                    padAll 1 $ uncurry drawDeckDetails (nonEmptyCursorCurrent cursor)
+                  ],
+          hBorder,
+          hCenterLayer $
+            vBox
+              [ str "Press enter to study the selected deck",
+                str "Press c to show the cards in the selected deck"
+              ]
+        ]
   ]
 
 drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection Card)) -> Widget n
@@ -135,23 +136,24 @@ drawDeckDetails (RootedDeck _ Deck {..}) ls =
 
 drawCardsState :: CardsState -> [Widget n]
 drawCardsState CardsState {..} =
-  [ vBox
-      [ padBottom Max $
-          case cardsStateCursor of
-            Nothing -> str "No cards"
-            Just cursor ->
-              hBox
-                [ padAll 1 $ hLimit 16 $ drawCardList cursor,
-                  vBorder,
-                  padAll 1 $ uncurry drawCardDetails (nonEmptyCursorCurrent cursor)
-                ],
-        hBorder,
-        hCenterLayer $
-          vBox
-            [ str "Press Enter to study this deck",
-              str "Press Escape to exit"
-            ]
-      ]
+  [ joinBorders $
+      vBox
+        [ padBottom Max $
+            case cardsStateCursor of
+              Nothing -> str "No cards"
+              Just cursor ->
+                hBox
+                  [ padAll 1 $ hLimit 16 $ drawCardList cursor,
+                    vBorder,
+                    padAll 1 $ uncurry drawCardDetails (nonEmptyCursorCurrent cursor)
+                  ],
+          hBorder,
+          hCenterLayer $
+            vBox
+              [ str "Press Enter to study this deck",
+                str "Press Escape to exit"
+              ]
+        ]
   ]
 
 drawCardList :: NonEmptyCursor (Card, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
@@ -176,7 +178,7 @@ drawCardDetails c@Card {..} lTimes =
     concat
       [ [txt $ "Id: " <> renderCardIdHex (hashCard c)],
         [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | ins <- maybeToList cardInstructions],
-        [ hCenterLayer $ padAll 1 $ hLimit 40 $ border $
+        [ hCenterLayer $ padAll 1 $ hLimit 40 $ joinBorders $ border $
             vBox
               [ padAll 1 $ drawFrontSide cardFront,
                 hBorder,
@@ -229,6 +231,7 @@ drawCardStudy fb Card {..} =
     concat
       [ [hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | ins <- maybeToList cardInstructions],
         [ hCenterLayer $ padAll 1 $ hLimit 40
+            $ joinBorders
             $ border
             $ vBox
             $ concat
