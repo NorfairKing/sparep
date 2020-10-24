@@ -25,14 +25,14 @@ import System.Process.Typed
 data Query
   = QueryGetDeckSelection RootedDeck
   | QueryGetDecksSelection [RootedDeck]
-  | QueryGetCardDates Card
-  | QueryGetStudyCards [RootedDeck] Word
+  | QueryGetStudyUnitDates StudyUnit
+  | QueryGetStudyUnits [RootedDeck] Word
 
 data Response
-  = ResponseGetDeckSelection RootedDeck (Selection Card)
-  | ResponseGetDecksSelection (Selection Card)
-  | ResponseGetCardDates Card (Maybe (UTCTime, UTCTime))
-  | ResponseGetStudyCards [Card]
+  = ResponseGetDeckSelection RootedDeck (Selection StudyUnit)
+  | ResponseGetDecksSelection (Selection StudyUnit)
+  | ResponseGetStudyUnitDates StudyUnit (Maybe (UTCTime, UTCTime))
+  | ResponseGetStudyUnits [StudyUnit]
 
 handleTuiEvent ::
   BChan Query -> State -> BrickEvent n Response -> EventM n (Next State)
@@ -40,7 +40,7 @@ handleTuiEvent qChan s e =
   case s of
     StateMenu ms -> handleMenuEvent qChan ms e
     StateDecks ss -> handleDecksEvent qChan ss e
-    StateCards cs -> handleCardsEvent qChan cs e
+    StateStudyUnits cs -> handleStudyUnitsEvent qChan cs e
     StateStudy ss -> fmap StateStudy <$> handleStudyEvent ss e
 
 handleMenuEvent ::
@@ -85,11 +85,11 @@ handleDecksEvent qChan s e = case decksStateCursor s of
               EvKey KDown [] -> mDo nonEmptyCursorSelectNext
               EvKey (KChar 'j') [] -> mDo nonEmptyCursorSelectNext
               EvKey (KChar 'c') [] -> do
-                let cardsStateDeck = fst (nonEmptyCursorCurrent cursor)
-                cards <- resolveRootedDeck cardsStateDeck
-                forM_ cards $ \c -> liftIO $ writeBChan qChan $ QueryGetCardDates c
-                let cardsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\c -> (c, Loading)) cards)
-                continue $ StateCards $ CardsState {..}
+                let studyUnitsStateDeck = fst (nonEmptyCursorCurrent cursor)
+                studyUnits <- resolveRootedDeck studyUnitsStateDeck
+                forM_ studyUnits $ \c -> liftIO $ writeBChan qChan $ QueryGetStudyUnitDates c
+                let studyUnitsStateCursor = makeNonEmptyCursor <$> NE.nonEmpty (map (\c -> (c, Loading)) studyUnits)
+                continue $ StateStudyUnits $ StudyUnitsState {..}
               EvKey KEnter [] -> handleStudy qChan [fst (nonEmptyCursorCurrent cursor)]
               _ -> continue $ StateDecks s
       AppEvent (ResponseGetDeckSelection d sel) -> do
@@ -98,45 +98,47 @@ handleDecksEvent qChan s e = case decksStateCursor s of
         continue $ StateDecks s'
       _ -> continue $ StateDecks s
 
-handleCardsEvent ::
-  BChan Query -> CardsState -> BrickEvent n Response -> EventM n (Next State)
-handleCardsEvent qChan s e =
+handleStudyUnitsEvent ::
+  BChan Query -> StudyUnitsState -> BrickEvent n Response -> EventM n (Next State)
+handleStudyUnitsEvent qChan s e =
   case e of
     VtyEvent vtye ->
       let mDo func =
-            let mcursor' = case cardsStateCursor s of
+            let mcursor' = case studyUnitsStateCursor s of
                   Nothing -> Nothing
                   Just cursor -> Just $ fromMaybe cursor $ func cursor
-             in continue $ StateCards $ s {cardsStateCursor = mcursor'}
+             in continue $ StateStudyUnits $ s {studyUnitsStateCursor = mcursor'}
           tryPlay :: FrontBack -> EventM n (Next State)
           tryPlay fb =
-            case cardsStateCursor s of
-              Nothing -> continue $ StateCards s
+            case studyUnitsStateCursor s of
+              Nothing -> continue $ StateStudyUnits s
               Just cursor -> do
-                let card = fst (nonEmptyCursorCurrent cursor)
-                    side = case fb of
-                      Front -> cardFront card
-                      Back -> cardBack card
-                case side of
-                  TextSide _ -> pure ()
-                  SoundSide fp _ -> playSoundFile fp
-                continue $ StateCards s
+                let studyUnit = fst (nonEmptyCursorCurrent cursor)
+                case studyUnit of
+                  CardUnit card -> do
+                    let side = case fb of
+                          Front -> cardFront card
+                          Back -> cardBack card
+                    case side of
+                      TextSide _ -> pure ()
+                      SoundSide fp _ -> playSoundFile fp
+                continue $ StateStudyUnits s
        in case vtye of
-            EvKey (KChar 'q') [] -> halt $ StateCards s
+            EvKey (KChar 'q') [] -> halt $ StateStudyUnits s
             EvKey KUp [] -> mDo nonEmptyCursorSelectPrev
             EvKey (KChar 'k') [] -> mDo nonEmptyCursorSelectPrev
             EvKey KDown [] -> mDo nonEmptyCursorSelectNext
             EvKey (KChar 'j') [] -> mDo nonEmptyCursorSelectNext
             EvKey (KChar 'f') [] -> tryPlay Front
             EvKey (KChar 'b') [] -> tryPlay Back
-            EvKey KEsc [] -> halt $ StateCards s
-            EvKey KEnter [] -> handleStudy qChan [cardsStateDeck s]
-            _ -> continue $ StateCards s
-    AppEvent (ResponseGetCardDates c dates) -> do
-      let mCursor' = flip fmap (cardsStateCursor s) $ mapNonEmptyCursor (\t@(c', _) -> if c == c' then (c', Loaded dates) else t)
-      let s' = s {cardsStateCursor = mCursor'}
-      continue $ StateCards s'
-    _ -> continue $ StateCards s
+            EvKey KEsc [] -> halt $ StateStudyUnits s
+            EvKey KEnter [] -> handleStudy qChan [studyUnitsStateDeck s]
+            _ -> continue $ StateStudyUnits s
+    AppEvent (ResponseGetStudyUnitDates c dates) -> do
+      let mCursor' = flip fmap (studyUnitsStateCursor s) $ mapNonEmptyCursor (\t@(c', _) -> if c == c' then (c', Loaded dates) else t)
+      let s' = s {studyUnitsStateCursor = mCursor'}
+      continue $ StateStudyUnits s'
+    _ -> continue $ StateStudyUnits s
 
 handleStudyEvent ::
   StudyState ->
@@ -150,7 +152,7 @@ handleStudyEvent s e =
           case vtye of
             EvKey (KChar 'q') [] -> halt s
             _ -> continue s
-        AppEvent (ResponseGetStudyCards cs) -> continue $ s {studyStateCursor = Loaded $ makeNonEmptyCursor <$> NE.nonEmpty cs}
+        AppEvent (ResponseGetStudyUnits cs) -> continue $ s {studyStateCursor = Loaded $ makeNonEmptyCursor <$> NE.nonEmpty cs}
         _ -> continue s
     Loaded mCursor ->
       case e of
@@ -161,12 +163,14 @@ handleStudyEvent s e =
               let tryPlay :: FrontBack -> EventM n (Next StudyState)
                   tryPlay fb = do
                     let cur = nonEmptyCursorCurrent cursor
-                    let side = case fb of
-                          Front -> cardFront cur
-                          Back -> cardBack cur
-                    case side of
-                      TextSide _ -> pure ()
-                      SoundSide fp _ -> playSoundFile fp
+                    case cur of
+                      CardUnit card -> do
+                        let side = case fb of
+                              Front -> cardFront card
+                              Back -> cardBack card
+                        case side of
+                          TextSide _ -> pure ()
+                          SoundSide fp _ -> playSoundFile fp
                     continue s
                in case studyStateFrontBack s of
                     Front ->
@@ -176,21 +180,21 @@ handleStudyEvent s e =
                         EvKey (KChar ' ') [] -> continue $ s {studyStateFrontBack = Back}
                         _ -> continue s
                     Back ->
-                      let finishCard :: Difficulty -> EventM n (Next StudyState)
-                          finishCard difficulty = do
+                      let finishStudyUnit :: Difficulty -> EventM n (Next StudyState)
+                          finishStudyUnit difficulty = do
                             let cur = nonEmptyCursorCurrent cursor
                             now <- liftIO getCurrentTime
                             let rep =
                                   ClientRepetition
-                                    { clientRepetitionCard = hashCard cur,
+                                    { clientRepetitionUnit = hashStudyUnit cur,
                                       clientRepetitionDifficulty = difficulty,
                                       clientRepetitionTimestamp = now,
                                       clientRepetitionServerId = Nothing
                                     }
                             let mcursor' = nonEmptyCursorSelectNext cursor
                             let mcursor'' =
-                                  -- Require re-studying incorrect cards
-                                  if difficulty == CardIncorrect
+                                  -- Require re-studying incorrect studyUnits
+                                  if difficulty == Incorrect
                                     then Just $ case mcursor' of
                                       Nothing -> singletonNonEmptyCursor cur
                                       Just cursor' -> nonEmptyCursorAppendAtEnd cur cursor'
@@ -205,17 +209,17 @@ handleStudyEvent s e =
                             EvKey (KChar 'f') [] -> tryPlay Front
                             EvKey (KChar 'b') [] -> tryPlay Back
                             EvKey (KChar 'q') [] -> halt s
-                            EvKey (KChar 'i') [] -> finishCard CardIncorrect
-                            EvKey (KChar 'h') [] -> finishCard CardHard
-                            EvKey (KChar 'g') [] -> finishCard CardGood
-                            EvKey (KChar 'e') [] -> finishCard CardEasy
+                            EvKey (KChar 'i') [] -> finishStudyUnit Incorrect
+                            EvKey (KChar 'h') [] -> finishStudyUnit Hard
+                            EvKey (KChar 'g') [] -> finishStudyUnit Good
+                            EvKey (KChar 'e') [] -> finishStudyUnit Easy
                             _ -> continue s
         _ -> continue s
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
 handleStudy :: BChan Query -> [RootedDeck] -> EventM n (Next State)
 handleStudy qChan decks = do
-  liftIO $ writeBChan qChan $ QueryGetStudyCards decks 25
+  liftIO $ writeBChan qChan $ QueryGetStudyUnits decks 25
   let studyStateRepetitions = []
   let studyStateFrontBack = Front
   let studyStateCursor = Loading

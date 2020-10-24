@@ -22,10 +22,11 @@ library
   exposed-modules:
       Sparep.Data
       Sparep.Data.Card
-      Sparep.Data.CardId
       Sparep.Data.Deck
       Sparep.Data.Difficulty
       Sparep.Data.Repetition
+      Sparep.Data.StudyUnit
+      Sparep.Data.StudyUnitId
   other-modules:
       Paths_sparep_data
   hs-source-dirs:

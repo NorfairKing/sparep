@@ -39,7 +39,7 @@ User
 
 ServerRepetition sql=repetition
   user UserId
-  card CardId
+  unit StudyUnitId sql=card
   difficulty Difficulty
   time UTCTime
 
@@ -63,13 +63,13 @@ instance Validity ServerRepetition
 serverMakeRepetition :: ServerRepetition -> Repetition
 serverMakeRepetition ServerRepetition {..} = Repetition {..}
   where
-    repetitionCardId = serverRepetitionCard
+    repetitionUnitId = serverRepetitionUnit
     repetitionDifficulty = serverRepetitionDifficulty
     repetitionTimestamp = serverRepetitionTime
 
 makeServerRepetition :: UserId -> Repetition -> ServerRepetition
 makeServerRepetition serverRepetitionUser Repetition {..} = ServerRepetition {..}
   where
-    serverRepetitionCard = repetitionCardId
+    serverRepetitionUnit = repetitionUnitId
     serverRepetitionDifficulty = repetitionDifficulty
     serverRepetitionTime = repetitionTimestamp

@@ -15,23 +15,23 @@ import Sparep.Client.Data
 import Sparep.Data
 import System.Random.Shuffle
 
-getCardDates :: Card -> SqlPersistT IO (Maybe (UTCTime, UTCTime))
-getCardDates card = do
-  reps <- map (clientMakeRepetition . entityVal) <$> selectList [ClientRepetitionCard ==. hashCard card] [Desc ClientRepetitionTimestamp]
+getStudyUnitDates :: StudyUnit -> SqlPersistT IO (Maybe (UTCTime, UTCTime))
+getStudyUnitDates unit = do
+  reps <- map (clientMakeRepetition . entityVal) <$> selectList [ClientRepetitionUnit ==. hashStudyUnit unit] [Desc ClientRepetitionTimestamp]
   pure $ (,) <$> (repetitionTimestamp <$> headMay reps) <*> nextRepititionSM2 reps
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
-generateStudyDeck :: [Card] -> Word -> SqlPersistT IO [Card]
+generateStudyDeck :: [StudyUnit] -> Word -> SqlPersistT IO [StudyUnit]
 generateStudyDeck cards numCards = generateStudySelection cards >>= (liftIO . studyFromSelection numCards)
 
-generateStudySelection :: [Card] -> SqlPersistT IO (Selection Card)
-generateStudySelection cards = do
+generateStudySelection :: [StudyUnit] -> SqlPersistT IO (Selection StudyUnit)
+generateStudySelection units = do
   cardData <-
-    forM cards $ \c ->
+    forM units $ \c ->
       (,) c
         . map (clientMakeRepetition . entityVal)
         <$> selectList
-          [ClientRepetitionCard ==. hashCard c]
+          [ClientRepetitionUnit ==. hashStudyUnit c]
           [Desc ClientRepetitionTimestamp]
   now <- liftIO getCurrentTime
   pure $ decideStudyDeckSM2 now cardData
@@ -53,7 +53,7 @@ decideStudyDeckSM0 now cardData =
   let (selectionNew, studiedAtLeastOnce) = partition (null . snd) cardData
       isTooSoon :: (a, [Repetition]) -> Bool
       isTooSoon (_, reps) =
-        case sortOn (Down . repetitionTimestamp) (filter ((/= CardIncorrect) . repetitionDifficulty) reps) of
+        case sortOn (Down . repetitionTimestamp) (filter ((/= Incorrect) . repetitionDifficulty) reps) of
           [] -> False
           (latestRepetition : _) ->
             let i = realToFrac (intervalSize (genericLength reps)) * nominalDay
@@ -92,7 +92,7 @@ nextRepititionSM2 reps = do
     -- How long to wait after the n'th study session before doing the n+1th study session
     intervalSize :: [Repetition] -> Maybe NominalDiffTime
     intervalSize reps_ =
-      case length $ filter ((/= CardIncorrect) . repetitionDifficulty) reps_ of
+      case length $ filter ((/= Incorrect) . repetitionDifficulty) reps_ of
         0 -> Nothing
         1 -> Just $ 1 * nominalDay
         2 -> Just $ 6 * nominalDay
@@ -106,10 +106,10 @@ nextRepititionSM2 reps = do
         q = difficultyTo0To5Scale (repetitionDifficulty r)
     difficultyTo0To5Scale :: Difficulty -> Rational
     difficultyTo0To5Scale = \case
-      CardIncorrect -> 0
-      CardHard -> 3
-      CardGood -> 4
-      CardEasy -> 5
+      Incorrect -> 0
+      Hard -> 3
+      Good -> 4
+      Easy -> 5
 
 data Selection a
   = Selection

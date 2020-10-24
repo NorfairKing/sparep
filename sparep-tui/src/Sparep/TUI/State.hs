@@ -12,33 +12,33 @@ data Loading a = Loading | Loaded a
 data State
   = StateMenu MenuState
   | StateDecks DecksState
-  | StateCards CardsState
+  | StateStudyUnits StudyUnitsState
   | StateStudy StudyState
   deriving (Show, Eq)
 
 data MenuState
   = MenuState
       { menuStateDecks :: [RootedDeck],
-        menuStateSelection :: Loading (Selection Card)
+        menuStateSelection :: Loading (Selection StudyUnit)
       }
   deriving (Show, Eq)
 
 data DecksState
   = DecksState
-      { decksStateCursor :: !(Maybe (NonEmptyCursor (RootedDeck, Loading (Selection Card))))
+      { decksStateCursor :: !(Maybe (NonEmptyCursor (RootedDeck, Loading (Selection StudyUnit))))
       }
   deriving (Show, Eq)
 
-data CardsState
-  = CardsState
-      { cardsStateDeck :: !RootedDeck,
-        cardsStateCursor :: !(Maybe (NonEmptyCursor (Card, Loading (Maybe (UTCTime, UTCTime)))))
+data StudyUnitsState
+  = StudyUnitsState
+      { studyUnitsStateDeck :: !RootedDeck,
+        studyUnitsStateCursor :: !(Maybe (NonEmptyCursor (StudyUnit, Loading (Maybe (UTCTime, UTCTime)))))
       }
   deriving (Show, Eq)
 
 data StudyState
   = StudyState
-      { studyStateCursor :: !(Loading (Maybe (NonEmptyCursor Card))),
+      { studyStateCursor :: !(Loading (Maybe (NonEmptyCursor StudyUnit))),
         studyStateFrontBack :: !FrontBack,
         studyStateRepetitions :: ![ClientRepetition]
       }

@@ -12,10 +12,7 @@ import Brick.Widgets.Core
 import Cursor.Brick
 import Cursor.Simple.List.NonEmpty
 import Data.Maybe
-import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Time
-import Path
 import Sparep.Data
 import Sparep.TUI.Repetition
 import Sparep.TUI.State
@@ -25,7 +22,7 @@ drawTui =
   \case
     StateMenu ms -> drawMenuState ms
     StateDecks ds -> drawDecksState ds
-    StateCards ds -> drawCardsState ds
+    StateStudyUnits ds -> drawStudyUnitsState ds
     StateStudy ss -> drawStudyState ss
 
 drawMenuState :: MenuState -> [Widget n]
@@ -79,7 +76,7 @@ drawDecksState DecksState {..} =
         ]
   ]
 
-drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection Card)) -> Widget n
+drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection a)) -> Widget n
 drawDeckList =
   verticalNonEmptyCursorTableWithHeader
     go
@@ -111,7 +108,7 @@ drawDeckList =
               ]
         ]
 
-drawDeckDetails :: RootedDeck -> Loading (Selection Card) -> Widget n
+drawDeckDetails :: RootedDeck -> Loading (Selection a) -> Widget n
 drawDeckDetails (RootedDeck _ Deck {..}) ls =
   vBox $
     concat
@@ -134,18 +131,18 @@ drawDeckDetails (RootedDeck _ Deck {..}) ls =
             ]
       ]
 
-drawCardsState :: CardsState -> [Widget n]
-drawCardsState CardsState {..} =
+drawStudyUnitsState :: StudyUnitsState -> [Widget n]
+drawStudyUnitsState StudyUnitsState {..} =
   [ joinBorders $
       vBox
         [ padBottom Max $
-            case cardsStateCursor of
+            case studyUnitsStateCursor of
               Nothing -> str "No cards"
               Just cursor ->
                 hBox
-                  [ padAll 1 $ hLimit 16 $ drawCardList cursor,
+                  [ padAll 1 $ hLimit 16 $ drawStudyUnitList cursor,
                     vBorder,
-                    padAll 1 $ uncurry drawCardDetails (nonEmptyCursorCurrent cursor)
+                    padAll 1 $ uncurry drawStudyUnitDetails (nonEmptyCursorCurrent cursor)
                   ],
           hBorder,
           hCenterLayer $
@@ -156,8 +153,8 @@ drawCardsState CardsState {..} =
         ]
   ]
 
-drawCardList :: NonEmptyCursor (Card, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
-drawCardList =
+drawStudyUnitList :: NonEmptyCursor (StudyUnit, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
+drawStudyUnitList =
   verticalNonEmptyCursorTableWithHeader
     go
     (map (withAttr selectedAttr) . go)
@@ -168,23 +165,21 @@ drawCardList =
         ]
     )
   where
-    go (c@Card {..}, _) =
-      [ padRight Max $ txt $ renderCardIdHex $ hashCard c
+    go (su, _) =
+      [ padRight Max $ txt $ renderStudyUnitIdHex $ hashStudyUnit su
       ]
 
-drawCardDetails :: Card -> Loading (Maybe (UTCTime, UTCTime)) -> Widget n
-drawCardDetails c@Card {..} lTimes =
+drawStudyUnitDetails :: StudyUnit -> Loading (Maybe (UTCTime, UTCTime)) -> Widget n
+drawStudyUnitDetails su lTimes =
   vBox $
     concat
-      [ [txt $ "Id: " <> renderCardIdHex (hashCard c)],
-        [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | ins <- maybeToList cardInstructions],
-        [ hCenterLayer $ padAll 1 $ hLimit 40 $ joinBorders $ border $
-            vBox
-              [ padAll 1 $ drawFrontSide cardFront,
-                hBorder,
-                padAll 1 $ drawBackSide cardBack
-              ]
-        ],
+      [ [txt $ "Id: " <> renderStudyUnitIdHex (hashStudyUnit su)],
+        case su of
+          CardUnit card@Card {..} ->
+            concat
+              [ [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | ins <- maybeToList cardInstructions],
+                [hCenterLayer $ drawCard Back card]
+              ],
         case lTimes of
           Loading -> [str "Loading", str "Loading"]
           Loaded mTimes -> case mTimes of
@@ -196,11 +191,6 @@ drawCardDetails c@Card {..} lTimes =
       ]
   where
     showTime = formatTime defaultTimeLocale "%F %R"
-
-cardSideDescription :: CardSide -> Text
-cardSideDescription = \case
-  TextSide t -> t
-  SoundSide fp _ -> T.pack $ fromRelFile $ filename fp
 
 drawStudyState :: StudyState -> [Widget n]
 drawStudyState StudyState {..} =
@@ -216,7 +206,7 @@ drawStudyState StudyState {..} =
                   $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
                 vCenterLayer $
                   vBox
-                    [ drawCardStudy studyStateFrontBack (nonEmptyCursorCurrent cursor),
+                    [ drawStudyUnitStudy studyStateFrontBack (nonEmptyCursorCurrent cursor),
                       hCenterLayer $ padLeftRight 3 $
                         case studyStateFrontBack of
                           Front -> str "Show back: space"
@@ -225,26 +215,32 @@ drawStudyState StudyState {..} =
               ]
   ]
 
-drawCardStudy :: FrontBack -> Card -> Widget n
-drawCardStudy fb Card {..} =
-  vBox $
-    concat
-      [ [hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | ins <- maybeToList cardInstructions],
-        [ hCenterLayer $ padAll 1 $ hLimit 40
-            $ joinBorders
-            $ border
-            $ vBox
-            $ concat
-              [ [ padAll 1 $ drawFrontSide cardFront
-                ],
-                case fb of
-                  Front -> []
-                  Back ->
-                    [ hBorder,
-                      padAll 1 $ drawBackSide cardBack
-                    ]
-              ]
+drawStudyUnitStudy :: FrontBack -> StudyUnit -> Widget n
+drawStudyUnitStudy fb su = case su of
+  CardUnit card@Card {..} ->
+    vBox $
+      concat
+        [ [ hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | ins <- maybeToList cardInstructions
+          ],
+          [ hCenterLayer $ drawCard fb card
+          ]
         ]
+
+drawCard :: FrontBack -> Card -> Widget n
+drawCard fb Card {..} =
+  padAll 1 $ hLimit 40
+    $ joinBorders
+    $ border
+    $ vBox
+    $ concat
+      [ [ padAll 1 $ drawFrontSide cardFront
+        ],
+        case fb of
+          Front -> []
+          Back ->
+            [ hBorder,
+              padAll 1 $ drawBackSide cardBack
+            ]
       ]
 
 drawFrontSide :: CardSide -> Widget n

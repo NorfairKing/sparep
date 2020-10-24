@@ -15,10 +15,10 @@ import Database.Persist.Sql
 import GHC.Generics (Generic)
 
 data Difficulty
-  = CardIncorrect
-  | CardHard
-  | CardGood
-  | CardEasy
+  = Incorrect
+  | Hard
+  | Good
+  | Easy
   deriving (Show, Eq, Ord, Generic)
 
 instance Validity Difficulty
@@ -26,19 +26,19 @@ instance Validity Difficulty
 renderDifficulty :: Difficulty -> Text
 renderDifficulty =
   \case
-    CardIncorrect -> "Incorrect"
-    CardHard -> "Hard"
-    CardGood -> "Good"
-    CardEasy -> "Easy"
+    Incorrect -> "Incorrect"
+    Hard -> "Hard"
+    Good -> "Good"
+    Easy -> "Easy"
 
 parseDifficulty :: Text -> Either Text Difficulty
 parseDifficulty =
   \case
-    "Incorrect" -> Right CardIncorrect
-    "Hard" -> Right CardHard
-    "Good" -> Right CardGood
-    "Correct" -> Right CardGood
-    "Easy" -> Right CardEasy
+    "Incorrect" -> Right Incorrect
+    "Hard" -> Right Hard
+    "Good" -> Right Good
+    "Correct" -> Right Good
+    "Easy" -> Right Easy
     _ -> Left "Unknown Difficulty"
 
 instance FromJSON Difficulty where

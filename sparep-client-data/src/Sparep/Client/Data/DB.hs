@@ -22,7 +22,7 @@ share
   [persistLowerCase|
 
 ClientRepetition sql=repetition
-    card CardId
+    unit StudyUnitId sql=card
     difficulty Difficulty
     timestamp UTCTime
     serverId ServerRepetitionId Maybe
@@ -32,7 +32,7 @@ ClientRepetition sql=repetition
 clientMakeRepetition :: ClientRepetition -> Repetition
 clientMakeRepetition ClientRepetition {..} = Repetition {..}
   where
-    repetitionCardId = clientRepetitionCard
+    repetitionUnitId = clientRepetitionUnit
     repetitionDifficulty = clientRepetitionDifficulty
     repetitionTimestamp = clientRepetitionTimestamp
 
@@ -45,6 +45,6 @@ makeUnsyncedClientRepetition = makeClientRepetition Nothing
 makeClientRepetition :: Maybe ServerRepetitionId -> Repetition -> ClientRepetition
 makeClientRepetition clientRepetitionServerId Repetition {..} = ClientRepetition {..}
   where
-    clientRepetitionCard = repetitionCardId
+    clientRepetitionUnit = repetitionUnitId
     clientRepetitionDifficulty = repetitionDifficulty
     clientRepetitionTimestamp = repetitionTimestamp

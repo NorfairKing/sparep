@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Sparep.Data.CardId where
+module Sparep.Data.StudyUnitId where
 
 import Control.Monad
 import Crypto.Hash.SHA256 as SHA256
@@ -23,8 +23,13 @@ import Database.Persist
 import Database.Persist.Sql
 import GHC.Generics (Generic)
 import Sparep.Data.Card
+import Sparep.Data.StudyUnit
 
-hashCard :: Card -> CardId
+hashStudyUnit :: StudyUnit -> StudyUnitId
+hashStudyUnit = \case
+  CardUnit c -> hashCard c
+
+hashCard :: Card -> StudyUnitId
 hashCard Card {..} =
   let sideBytes = \case
         TextSide t -> TE.encodeUtf8 (T.strip t)
@@ -34,53 +39,53 @@ hashCard Card {..} =
           [ sideBytes cardFront,
             sideBytes cardBack
           ]
-   in CardId {cardIdSha256 = SHA256.hash bs}
+   in StudyUnitId {cardIdSha256 = SHA256.hash bs}
 
-newtype CardId
-  = CardId
+newtype StudyUnitId
+  = StudyUnitId
       { cardIdSha256 :: ByteString
       }
   deriving (Show, Eq, Ord, Generic)
 
-instance Validity CardId where
-  validate cid@CardId {..} =
+instance Validity StudyUnitId where
+  validate cid@StudyUnitId {..} =
     mconcat
       [ genericValidate cid,
         declare "The length of the sha256 hash bytestring is 32 bytes" $
           SB.length cardIdSha256 == 32
       ]
 
-renderCardIdHex :: CardId -> Text
-renderCardIdHex = encodeBase16 . cardIdSha256
+renderStudyUnitIdHex :: StudyUnitId -> Text
+renderStudyUnitIdHex = encodeBase16 . cardIdSha256
 
-parseCardIdHex :: Text -> Either Text CardId
-parseCardIdHex = fmap CardId . decodeBase16 . TE.encodeUtf8
+parseStudyUnitIdHex :: Text -> Either Text StudyUnitId
+parseStudyUnitIdHex = fmap StudyUnitId . decodeBase16 . TE.encodeUtf8
 
-instance FromJSON CardId where
-  parseJSON = withText "CardId" $ \t -> case parseCardIdHex t of
+instance FromJSON StudyUnitId where
+  parseJSON = withText "StudyUnitId" $ \t -> case parseStudyUnitIdHex t of
     Left err -> fail $ T.unpack err
     Right cid -> pure cid
 
-instance ToJSON CardId where
-  toJSON = toJSON . renderCardIdHex
+instance ToJSON StudyUnitId where
+  toJSON = toJSON . renderStudyUnitIdHex
 
-renderCardId :: CardId -> ByteString
-renderCardId CardId {..} = cardIdSha256
+renderStudyUnitId :: StudyUnitId -> ByteString
+renderStudyUnitId StudyUnitId {..} = cardIdSha256
 
-parseCardId :: ByteString -> Either Text CardId
-parseCardId sb =
+parseStudyUnitId :: ByteString -> Either Text StudyUnitId
+parseStudyUnitId sb =
   case SB.length sb of
     32 ->
-      pure CardId {cardIdSha256 = sb}
+      pure StudyUnitId {cardIdSha256 = sb}
     l
       | l > 32 ->
-        pure CardId {cardIdSha256 = SB.take 32 sb}
+        pure StudyUnitId {cardIdSha256 = SB.take 32 sb}
       | otherwise -> Left $ "Invalid card id length: " <> T.pack (show l)
 
-instance PersistField CardId where
-  toPersistValue = toPersistValue . renderCardId
+instance PersistField StudyUnitId where
+  toPersistValue = toPersistValue . renderStudyUnitId
 
-  fromPersistValue = fromPersistValue >=> parseCardId
+  fromPersistValue = fromPersistValue >=> parseStudyUnitId
 
-instance PersistFieldSql CardId where
+instance PersistFieldSql StudyUnitId where
   sqlType Proxy = sqlType (Proxy :: Proxy ByteString)

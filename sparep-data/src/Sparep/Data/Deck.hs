@@ -24,6 +24,7 @@ import GHC.Generics (Generic)
 import Path
 import Path.IO
 import Sparep.Data.Card
+import Sparep.Data.StudyUnit
 import System.Exit
 import YamlParse.Applicative as YamlParse
 
@@ -168,12 +169,13 @@ instance YamlSchema CardSideDef where
 instance FromJSON CardSideDef where
   parseJSON = viaYamlSchema
 
-resolveRootedDeck :: MonadIO m => RootedDeck -> m [Card]
+resolveRootedDeck :: MonadIO m => RootedDeck -> m [StudyUnit]
 resolveRootedDeck RootedDeck {..} = resolveDeck rootedDeckPath rootedDeckDeck
 
-resolveDeck :: MonadIO m => Path Abs File -> Deck -> m [Card]
+resolveDeck :: MonadIO m => Path Abs File -> Deck -> m [StudyUnit]
 resolveDeck fp Deck {..} =
-  concat <$> mapM (resolveCardDef fp deckReverse deckInstructions) deckCards
+  map CardUnit
+    . concat <$> mapM (resolveCardDef fp deckReverse deckInstructions) deckCards
 
 resolveCardDef :: MonadIO m => Path Abs File -> Maybe Bool -> Maybe Instructions -> CardDef -> m [Card]
 resolveCardDef fp mDefaultReverse mDefaultInstructions = \case

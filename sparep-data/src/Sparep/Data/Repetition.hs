@@ -9,12 +9,12 @@ import Data.Time
 import Data.Validity
 import Data.Validity.Time ()
 import GHC.Generics (Generic)
-import Sparep.Data.CardId
 import Sparep.Data.Difficulty
+import Sparep.Data.StudyUnitId
 
 data Repetition
   = Repetition
-      { repetitionCardId :: !CardId,
+      { repetitionUnitId :: !StudyUnitId,
         repetitionDifficulty :: !Difficulty,
         repetitionTimestamp :: !UTCTime
       }
@@ -25,14 +25,14 @@ instance Validity Repetition
 instance FromJSON Repetition where
   parseJSON = withObject "Repetition" $ \o ->
     Repetition
-      <$> o .: "card"
+      <$> o .: "unit"
       <*> o .: "difficulty"
       <*> o .: "time"
 
 instance ToJSON Repetition where
   toJSON Repetition {..} =
     object
-      [ "card" .= repetitionCardId,
+      [ "unit" .= repetitionUnitId,
         "difficulty" .= repetitionDifficulty,
         "time" .= repetitionTimestamp
       ]

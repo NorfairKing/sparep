@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Sparep.Data.CardId.Gen where
+module Sparep.Data.StudyUnitId.Gen where
 
 import Data.GenValidity
 import Sparep.Data.Card.Gen ()
-import Sparep.Data.CardId
+import Sparep.Data.StudyUnitId
 
-instance GenValid CardId where
+instance GenValid StudyUnitId where
   genValid = hashCard <$> genValid
   shrinkValid _ = []

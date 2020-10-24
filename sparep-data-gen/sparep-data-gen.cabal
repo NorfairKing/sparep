@@ -21,11 +21,12 @@ source-repository head
 library
   exposed-modules:
       Sparep.Data.Card.Gen
-      Sparep.Data.CardId.Gen
       Sparep.Data.Deck.Gen
       Sparep.Data.Difficulty.Gen
       Sparep.Data.Gen
       Sparep.Data.Repetition.Gen
+      Sparep.Data.StudyUnit.Gen
+      Sparep.Data.StudyUnitId.Gen
   other-modules:
       Paths_sparep_data_gen
   hs-source-dirs:
@@ -46,10 +47,11 @@ test-suite sparep-data-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Sparep.Data.CardIdSpec
       Sparep.Data.CardSpec
       Sparep.Data.DifficultySpec
       Sparep.Data.RepetitionSpec
+      Sparep.Data.StudyUnitIdSpec
+      Sparep.Data.StudyUnitSpec
       Paths_sparep_data_gen
   hs-source-dirs:
       test

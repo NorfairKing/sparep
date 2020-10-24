@@ -74,7 +74,7 @@ migrateRepetition = do
   forM_ rs $ \(Entity rid ClientRepetition {..}) ->
     update
       rid
-      [ ClientRepetitionCard =. clientRepetitionCard,
+      [ ClientRepetitionUnit =. clientRepetitionUnit,
         ClientRepetitionDifficulty =. clientRepetitionDifficulty,
         ClientRepetitionTimestamp =. clientRepetitionTimestamp
       ] -- To make sure that it goes through a reading and writing cycle
@@ -91,10 +91,10 @@ dbWorker qChan rChan = forever $ do
     QueryGetDecksSelection ds -> do
       cs <- concat <$> mapM resolveRootedDeck ds
       runDB $ ResponseGetDecksSelection <$> generateStudySelection cs
-    QueryGetCardDates c -> runDB $ ResponseGetCardDates c <$> getCardDates c
-    QueryGetStudyCards ds w -> do
+    QueryGetStudyUnitDates c -> runDB $ ResponseGetStudyUnitDates c <$> getStudyUnitDates c
+    QueryGetStudyUnits ds w -> do
       cs <- concat <$> mapM resolveRootedDeck ds
-      runDB $ ResponseGetStudyCards <$> generateStudyDeck cs w
+      runDB $ ResponseGetStudyUnits <$> generateStudyDeck cs w
   liftIO $ writeBChan rChan response
 
 runDB :: SqlPersistT IO a -> DB a
