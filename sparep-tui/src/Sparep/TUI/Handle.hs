@@ -260,7 +260,7 @@ handleStudyEvent s e =
                             EvKey KBackTab [] -> funcDo fillExerciseCursorSeekBack
                             EvKey (KChar 'i') [MMeta] -> finishStudyUnit Incorrect
                             EvKey (KChar 'h') [MMeta] -> tryFinishStudyUnit Hard
-                            EvKey (KChar 'c') [MMeta] -> tryFinishStudyUnit Good
+                            EvKey (KChar 'g') [MMeta] -> tryFinishStudyUnit Good
                             EvKey (KChar 'e') [MMeta] -> tryFinishStudyUnit Easy
                             EvKey (KChar c) [] -> textDo $ textCursorInsert c
                             EvKey KBS [] -> textDo $ dullMDelete . textCursorRemove

@@ -7,6 +7,7 @@ module Sparep.TUI.Draw where
 import Brick.AttrMap
 import Brick.Markup
 import Brick.Types
+import Brick.Util
 import Brick.Widgets.Border
 import Brick.Widgets.Center
 import Brick.Widgets.Core
@@ -19,6 +20,7 @@ import Data.Maybe
 import Data.Semigroup (sconcat)
 import qualified Data.Text as T
 import Data.Time
+import Graphics.Vty.Attributes
 import Sparep.Data
 import Sparep.TUI.Repetition
 import Sparep.TUI.State
@@ -286,22 +288,33 @@ drawFillExerciseCursor fec@FillExerciseCursor {..} =
                        )
             )
    in vBox
-        [ hCenterLayer . hLimit 40 . border . padAll 1 $
+        [ hCenterLayer $ hLimit 40 . border . padAll 1 $
             NEC.foldNonEmptyCursor
               ( \befores current afters ->
-                  vBox
-                    [ markup $ mconcat $ map partCursorMarkup befores,
-                      case current of
-                        LitPartCursor t -> withAttr litPartAttr $ txtWrap t -- Should not happen.
-                        FillPartCursor tc t ->
-                          let t' = rebuildTextCursor tc
-                              attr =
-                                if t' == t
-                                  then fillCorrectAttr
-                                  else fillPartAttr
-                           in withAttr attr $ selectedTextCursorWidget TextCursorName tc,
-                      markup $ mconcat $ map partCursorMarkup afters
-                    ]
+                  markup $ mconcat $
+                    concat
+                      [ map partCursorMarkup befores,
+                        case current of
+                          LitPartCursor t -> [t @? litPartAttr] -- Should not happen.
+                          FillPartCursor tc t ->
+                            let t' = rebuildTextCursor tc
+                                attr =
+                                  if t' == t
+                                    then fillCorrectAttr
+                                    else fillPartAttr
+                                (t1, t2) = textCursorSplit tc
+                             in case T.unpack (rebuildTextCursor t2) of
+                                  [] ->
+                                    [ rebuildTextCursor t1 @? attr,
+                                      T.singleton ' ' @? (attr <> fillCursorPartAttr)
+                                    ]
+                                  (c : _) ->
+                                    [ rebuildTextCursor t1 @? attr,
+                                      T.singleton c @? (attr <> fillCursorPartAttr),
+                                      rebuildTextCursor t2 @? attr
+                                    ],
+                        map partCursorMarkup afters
+                      ]
               )
               fillExerciseCursorList,
           hCenterLayer $ padAll 1 $ str "Next hole: Tab,  Previous hole: Shift-Tab",
@@ -310,6 +323,21 @@ drawFillExerciseCursor fec@FillExerciseCursor {..} =
               then str "Incorrect: Alt-i,  Hard: Alt-h,  Good: Alt-g,  Easy: Alt-e"
               else str "Incorrect: Alt-i"
         ]
+
+tuiAttrMap =
+  attrMap
+    (bg brightBlack)
+    [ (selectedAttr, fg brightWhite),
+      (headingAttr, defAttr `withStyle` underline),
+      (instructionsAttr, fg yellow),
+      (sideAttr, fg brightWhite),
+      (litPartAttr, fg brightWhite),
+      (fillPartAttr, fg magenta),
+      (fillIncorrectAttr, fg red),
+      (fillCorrectAttr, fg green),
+      (fillPartAttr <> fillCursorPartAttr, withStyle (fg magenta) reverseVideo),
+      (fillCorrectAttr <> fillCursorPartAttr, withStyle (fg green) reverseVideo)
+    ]
 
 headingAttr :: AttrName
 headingAttr = "heading"
@@ -325,6 +353,9 @@ litPartAttr = "lit-part"
 
 fillPartAttr :: AttrName
 fillPartAttr = "fill-part"
+
+fillCursorPartAttr :: AttrName
+fillCursorPartAttr = "fill-part"
 
 fillCorrectAttr :: AttrName
 fillCorrectAttr = "fill-part-incorrect"

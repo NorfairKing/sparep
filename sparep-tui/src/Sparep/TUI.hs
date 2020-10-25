@@ -109,19 +109,7 @@ tuiApp qChan =
       appChooseCursor = showFirstCursor,
       appHandleEvent = handleTuiEvent qChan,
       appStartEvent = pure,
-      appAttrMap =
-        const $
-          attrMap
-            (bg brightBlack)
-            [ (selectedAttr, fg brightWhite),
-              (headingAttr, defAttr `withStyle` underline),
-              (instructionsAttr, fg yellow),
-              (sideAttr, fg brightWhite),
-              (litPartAttr, fg brightWhite),
-              (fillPartAttr, fg magenta),
-              (fillIncorrectAttr, fg red),
-              (fillCorrectAttr, fg green)
-            ]
+      appAttrMap = const tuiAttrMap
     }
 
 buildInitialState :: BChan Query -> [RootedDeck] -> IO State
