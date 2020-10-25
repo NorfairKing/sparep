@@ -17,6 +17,7 @@ import Cursor.Text
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
 import Data.Semigroup (sconcat)
+import qualified Data.Text as T
 import Data.Time
 import Sparep.Data
 import Sparep.TUI.Repetition
@@ -272,28 +273,43 @@ drawBackSide = withAttr sideAttr . \case
   SoundSide _ _ -> str "Press 'b' to play sound"
 
 drawFillExerciseCursor :: FillExerciseCursor -> Widget ResourceName
-drawFillExerciseCursor =
+drawFillExerciseCursor fec@FillExerciseCursor {..} =
   let partCursorMarkup =
         \case
           LitPartCursor t -> t @? litPartAttr
-          FillPartCursor tc _ ->
-            ( if textCursorNull tc
-                then "___"
-                else rebuildTextCursor tc
+          FillPartCursor tc t ->
+            ( let t' = rebuildTextCursor tc
+               in (if T.null t' then "___" else t')
+                    @? ( if t' == t
+                           then fillCorrectAttr
+                           else fillIncorrectAttr
+                       )
             )
-              @? fillPartAttr
-   in hLimit 40 . border
-        . NEC.foldNonEmptyCursor
-          ( \befores current afters ->
-              vBox
-                [ markup $ mconcat $ map partCursorMarkup befores,
-                  case current of
-                    LitPartCursor t -> withAttr litPartAttr $ txtWrap t -- Should not happen.
-                    FillPartCursor tc _ -> withAttr fillPartAttr $ selectedTextCursorWidget TextCursorName tc,
-                  markup $ mconcat $ map partCursorMarkup afters
-                ]
-          )
-        . fillExerciseCursorList
+   in vBox
+        [ hCenterLayer . hLimit 40 . border . padAll 1 $
+            NEC.foldNonEmptyCursor
+              ( \befores current afters ->
+                  vBox
+                    [ markup $ mconcat $ map partCursorMarkup befores,
+                      case current of
+                        LitPartCursor t -> withAttr litPartAttr $ txtWrap t -- Should not happen.
+                        FillPartCursor tc t ->
+                          let t' = rebuildTextCursor tc
+                              attr =
+                                if t' == t
+                                  then fillCorrectAttr
+                                  else fillPartAttr
+                           in withAttr attr $ selectedTextCursorWidget TextCursorName tc,
+                      markup $ mconcat $ map partCursorMarkup afters
+                    ]
+              )
+              fillExerciseCursorList,
+          hCenterLayer $ padAll 1 $ str "Next hole: Tab,  Previous hole: Shift-Tab",
+          hCenterLayer $ padAll 1 $
+            if fillExerciseCursorCorrect fec
+              then str "Incorrect: Alt-i,  Hard: Alt-h,  Good: Alt-g,  Easy: Alt-e"
+              else str "Incorrect: Alt-i"
+        ]
 
 headingAttr :: AttrName
 headingAttr = "heading"
@@ -309,6 +325,12 @@ litPartAttr = "lit-part"
 
 fillPartAttr :: AttrName
 fillPartAttr = "fill-part"
+
+fillCorrectAttr :: AttrName
+fillCorrectAttr = "fill-part-incorrect"
+
+fillIncorrectAttr :: AttrName
+fillIncorrectAttr = "fill-part-correct"
 
 instructionsAttr :: AttrName
 instructionsAttr = "instructions"

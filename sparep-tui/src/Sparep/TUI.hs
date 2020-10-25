@@ -118,7 +118,9 @@ tuiApp qChan =
               (instructionsAttr, fg yellow),
               (sideAttr, fg brightWhite),
               (litPartAttr, fg brightWhite),
-              (fillPartAttr, fg magenta)
+              (fillPartAttr, fg magenta),
+              (fillIncorrectAttr, fg red),
+              (fillCorrectAttr, fg green)
             ]
     }
 

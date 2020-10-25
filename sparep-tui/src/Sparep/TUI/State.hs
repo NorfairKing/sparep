@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Sparep.TUI.State where
@@ -6,6 +7,7 @@ module Sparep.TUI.State where
 import Cursor.List.NonEmpty
 import qualified Cursor.Simple.List.NonEmpty as Simple
 import Cursor.Text
+import Data.Maybe
 import Data.Text (Text)
 import Data.Time
 import Sparep.Client.Data
@@ -87,10 +89,32 @@ newtype FillExerciseCursor
   deriving (Show, Eq)
 
 makeFillExerciseCursor :: FillExercise -> FillExerciseCursor
-makeFillExerciseCursor FillExercise {..} = FillExerciseCursor $ Simple.makeNonEmptyCursor $ fmap makeFillExercisePartCursor fillExerciseSequence
+makeFillExerciseCursor FillExercise {..} =
+  let fec = FillExerciseCursor $ Simple.makeNonEmptyCursor $ fmap makeFillExercisePartCursor fillExerciseSequence
+   in fromMaybe fec $ fillExerciseCursorSeek fec
 
 rebuildFillExerciseCursor :: FillExerciseCursor -> FillExercise
 rebuildFillExerciseCursor = FillExercise . fmap rebuildFillExercisePartCursor . Simple.rebuildNonEmptyCursor . fillExerciseCursorList
+
+fillExerciseCursorSeek :: FillExerciseCursor -> Maybe FillExerciseCursor
+fillExerciseCursorSeek = fillExerciseCursorSeekHelper Simple.nonEmptyCursorSelectNext
+
+fillExerciseCursorSeekBack :: FillExerciseCursor -> Maybe FillExerciseCursor
+fillExerciseCursorSeekBack = fillExerciseCursorSeekHelper Simple.nonEmptyCursorSelectPrev
+
+fillExerciseCursorSeekHelper :: (forall a. Simple.NonEmptyCursor a -> Maybe (Simple.NonEmptyCursor a)) -> FillExerciseCursor -> Maybe FillExerciseCursor
+fillExerciseCursorSeekHelper func fec = do
+  nec <- func (fillExerciseCursorList fec)
+  FillExerciseCursor <$> go nec
+  where
+    go :: Simple.NonEmptyCursor FillExercisePartCursor -> Maybe (Simple.NonEmptyCursor FillExercisePartCursor)
+    go nec =
+      if fillExercisePartCursorIsFill (nonEmptyCursorCurrent nec)
+        then pure nec
+        else func nec >>= go
+
+fillExerciseCursorCorrect :: FillExerciseCursor -> Bool
+fillExerciseCursorCorrect = foldNonEmptyCursor (\befores cur afters -> all fillExercisePartCursorCorrect $ befores ++ [cur] ++ afters) . fillExerciseCursorList
 
 data FillExercisePartCursor
   = LitPartCursor !Text
@@ -106,6 +130,16 @@ rebuildFillExercisePartCursor :: FillExercisePartCursor -> FillExercisePart
 rebuildFillExercisePartCursor = \case
   LitPartCursor t -> LitPart t
   FillPartCursor _ t -> FillPart t
+
+fillExercisePartCursorIsFill :: FillExercisePartCursor -> Bool
+fillExercisePartCursorIsFill = \case
+  FillPartCursor _ _ -> True
+  _ -> False
+
+fillExercisePartCursorCorrect :: FillExercisePartCursor -> Bool
+fillExercisePartCursorCorrect = \case
+  LitPartCursor _ -> True
+  FillPartCursor tc t -> t == rebuildTextCursor tc
 
 data FrontBack
   = Front

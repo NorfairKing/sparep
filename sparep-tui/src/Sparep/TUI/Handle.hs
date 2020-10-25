@@ -11,6 +11,8 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Cursor.List.NonEmpty
 import qualified Cursor.Simple.List.NonEmpty as Simple
+import Cursor.Text
+import Cursor.Types
 import Data.Function
 import Data.List
 import qualified Data.List.NonEmpty as NE
@@ -154,7 +156,7 @@ handleStudyEvent s e =
       case e of
         VtyEvent vtye ->
           case vtye of
-            EvKey (KChar 'q') [] -> halt s
+            EvKey KEsc [] -> halt s
             _ -> continue s
         AppEvent (ResponseGetStudyUnits cs) ->
           continue $
@@ -170,68 +172,104 @@ handleStudyEvent s e =
           case mCursor of
             Nothing -> halt s
             Just cursor ->
-              let tryPlay :: FrontBack -> EventM n (Next StudyState)
-                  tryPlay fb = do
+              let finishStudyUnit :: Difficulty -> EventM n (Next StudyState)
+                  finishStudyUnit difficulty = do
                     let cur = nonEmptyCursorCurrent cursor
-                    case cur of
-                      CardUnitCursor CardCursor {..} -> do
-                        let side = case fb of
-                              Front -> cardFront cardCursorCard
-                              Back -> cardBack cardCursorCard
-                        case side of
-                          TextSide _ -> pure ()
-                          SoundSide fp _ -> playSoundFile fp
-                      _ -> pure ()
-                    continue s
+                    now <- liftIO getCurrentTime
+                    let rep =
+                          ClientRepetition
+                            { clientRepetitionUnit = hashStudyUnit (rebuildStudyUnitCursor cur),
+                              clientRepetitionDifficulty = difficulty,
+                              clientRepetitionTimestamp = now,
+                              clientRepetitionServerId = Nothing
+                            }
+                    let mcursor' = nonEmptyCursorSelectNext rebuildStudyUnitCursor makeStudyUnitCursor cursor
+                    let mcursor'' =
+                          -- Require re-studying incorrect studyUnits
+                          if difficulty == Incorrect
+                            then Just $ case mcursor' of
+                              Nothing -> singletonNonEmptyCursor cur
+                              Just cursor' -> nonEmptyCursorAppendAtEnd (rebuildStudyUnitCursor cur) cursor'
+                            else mcursor'
+                    continue $
+                      s
+                        { studyStateCursor = Loaded mcursor'',
+                          studyStateRepetitions = rep : studyStateRepetitions s
+                        }
                in case nonEmptyCursorCurrent cursor of
-                    CardUnitCursor cc@CardCursor {..} -> case cardCursorFrontBack of
-                      Front ->
-                        case vtye of
-                          EvKey (KChar 'f') [] -> tryPlay Front
-                          EvKey (KChar 'q') [] -> halt s
-                          EvKey (KChar ' ') [] ->
-                            continue $
-                              s
-                                { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ CardUnitCursor (cardCursorShowBack cc)
-                                }
-                          _ -> continue s
-                      Back ->
-                        let finishStudyUnit :: Difficulty -> EventM n (Next StudyState)
-                            finishStudyUnit difficulty = do
-                              let cur = nonEmptyCursorCurrent cursor
-                              now <- liftIO getCurrentTime
-                              let rep =
-                                    ClientRepetition
-                                      { clientRepetitionUnit = hashStudyUnit (rebuildStudyUnitCursor cur),
-                                        clientRepetitionDifficulty = difficulty,
-                                        clientRepetitionTimestamp = now,
-                                        clientRepetitionServerId = Nothing
+                    CardUnitCursor cc@CardCursor {..} ->
+                      let tryShowExtra :: FrontBack -> EventM n (Next StudyState)
+                          tryShowExtra fb = do
+                            let side = case fb of
+                                  Front -> cardFront cardCursorCard
+                                  Back -> cardBack cardCursorCard
+                            case side of
+                              TextSide _ -> pure ()
+                              SoundSide fp _ -> playSoundFile fp
+                            continue s
+                       in case cardCursorFrontBack of
+                            Front ->
+                              case vtye of
+                                EvKey KEsc [] -> halt s
+                                EvKey (KChar 'f') [] -> tryShowExtra Front
+                                EvKey (KChar ' ') [] ->
+                                  continue $
+                                    s
+                                      { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ CardUnitCursor (cardCursorShowBack cc)
                                       }
-                              let mcursor' = nonEmptyCursorSelectNext rebuildStudyUnitCursor makeStudyUnitCursor cursor
-                              let mcursor'' =
-                                    -- Require re-studying incorrect studyUnits
-                                    if difficulty == Incorrect
-                                      then Just $ case mcursor' of
-                                        Nothing -> singletonNonEmptyCursor cur
-                                        Just cursor' -> nonEmptyCursorAppendAtEnd (rebuildStudyUnitCursor cur) cursor'
-                                      else mcursor'
-                              continue $
-                                s
-                                  { studyStateCursor = Loaded mcursor'',
-                                    studyStateRepetitions = rep : studyStateRepetitions s
-                                  }
-                         in case vtye of
-                              EvKey (KChar 'f') [] -> tryPlay Front
-                              EvKey (KChar 'b') [] -> tryPlay Back
-                              EvKey (KChar 'q') [] -> halt s
-                              EvKey (KChar 'i') [] -> finishStudyUnit Incorrect
-                              EvKey (KChar 'h') [] -> finishStudyUnit Hard
-                              EvKey (KChar 'g') [] -> finishStudyUnit Good
-                              EvKey (KChar 'e') [] -> finishStudyUnit Easy
-                              _ -> continue s
-                    FillExerciseUnitCursor FillExerciseCursor {..} -> case vtye of
-                      EvKey (KChar 'q') [] -> halt s
-                      _ -> continue s
+                                _ -> continue s
+                            Back ->
+                              case vtye of
+                                EvKey KEsc [] -> halt s
+                                EvKey (KChar 'f') [] -> tryShowExtra Front
+                                EvKey (KChar 'b') [] -> tryShowExtra Back
+                                EvKey (KChar 'i') [] -> finishStudyUnit Incorrect
+                                EvKey (KChar 'h') [] -> finishStudyUnit Hard
+                                EvKey (KChar 'g') [] -> finishStudyUnit Good
+                                EvKey (KChar 'e') [] -> finishStudyUnit Easy
+                                _ -> continue s
+                    FillExerciseUnitCursor fec@FillExerciseCursor {..} ->
+                      let funcDo func =
+                            let fec' = fromMaybe fec $ func fec
+                             in continue $
+                                  s
+                                    { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ FillExerciseUnitCursor fec'
+                                    }
+                          textDo func =
+                            let fec' =
+                                  fec
+                                    { fillExerciseCursorList =
+                                        fillExerciseCursorList
+                                          & nonEmptyCursorElemL
+                                          %~ ( \pc -> fromMaybe pc $ case pc of
+                                                 LitPartCursor _ -> Nothing
+                                                 FillPartCursor tc t -> FillPartCursor <$> func tc <*> pure t
+                                             )
+                                    }
+                             in continue $
+                                  s
+                                    { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ FillExerciseUnitCursor fec'
+                                    }
+                          tryFinishStudyUnit diff =
+                            if fillExerciseCursorCorrect fec
+                              then finishStudyUnit diff
+                              else continue s
+                       in case vtye of
+                            EvKey KEsc [] -> halt s
+                            EvKey (KChar '\t') [] -> funcDo fillExerciseCursorSeek
+                            EvKey KBackTab [] -> funcDo fillExerciseCursorSeekBack
+                            EvKey (KChar 'i') [MMeta] -> finishStudyUnit Incorrect
+                            EvKey (KChar 'h') [MMeta] -> tryFinishStudyUnit Hard
+                            EvKey (KChar 'c') [MMeta] -> tryFinishStudyUnit Good
+                            EvKey (KChar 'e') [MMeta] -> tryFinishStudyUnit Easy
+                            EvKey (KChar c) [] -> textDo $ textCursorInsert c
+                            EvKey KBS [] -> textDo $ dullMDelete . textCursorRemove
+                            EvKey KDel [] -> textDo $ dullMDelete . textCursorDelete
+                            EvKey KUp [] -> textDo $ pure . textCursorSelectStart
+                            EvKey KLeft [] -> textDo textCursorSelectPrev
+                            EvKey KRight [] -> textDo textCursorSelectNext
+                            EvKey KDown [] -> textDo $ pure . textCursorSelectEnd
+                            _ -> continue s
         _ -> continue s
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
