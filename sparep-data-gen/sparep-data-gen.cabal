@@ -23,6 +23,7 @@ library
       Sparep.Data.Card.Gen
       Sparep.Data.Deck.Gen
       Sparep.Data.Difficulty.Gen
+      Sparep.Data.FillExercise.Gen
       Sparep.Data.Gen
       Sparep.Data.Repetition.Gen
       Sparep.Data.StudyUnit.Gen

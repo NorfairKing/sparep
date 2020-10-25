@@ -229,6 +229,9 @@ handleStudyEvent s e =
                               EvKey (KChar 'g') [] -> finishStudyUnit Good
                               EvKey (KChar 'e') [] -> finishStudyUnit Easy
                               _ -> continue s
+                    FillExerciseUnitCursor FillExerciseCursor {..} -> case vtye of
+                      EvKey (KChar 'q') [] -> halt s
+                      _ -> continue s
         _ -> continue s
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
@@ -236,7 +239,6 @@ handleStudy :: BChan Query -> [RootedDeck] -> EventM n (Next State)
 handleStudy qChan decks = do
   liftIO $ writeBChan qChan $ QueryGetStudyUnits decks 25
   let studyStateRepetitions = []
-  let studyStateFrontBack = Front
   let studyStateCursor = Loading
   continue $ StateStudy $ StudyState {..}
 

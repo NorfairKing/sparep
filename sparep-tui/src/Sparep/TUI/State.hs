@@ -82,15 +82,15 @@ rebuildCardCursor = cardCursorCard
 
 newtype FillExerciseCursor
   = FillExerciseCursor
-      { fillExerciseCursorList :: NonEmptyCursor FillExercisePartCursor FillExercisePart
+      { fillExerciseCursorList :: Simple.NonEmptyCursor FillExercisePartCursor
       }
   deriving (Show, Eq)
 
 makeFillExerciseCursor :: FillExercise -> FillExerciseCursor
-makeFillExerciseCursor FillExercise {..} = FillExerciseCursor $ makeNonEmptyCursor makeFillExercisePartCursor fillExerciseSequence
+makeFillExerciseCursor FillExercise {..} = FillExerciseCursor $ Simple.makeNonEmptyCursor $ fmap makeFillExercisePartCursor fillExerciseSequence
 
 rebuildFillExerciseCursor :: FillExerciseCursor -> FillExercise
-rebuildFillExerciseCursor = FillExercise . rebuildNonEmptyCursor rebuildFillExercisePartCursor . fillExerciseCursorList
+rebuildFillExerciseCursor = FillExercise . fmap rebuildFillExercisePartCursor . Simple.rebuildNonEmptyCursor . fillExerciseCursorList
 
 data FillExercisePartCursor
   = LitPartCursor !Text

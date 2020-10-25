@@ -9,6 +9,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString as SB
+import Data.List.NonEmpty ((<|), NonEmpty (..))
 import qualified Data.Map as M
 import Data.Map (Map)
 import Data.Maybe
@@ -24,6 +25,7 @@ import GHC.Generics (Generic)
 import Path
 import Path.IO
 import Sparep.Data.Card
+import Sparep.Data.FillExercise
 import Sparep.Data.StudyUnit
 import System.Exit
 import YamlParse.Applicative as YamlParse
@@ -56,13 +58,16 @@ readRootedDeckOrErr afp = do
     Left err -> Left err
     Right d -> Right $ RootedDeck {rootedDeckPath = afp, rootedDeckDeck = d}
 
+resolveRootedDeck :: MonadIO m => RootedDeck -> m [StudyUnit]
+resolveRootedDeck RootedDeck {..} = resolveDeck rootedDeckPath rootedDeckDeck
+
 data Deck
   = Deck
       { deckName :: !(Maybe Text),
         deckDescription :: !(Maybe Text),
         deckInstructions :: !(Maybe Instructions),
         deckReverse :: !(Maybe Bool),
-        deckCards :: ![CardDef]
+        deckStudyUnits :: ![StudyUnitDef]
       }
   deriving (Show, Eq, Generic)
 
@@ -81,6 +86,28 @@ instance YamlSchema Deck where
 instance FromJSON Deck where
   parseJSON = viaYamlSchema
 
+resolveDeck :: MonadIO m => Path Abs File -> Deck -> m [StudyUnit]
+resolveDeck fp Deck {..} = concat <$> mapM (resolveStudyUnitDef fp deckReverse deckInstructions) deckStudyUnits
+
+data StudyUnitDef
+  = CardUnitDef !CardDef
+  | FillExerciseUnitDef !FillExerciseDef
+  deriving (Show, Eq, Generic)
+
+instance Validity StudyUnitDef
+
+instance YamlSchema StudyUnitDef where
+  yamlSchema =
+    alternatives
+      [ FillExerciseUnitDef <$> yamlSchema,
+        CardUnitDef <$> yamlSchema
+      ]
+
+resolveStudyUnitDef :: MonadIO m => Path Abs File -> Maybe Bool -> Maybe Instructions -> StudyUnitDef -> m [StudyUnit]
+resolveStudyUnitDef fp mDefaultReverse mDefaultInstructions = \case
+  CardUnitDef cd -> fmap CardUnit <$> resolveCardDef fp mDefaultReverse mDefaultInstructions cd
+  FillExerciseUnitDef fed -> pure [FillExerciseUnit $ resolveFillExerciseDef fed]
+
 data CardDef
   = CardFrontBack !CardFrontBackDef
   | CardManySided !CardManySidedDef
@@ -97,6 +124,11 @@ instance YamlSchema CardDef where
 
 instance FromJSON CardDef where
   parseJSON = viaYamlSchema
+
+resolveCardDef :: MonadIO m => Path Abs File -> Maybe Bool -> Maybe Instructions -> CardDef -> m [Card]
+resolveCardDef fp mDefaultReverse mDefaultInstructions = \case
+  CardFrontBack cfbd -> resolveCardFrontBackDef fp mDefaultReverse mDefaultInstructions cfbd
+  CardManySided cmsd -> resolveCardManySidedDef fp mDefaultInstructions cmsd
 
 data CardFrontBackDef
   = CardFrontBackDef
@@ -121,16 +153,26 @@ instance YamlSchema CardFrontBackDef where
 instance FromJSON CardFrontBackDef where
   parseJSON = viaYamlSchema
 
-newtype Instructions = Instructions {unInstructions :: Text}
-  deriving (Show, Eq, Generic)
-
-instance Validity Instructions
-
-instance YamlSchema Instructions where
-  yamlSchema = Instructions <$> yamlSchema
-
-instance FromJSON Instructions where
-  parseJSON = viaYamlSchema
+resolveCardFrontBackDef :: MonadIO m => Path Abs File -> Maybe Bool -> Maybe Instructions -> CardFrontBackDef -> m [Card]
+resolveCardFrontBackDef fp mDefaultReverse mDefaultInstructions CardFrontBackDef {..} = do
+  let mInstructions = cardFrontBackDefInstructions <|> mDefaultInstructions
+      defaultReverse = fromMaybe False mDefaultReverse
+  frontSide <- resolveCardSideDef fp cardFrontBackDefFront
+  backSide <- resolveCardSideDef fp cardFrontBackDefBack
+  let rightWayRoundCard =
+        Card
+          { cardInstructions = unInstructions <$> mInstructions,
+            cardFront = frontSide,
+            cardBack = backSide
+          }
+      reversedCard =
+        Card
+          { cardInstructions = unInstructions <$> mInstructions,
+            cardFront = backSide,
+            cardBack = frontSide
+          }
+      doReversal = fromMaybe defaultReverse cardFrontBackDefReverse
+  pure $ rightWayRoundCard : [reversedCard | doReversal]
 
 data CardManySidedDef
   = CardManySidedDef
@@ -147,6 +189,36 @@ instance YamlSchema CardManySidedDef where
       CardManySidedDef
         <$> requiredField "sides" "The sides of the many-sided card"
         <*> optionalField "instructions" "Instructions for what to do when you see the front of the card"
+
+resolveCardManySidedDef :: MonadIO m => Path Abs File -> Maybe Instructions -> CardManySidedDef -> m [Card]
+resolveCardManySidedDef fp mDefaultInstructions CardManySidedDef {..} = do
+  let mInstructions = cardManySidedDefInstructions <|> mDefaultInstructions
+  sidesList <- M.toList <$> mapM (resolveCardSideDef fp) cardManySidedDefSides
+  pure $ do
+    s1@(side1Name, side1) <- sidesList
+    (side2Name, side2) <- filter (/= s1) sidesList
+    pure
+      Card
+        { cardInstructions =
+            Just $ T.unwords $
+              concat
+                [ [unInstructions i | i <- maybeToList mInstructions],
+                  ["(", side1Name, "->", side2Name, ")"]
+                ],
+          cardFront = side1,
+          cardBack = side2
+        }
+
+newtype Instructions = Instructions {unInstructions :: Text}
+  deriving (Show, Eq, Generic)
+
+instance Validity Instructions
+
+instance YamlSchema Instructions where
+  yamlSchema = Instructions <$> yamlSchema
+
+instance FromJSON Instructions where
+  parseJSON = viaYamlSchema
 
 data CardSideDef
   = TextSideDef !Text
@@ -169,59 +241,6 @@ instance YamlSchema CardSideDef where
 instance FromJSON CardSideDef where
   parseJSON = viaYamlSchema
 
-resolveRootedDeck :: MonadIO m => RootedDeck -> m [StudyUnit]
-resolveRootedDeck RootedDeck {..} = resolveDeck rootedDeckPath rootedDeckDeck
-
-resolveDeck :: MonadIO m => Path Abs File -> Deck -> m [StudyUnit]
-resolveDeck fp Deck {..} =
-  map CardUnit
-    . concat <$> mapM (resolveCardDef fp deckReverse deckInstructions) deckCards
-
-resolveCardDef :: MonadIO m => Path Abs File -> Maybe Bool -> Maybe Instructions -> CardDef -> m [Card]
-resolveCardDef fp mDefaultReverse mDefaultInstructions = \case
-  CardFrontBack cfbd -> resolveCardFrontBackDef fp mDefaultReverse mDefaultInstructions cfbd
-  CardManySided cmsd -> resolveCardManySidedDef fp mDefaultInstructions cmsd
-
-resolveCardFrontBackDef :: MonadIO m => Path Abs File -> Maybe Bool -> Maybe Instructions -> CardFrontBackDef -> m [Card]
-resolveCardFrontBackDef fp mDefaultReverse mDefaultInstructions CardFrontBackDef {..} = do
-  let mInstructions = cardFrontBackDefInstructions <|> mDefaultInstructions
-      defaultReverse = fromMaybe False mDefaultReverse
-  frontSide <- resolveCardSideDef fp cardFrontBackDefFront
-  backSide <- resolveCardSideDef fp cardFrontBackDefBack
-  let rightWayRoundCard =
-        Card
-          { cardInstructions = unInstructions <$> mInstructions,
-            cardFront = frontSide,
-            cardBack = backSide
-          }
-      reversedCard =
-        Card
-          { cardInstructions = unInstructions <$> mInstructions,
-            cardFront = backSide,
-            cardBack = frontSide
-          }
-      doReversal = fromMaybe defaultReverse cardFrontBackDefReverse
-  pure $ rightWayRoundCard : [reversedCard | doReversal]
-
-resolveCardManySidedDef :: MonadIO m => Path Abs File -> Maybe Instructions -> CardManySidedDef -> m [Card]
-resolveCardManySidedDef fp mDefaultInstructions CardManySidedDef {..} = do
-  let mInstructions = cardManySidedDefInstructions <|> mDefaultInstructions
-  sidesList <- M.toList <$> mapM (resolveCardSideDef fp) cardManySidedDefSides
-  pure $ do
-    s1@(side1Name, side1) <- sidesList
-    (side2Name, side2) <- filter (/= s1) sidesList
-    pure
-      Card
-        { cardInstructions =
-            Just $ T.unwords $
-              concat
-                [ [unInstructions i | i <- maybeToList mInstructions],
-                  ["(", side1Name, "->", side2Name, ")"]
-                ],
-          cardFront = side1,
-          cardBack = side2
-        }
-
 resolveCardSideDef :: MonadIO m => Path Abs File -> CardSideDef -> m CardSide
 resolveCardSideDef dfp = \case
   TextSideDef t -> pure $ TextSide $ T.strip t
@@ -229,3 +248,30 @@ resolveCardSideDef dfp = \case
     afp <- resolveFile (parent dfp) fp
     contents <- SB.readFile $ fromAbsFile afp
     pure $ SoundSide afp contents
+
+data FillExerciseDef
+  = FillExerciseDef
+      { fillExerciseDefSequence :: NonEmpty FillExercisePart
+      }
+  deriving (Show, Eq, Generic)
+
+instance Validity FillExerciseDef
+
+instance YamlSchema FillExerciseDef where
+  yamlSchema = FillExerciseDef . parseFillExerciseParts <$> yamlSchema
+
+resolveFillExerciseDef :: FillExerciseDef -> FillExercise
+resolveFillExerciseDef FillExerciseDef {..} =
+  FillExercise
+    { fillExerciseSequence = fillExerciseDefSequence
+    }
+
+parseFillExerciseParts :: Text -> NonEmpty FillExercisePart
+parseFillExerciseParts = goLit [] . T.unpack
+  where
+    goLit acc [] = LitPart (T.pack $ reverse acc) :| []
+    goLit acc ('_' : rest) = LitPart (T.pack $ reverse acc) <| goFill [] rest
+    goLit acc (c : rest) = goLit (c : acc) rest
+    goFill acc [] = LitPart (T.pack $ reverse acc) :| []
+    goFill acc ('_' : rest) = FillPart (T.pack $ reverse acc) <| goLit [] rest
+    goFill acc (c : rest) = goFill (c : acc) rest

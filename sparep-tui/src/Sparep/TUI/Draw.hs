@@ -11,10 +11,12 @@ import Brick.Widgets.Border
 import Brick.Widgets.Center
 import Brick.Widgets.Core
 import Cursor.Brick
-import Cursor.List.NonEmpty
-import qualified Cursor.Simple.List.NonEmpty as Simple
+import qualified Cursor.List.NonEmpty as NEC
+import Cursor.Simple.List.NonEmpty
+import Cursor.Text
+import qualified Data.List.NonEmpty as NE
 import Data.Maybe
-import qualified Data.Text as T
+import Data.Semigroup (sconcat)
 import Data.Time
 import Sparep.Data
 import Sparep.TUI.Repetition
@@ -79,7 +81,7 @@ drawDecksState DecksState {..} =
         ]
   ]
 
-drawDeckList :: Simple.NonEmptyCursor (RootedDeck, Loading (Selection a)) -> Widget n
+drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection a)) -> Widget n
 drawDeckList =
   verticalNonEmptyCursorTableWithHeader
     go
@@ -156,7 +158,7 @@ drawStudyUnitsState StudyUnitsState {..} =
         ]
   ]
 
-drawStudyUnitList :: Simple.NonEmptyCursor (StudyUnit, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
+drawStudyUnitList :: NonEmptyCursor (StudyUnit, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
 drawStudyUnitList =
   verticalNonEmptyCursorTableWithHeader
     go
@@ -182,7 +184,16 @@ drawStudyUnitDetails su lTimes =
             concat
               [ [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | ins <- maybeToList cardInstructions],
                 [hCenterLayer $ drawCard Back card]
-              ],
+              ]
+          FillExerciseUnit FillExercise {..} ->
+            [ hCenterLayer $ hLimit 40 $ border $ padAll 1 $ markup $ sconcat $
+                NE.map
+                  ( \case
+                      LitPart t -> t @? litPartAttr
+                      FillPart t -> t @? fillPartAttr
+                  )
+                  fillExerciseSequence
+            ],
         case lTimes of
           Loading -> [str "Loading", str "Loading"]
           Loaded mTimes -> case mTimes of
@@ -262,20 +273,26 @@ drawBackSide = withAttr sideAttr . \case
 
 drawFillExerciseCursor :: FillExerciseCursor -> Widget ResourceName
 drawFillExerciseCursor =
-  let partText =
+  let partCursorMarkup =
         \case
-          LitPart t -> t
-          FillPart t -> t
-   in foldNonEmptyCursor
-        ( \befores current afters ->
-            vBox
-              [ withAttr sideAttr $ txtWrap $ T.concat (map partText befores),
-                withAttr (typingAttr <> sideAttr) $ case current of
-                  LitPartCursor t -> txtWrap t
-                  FillPartCursor tc _ -> selectedTextCursorWidget TextCursorName tc,
-                withAttr sideAttr $ txtWrap $ T.concat (map partText afters)
-              ]
-        )
+          LitPartCursor t -> t @? litPartAttr
+          FillPartCursor tc _ ->
+            ( if textCursorNull tc
+                then "___"
+                else rebuildTextCursor tc
+            )
+              @? fillPartAttr
+   in hLimit 40 . border
+        . NEC.foldNonEmptyCursor
+          ( \befores current afters ->
+              vBox
+                [ markup $ mconcat $ map partCursorMarkup befores,
+                  case current of
+                    LitPartCursor t -> withAttr litPartAttr $ txtWrap t -- Should not happen.
+                    FillPartCursor tc _ -> withAttr fillPartAttr $ selectedTextCursorWidget TextCursorName tc,
+                  markup $ mconcat $ map partCursorMarkup afters
+                ]
+          )
         . fillExerciseCursorList
 
 headingAttr :: AttrName
@@ -287,8 +304,11 @@ selectedAttr = "selected"
 sideAttr :: AttrName
 sideAttr = "side"
 
-typingAttr :: AttrName
-typingAttr = "typing"
+litPartAttr :: AttrName
+litPartAttr = "lit-part"
+
+fillPartAttr :: AttrName
+fillPartAttr = "fill-part"
 
 instructionsAttr :: AttrName
 instructionsAttr = "instructions"
