@@ -44,6 +44,7 @@ library
     , envparse
     , filelock
     , filepath
+    , microlens
     , monad-logger
     , mtl
     , optparse-applicative

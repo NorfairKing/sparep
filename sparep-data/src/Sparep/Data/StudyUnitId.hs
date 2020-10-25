@@ -11,7 +11,9 @@ import Data.Aeson
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as SB
 import Data.ByteString.Base16
+import Data.List.NonEmpty as NE
 import Data.Proxy
+import Data.Semigroup
 import Data.Text
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -23,23 +25,33 @@ import Database.Persist
 import Database.Persist.Sql
 import GHC.Generics (Generic)
 import Sparep.Data.Card
+import Sparep.Data.FillExercise
 import Sparep.Data.StudyUnit
 
 hashStudyUnit :: StudyUnit -> StudyUnitId
-hashStudyUnit = \case
-  CardUnit c -> hashCard c
+hashStudyUnit su =
+  let bs = case su of
+        CardUnit c -> cardContents c
+        FillExerciseUnit fe -> fillExerciseContents fe
+   in StudyUnitId {cardIdSha256 = SHA256.hash bs}
 
-hashCard :: Card -> StudyUnitId
-hashCard Card {..} =
+cardContents :: Card -> ByteString
+cardContents Card {..} =
   let sideBytes = \case
         TextSide t -> TE.encodeUtf8 (T.strip t)
         SoundSide _ contents -> contents
-      bs =
-        SB.concat
-          [ sideBytes cardFront,
-            sideBytes cardBack
-          ]
-   in StudyUnitId {cardIdSha256 = SHA256.hash bs}
+   in SB.concat
+        [ sideBytes cardFront,
+          sideBytes cardBack
+        ]
+
+fillExerciseContents :: FillExercise -> ByteString
+fillExerciseContents FillExercise {..} = sconcat $ NE.map fillExercisePartContents fillExerciseSequence
+
+fillExercisePartContents :: FillExercisePart -> ByteString
+fillExercisePartContents = \case
+  LitPart t -> SB.cons 0 $ TE.encodeUtf8 t
+  FillPart t -> SB.cons 1 $ TE.encodeUtf8 t
 
 newtype StudyUnitId
   = StudyUnitId

@@ -24,6 +24,7 @@ library
       Sparep.Data.Card
       Sparep.Data.Deck
       Sparep.Data.Difficulty
+      Sparep.Data.FillExercise
       Sparep.Data.Repetition
       Sparep.Data.StudyUnit
       Sparep.Data.StudyUnitId

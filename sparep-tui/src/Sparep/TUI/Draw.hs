@@ -204,27 +204,30 @@ drawStudyState StudyState {..} =
               [ hCenterLayer
                   $ str
                   $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
-                vCenterLayer $
-                  vBox
-                    [ drawStudyUnitStudy studyStateFrontBack (nonEmptyCursorCurrent cursor),
-                      hCenterLayer $ padLeftRight 3 $
-                        case studyStateFrontBack of
-                          Front -> str "Show back: space"
-                          Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
-                    ]
+                vCenterLayer $ drawStudyUnitCursor (nonEmptyCursorCurrent cursor)
               ]
   ]
 
-drawStudyUnitStudy :: FrontBack -> StudyUnit -> Widget n
-drawStudyUnitStudy fb su = case su of
-  CardUnit card@Card {..} ->
-    vBox $
-      concat
-        [ [ hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | ins <- maybeToList cardInstructions
-          ],
-          [ hCenterLayer $ drawCard fb card
+drawStudyUnitCursor :: StudyUnitCursor -> Widget n
+drawStudyUnitCursor su = case su of
+  CardUnitCursor cc -> drawCardCursor cc
+
+drawCardCursor :: CardCursor -> Widget n
+drawCardCursor CardCursor {..} =
+  let Card {..} = cardCursorCard
+   in vBox $
+        concat
+          [ [ hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | ins <- maybeToList cardInstructions
+            ],
+            [ hCenterLayer $ drawCard cardCursorFrontBack cardCursorCard,
+              vBox
+                [ hCenterLayer $ padLeftRight 3 $
+                    case cardCursorFrontBack of
+                      Front -> str "Show back: space"
+                      Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
+                ]
+            ]
           ]
-        ]
 
 drawCard :: FrontBack -> Card -> Widget n
 drawCard fb Card {..} =
