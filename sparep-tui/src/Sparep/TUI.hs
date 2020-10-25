@@ -7,10 +7,8 @@ module Sparep.TUI
   )
 where
 
-import Brick.AttrMap
 import Brick.BChan
 import Brick.Main
-import Brick.Util
 import Control.Concurrent.Async
 import Control.Monad
 import Control.Monad.IO.Class
@@ -21,7 +19,6 @@ import Database.Persist
 import Database.Persist.Sql
 import Database.Persist.Sqlite
 import Graphics.Vty (defaultConfig, mkVty)
-import Graphics.Vty.Attributes
 import Path
 import Path.IO
 import Sparep.Client.Data

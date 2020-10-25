@@ -324,6 +324,7 @@ drawFillExerciseCursor fec@FillExerciseCursor {..} =
               else str "Incorrect: Alt-i"
         ]
 
+tuiAttrMap :: AttrMap
 tuiAttrMap =
   attrMap
     (bg brightBlack)
