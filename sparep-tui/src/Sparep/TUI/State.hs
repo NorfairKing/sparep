@@ -1,9 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Sparep.TUI.State where
 
 import Cursor.List.NonEmpty
 import qualified Cursor.Simple.List.NonEmpty as Simple
+import Cursor.Text
+import Data.Text (Text)
 import Data.Time
 import Sparep.Client.Data
 import Sparep.Data
@@ -48,15 +51,18 @@ data StudyState
 
 data StudyUnitCursor
   = CardUnitCursor !CardCursor
+  | FillExerciseUnitCursor !FillExerciseCursor
   deriving (Show, Eq)
 
 makeStudyUnitCursor :: StudyUnit -> StudyUnitCursor
 makeStudyUnitCursor = \case
   CardUnit c -> CardUnitCursor $ makeCardCursor c
+  FillExerciseUnit fe -> FillExerciseUnitCursor $ makeFillExerciseCursor fe
 
 rebuildStudyUnitCursor :: StudyUnitCursor -> StudyUnit
 rebuildStudyUnitCursor = \case
   CardUnitCursor cc -> CardUnit $ rebuildCardCursor cc
+  FillExerciseUnitCursor fec -> FillExerciseUnit $ rebuildFillExerciseCursor fec
 
 data CardCursor
   = CardCursor
@@ -74,11 +80,38 @@ cardCursorShowBack cc = cc {cardCursorFrontBack = Back}
 rebuildCardCursor :: CardCursor -> Card
 rebuildCardCursor = cardCursorCard
 
+newtype FillExerciseCursor
+  = FillExerciseCursor
+      { fillExerciseCursorList :: NonEmptyCursor FillExercisePartCursor FillExercisePart
+      }
+  deriving (Show, Eq)
+
+makeFillExerciseCursor :: FillExercise -> FillExerciseCursor
+makeFillExerciseCursor FillExercise {..} = FillExerciseCursor $ makeNonEmptyCursor makeFillExercisePartCursor fillExerciseSequence
+
+rebuildFillExerciseCursor :: FillExerciseCursor -> FillExercise
+rebuildFillExerciseCursor = FillExercise . rebuildNonEmptyCursor rebuildFillExercisePartCursor . fillExerciseCursorList
+
+data FillExercisePartCursor
+  = LitPartCursor !Text
+  | FillPartCursor !TextCursor !Text
+  deriving (Show, Eq)
+
+makeFillExercisePartCursor :: FillExercisePart -> FillExercisePartCursor
+makeFillExercisePartCursor = \case
+  LitPart t -> LitPartCursor t
+  FillPart t -> FillPartCursor emptyTextCursor t
+
+rebuildFillExercisePartCursor :: FillExercisePartCursor -> FillExercisePart
+rebuildFillExercisePartCursor = \case
+  LitPartCursor t -> LitPart t
+  FillPartCursor _ t -> FillPart t
+
 data FrontBack
   = Front
   | Back
   deriving (Show, Eq)
 
 data ResourceName
-  = ResourceName
+  = TextCursorName
   deriving (Show, Eq, Ord)

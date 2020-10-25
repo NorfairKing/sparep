@@ -5,6 +5,10 @@ let
     import (
       pkgs.fetchFromGitHub (import ./validity-version.nix) + "/nix/overlay.nix"
     );
+  cursor-overlay =
+    import (
+      pkgs.fetchFromGitHub (import ./cursor-version.nix) + "/nix/overlay.nix"
+    );
   yamlparse-applicative-overlay =
     import (
       pkgs.fetchFromGitHub (import ./yamlparse-applicative-version.nix) + "/nix/overlay.nix"
@@ -14,6 +18,7 @@ let
       overlays =
         [
           validity-overlay
+          cursor-overlay
           yamlparse-applicative-overlay
           (import ./gitignore-src.nix)
           (import ./overlay.nix)

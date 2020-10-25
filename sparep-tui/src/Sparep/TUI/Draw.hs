@@ -5,19 +5,22 @@
 module Sparep.TUI.Draw where
 
 import Brick.AttrMap
+import Brick.Markup
 import Brick.Types
 import Brick.Widgets.Border
 import Brick.Widgets.Center
 import Brick.Widgets.Core
 import Cursor.Brick
-import Cursor.Simple.List.NonEmpty
+import Cursor.List.NonEmpty
+import qualified Cursor.Simple.List.NonEmpty as Simple
 import Data.Maybe
+import qualified Data.Text as T
 import Data.Time
 import Sparep.Data
 import Sparep.TUI.Repetition
 import Sparep.TUI.State
 
-drawTui :: State -> [Widget n]
+drawTui :: State -> [Widget ResourceName]
 drawTui =
   \case
     StateMenu ms -> drawMenuState ms
@@ -76,7 +79,7 @@ drawDecksState DecksState {..} =
         ]
   ]
 
-drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection a)) -> Widget n
+drawDeckList :: Simple.NonEmptyCursor (RootedDeck, Loading (Selection a)) -> Widget n
 drawDeckList =
   verticalNonEmptyCursorTableWithHeader
     go
@@ -153,7 +156,7 @@ drawStudyUnitsState StudyUnitsState {..} =
         ]
   ]
 
-drawStudyUnitList :: NonEmptyCursor (StudyUnit, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
+drawStudyUnitList :: Simple.NonEmptyCursor (StudyUnit, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
 drawStudyUnitList =
   verticalNonEmptyCursorTableWithHeader
     go
@@ -192,7 +195,7 @@ drawStudyUnitDetails su lTimes =
   where
     showTime = formatTime defaultTimeLocale "%F %R"
 
-drawStudyState :: StudyState -> [Widget n]
+drawStudyState :: StudyState -> [Widget ResourceName]
 drawStudyState StudyState {..} =
   [ case studyStateCursor of
       Loading -> centerLayer $ str "Loading cards to study..."
@@ -208,9 +211,10 @@ drawStudyState StudyState {..} =
               ]
   ]
 
-drawStudyUnitCursor :: StudyUnitCursor -> Widget n
+drawStudyUnitCursor :: StudyUnitCursor -> Widget ResourceName
 drawStudyUnitCursor su = case su of
   CardUnitCursor cc -> drawCardCursor cc
+  FillExerciseUnitCursor fec -> drawFillExerciseCursor fec
 
 drawCardCursor :: CardCursor -> Widget n
 drawCardCursor CardCursor {..} =
@@ -256,6 +260,24 @@ drawBackSide = withAttr sideAttr . \case
   TextSide t -> txtWrap t
   SoundSide _ _ -> str "Press 'b' to play sound"
 
+drawFillExerciseCursor :: FillExerciseCursor -> Widget ResourceName
+drawFillExerciseCursor =
+  let partText =
+        \case
+          LitPart t -> t
+          FillPart t -> t
+   in foldNonEmptyCursor
+        ( \befores current afters ->
+            vBox
+              [ withAttr sideAttr $ txtWrap $ T.concat (map partText befores),
+                withAttr (typingAttr <> sideAttr) $ case current of
+                  LitPartCursor t -> txtWrap t
+                  FillPartCursor tc _ -> selectedTextCursorWidget TextCursorName tc,
+                withAttr sideAttr $ txtWrap $ T.concat (map partText afters)
+              ]
+        )
+        . fillExerciseCursorList
+
 headingAttr :: AttrName
 headingAttr = "heading"
 
@@ -264,6 +286,9 @@ selectedAttr = "selected"
 
 sideAttr :: AttrName
 sideAttr = "side"
+
+typingAttr :: AttrName
+typingAttr = "typing"
 
 instructionsAttr :: AttrName
 instructionsAttr = "instructions"
