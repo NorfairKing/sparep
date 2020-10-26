@@ -185,18 +185,21 @@ drawStudyUnitDetails su lTimes =
         case su of
           CardUnit card@Card {..} ->
             concat
-              [ [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | ins <- maybeToList cardInstructions],
+              [ [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | Instructions ins <- maybeToList cardInstructions],
                 [hCenterLayer $ drawCard Back card]
               ]
           FillExerciseUnit FillExercise {..} ->
-            [ hCenterLayer $ hLimit 40 $ border $ padAll 1 $ markup $ sconcat $
-                NE.map
-                  ( \case
-                      LitPart t -> t @? litPartAttr
-                      FillPart t -> t @? fillPartAttr
-                  )
-                  fillExerciseSequence
-            ],
+            concat
+              [ [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | Instructions ins <- maybeToList fillExerciseInstructions],
+                [ hCenterLayer $ hLimit 40 $ border $ padAll 1 $ markup $ sconcat $
+                    NE.map
+                      ( \case
+                          LitPart t -> t @? litPartAttr
+                          FillPart t -> t @? fillPartAttr
+                      )
+                      fillExerciseSequence
+                ]
+              ],
         case lTimes of
           Loading -> [str "Loading", str "Loading"]
           Loaded mTimes -> case mTimes of
@@ -235,7 +238,7 @@ drawCardCursor CardCursor {..} =
   let Card {..} = cardCursorCard
    in vBox $
         concat
-          [ [ hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | ins <- maybeToList cardInstructions
+          [ [ hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | Instructions ins <- maybeToList cardInstructions
             ],
             [ hCenterLayer $ drawCard cardCursorFrontBack cardCursorCard,
               vBox
@@ -287,42 +290,46 @@ drawFillExerciseCursor fec@FillExerciseCursor {..} =
                            else fillIncorrectAttr
                        )
             )
-   in vBox
-        [ hCenterLayer $ hLimit 40 . border . padAll 1 $
-            NEC.foldNonEmptyCursor
-              ( \befores current afters ->
-                  markup $ mconcat $
-                    concat
-                      [ map partCursorMarkup befores,
-                        case current of
-                          LitPartCursor t -> [t @? litPartAttr] -- Should not happen.
-                          FillPartCursor tc t ->
-                            let t' = rebuildTextCursor tc
-                                attr =
-                                  if t' == t
-                                    then fillCorrectAttr
-                                    else fillPartAttr
-                                (t1, t2) = textCursorSplit tc
-                             in case T.unpack (rebuildTextCursor t2) of
-                                  [] ->
-                                    [ rebuildTextCursor t1 @? attr,
-                                      T.singleton ' ' @? (attr <> fillCursorPartAttr)
-                                    ]
-                                  (c : _) ->
-                                    [ rebuildTextCursor t1 @? attr,
-                                      T.singleton c @? (attr <> fillCursorPartAttr),
-                                      rebuildTextCursor t2 @? attr
-                                    ],
-                        map partCursorMarkup afters
-                      ]
-              )
-              fillExerciseCursorList,
-          hCenterLayer $ padAll 1 $ str "Next hole: Tab,  Previous hole: Shift-Tab",
-          hCenterLayer $ padAll 1 $
-            if fillExerciseCursorCorrect fec
-              then str "Incorrect: Alt-i,  Hard: Alt-h,  Good: Alt-g,  Easy: Alt-e"
-              else str "Incorrect: Alt-i"
-        ]
+   in vBox $
+        concat
+          [ [hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | Instructions ins <- maybeToList fillExerciseCursorInstructions],
+            [ hCenterLayer $ hLimit 40 . border . padAll 1 $
+                NEC.foldNonEmptyCursor
+                  ( \befores current afters ->
+                      markup $ mconcat $
+                        concat
+                          [ map partCursorMarkup befores,
+                            case current of
+                              LitPartCursor t -> [t @? litPartAttr] -- Should not happen.
+                              FillPartCursor tc t ->
+                                let t' = rebuildTextCursor tc
+                                    attr =
+                                      if t' == t
+                                        then fillCorrectAttr
+                                        else fillPartAttr
+                                    (t1, t2) = textCursorSplit tc
+                                 in case T.unpack (rebuildTextCursor t2) of
+                                      [] ->
+                                        [ rebuildTextCursor t1 @? attr,
+                                          T.singleton ' ' @? (attr <> fillCursorPartAttr)
+                                        ]
+                                      (c : _) ->
+                                        [ rebuildTextCursor t1 @? attr,
+                                          T.singleton c @? (attr <> fillCursorPartAttr),
+                                          rebuildTextCursor t2 @? attr
+                                        ],
+                            map partCursorMarkup afters
+                          ]
+                  )
+                  fillExerciseCursorList
+            ],
+            [hCenterLayer $ padAll 1 $ str "Next hole: Tab,  Previous hole: Shift-Tab" | fillExerciseCursorCountHoles fec > 1],
+            [ hCenterLayer $ padAll 1 $
+                if fillExerciseCursorCorrect fec
+                  then str "Incorrect: Alt-i,  Hard: Alt-h,  Good: Alt-g,  Easy: Alt-e"
+                  else str "Incorrect: Alt-i"
+            ]
+          ]
 
 tuiAttrMap :: AttrMap
 tuiAttrMap =

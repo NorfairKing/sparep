@@ -26,6 +26,7 @@ import Path
 import Path.IO
 import Sparep.Data.Card
 import Sparep.Data.FillExercise
+import Sparep.Data.Instructions
 import Sparep.Data.StudyUnit
 import System.Exit
 import YamlParse.Applicative as YamlParse
@@ -106,7 +107,7 @@ instance YamlSchema StudyUnitDef where
 resolveStudyUnitDef :: MonadIO m => Path Abs File -> Maybe Bool -> Maybe Instructions -> StudyUnitDef -> m [StudyUnit]
 resolveStudyUnitDef fp mDefaultReverse mDefaultInstructions = \case
   CardUnitDef cd -> fmap CardUnit <$> resolveCardDef fp mDefaultReverse mDefaultInstructions cd
-  FillExerciseUnitDef fed -> pure [FillExerciseUnit $ resolveFillExerciseDef fed]
+  FillExerciseUnitDef fed -> pure [FillExerciseUnit $ resolveFillExerciseDef mDefaultInstructions fed]
 
 data CardDef
   = CardFrontBack !CardFrontBackDef
@@ -161,13 +162,13 @@ resolveCardFrontBackDef fp mDefaultReverse mDefaultInstructions CardFrontBackDef
   backSide <- resolveCardSideDef fp cardFrontBackDefBack
   let rightWayRoundCard =
         Card
-          { cardInstructions = unInstructions <$> mInstructions,
+          { cardInstructions = mInstructions,
             cardFront = frontSide,
             cardBack = backSide
           }
       reversedCard =
         Card
-          { cardInstructions = unInstructions <$> mInstructions,
+          { cardInstructions = mInstructions,
             cardFront = backSide,
             cardBack = frontSide
           }
@@ -200,25 +201,14 @@ resolveCardManySidedDef fp mDefaultInstructions CardManySidedDef {..} = do
     pure
       Card
         { cardInstructions =
-            Just $ T.unwords $
+            Just $ Instructions $ T.unwords $
               concat
-                [ [unInstructions i | i <- maybeToList mInstructions],
+                [ [i | Instructions i <- maybeToList mInstructions],
                   ["(", side1Name, "->", side2Name, ")"]
                 ],
           cardFront = side1,
           cardBack = side2
         }
-
-newtype Instructions = Instructions {unInstructions :: Text}
-  deriving (Show, Eq, Generic)
-
-instance Validity Instructions
-
-instance YamlSchema Instructions where
-  yamlSchema = Instructions <$> yamlSchema
-
-instance FromJSON Instructions where
-  parseJSON = viaYamlSchema
 
 data CardSideDef
   = TextSideDef !Text
@@ -251,19 +241,28 @@ resolveCardSideDef dfp = \case
 
 data FillExerciseDef
   = FillExerciseDef
-      { fillExerciseDefSequence :: NonEmpty FillExercisePart
+      { fillExerciseDefSequence :: NonEmpty FillExercisePart,
+        fillExerciseDefInstructions :: Maybe Instructions
       }
   deriving (Show, Eq, Generic)
 
 instance Validity FillExerciseDef
 
 instance YamlSchema FillExerciseDef where
-  yamlSchema = FillExerciseDef . parseFillExerciseParts <$> yamlSchema
+  yamlSchema =
+    alternatives
+      [ FillExerciseDef <$> (parseFillExerciseParts <$> yamlSchema) <*> pure Nothing,
+        objectParser "FillExerciseDef" $
+          FillExerciseDef
+            <$> requiredFieldWith "fill" "The text to fill in" (parseFillExerciseParts <$> yamlSchema)
+            <*> optionalField "instructions" "Instructions for this specific fill exercise"
+      ]
 
-resolveFillExerciseDef :: FillExerciseDef -> FillExercise
-resolveFillExerciseDef FillExerciseDef {..} =
+resolveFillExerciseDef :: Maybe Instructions -> FillExerciseDef -> FillExercise
+resolveFillExerciseDef mDefaultInstructions FillExerciseDef {..} =
   FillExercise
-    { fillExerciseSequence = fillExerciseDefSequence
+    { fillExerciseSequence = fillExerciseDefSequence,
+      fillExerciseInstructions = fillExerciseDefInstructions <|> mDefaultInstructions
     }
 
 parseFillExerciseParts :: Text -> NonEmpty FillExercisePart

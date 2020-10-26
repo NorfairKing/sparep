@@ -9,11 +9,13 @@ import Data.Validity.ByteString ()
 import Data.Validity.Path ()
 import Data.Validity.Text ()
 import GHC.Generics (Generic)
+import Sparep.Data.Instructions
 
 -- | A fillExercise is a piece of text with holes for the user to type text.
-newtype FillExercise
+data FillExercise
   = FillExercise
-      { fillExerciseSequence :: FillExerciseSequence
+      { fillExerciseSequence :: FillExerciseSequence,
+        fillExerciseInstructions :: Maybe Instructions
       }
   deriving (Show, Eq, Generic)
 

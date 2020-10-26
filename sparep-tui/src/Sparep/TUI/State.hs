@@ -82,19 +82,28 @@ cardCursorShowBack cc = cc {cardCursorFrontBack = Back}
 rebuildCardCursor :: CardCursor -> Card
 rebuildCardCursor = cardCursorCard
 
-newtype FillExerciseCursor
+data FillExerciseCursor
   = FillExerciseCursor
-      { fillExerciseCursorList :: Simple.NonEmptyCursor FillExercisePartCursor
+      { fillExerciseCursorList :: Simple.NonEmptyCursor FillExercisePartCursor,
+        fillExerciseCursorInstructions :: Maybe Instructions
       }
   deriving (Show, Eq)
 
 makeFillExerciseCursor :: FillExercise -> FillExerciseCursor
 makeFillExerciseCursor FillExercise {..} =
-  let fec = FillExerciseCursor $ Simple.makeNonEmptyCursor $ fmap makeFillExercisePartCursor fillExerciseSequence
+  let fec =
+        FillExerciseCursor
+          { fillExerciseCursorList = Simple.makeNonEmptyCursor $ fmap makeFillExercisePartCursor fillExerciseSequence,
+            fillExerciseCursorInstructions = fillExerciseInstructions
+          }
    in fromMaybe fec $ fillExerciseCursorSeek fec
 
 rebuildFillExerciseCursor :: FillExerciseCursor -> FillExercise
-rebuildFillExerciseCursor = FillExercise . fmap rebuildFillExercisePartCursor . Simple.rebuildNonEmptyCursor . fillExerciseCursorList
+rebuildFillExerciseCursor FillExerciseCursor {..} =
+  FillExercise
+    { fillExerciseSequence = rebuildFillExercisePartCursor <$> Simple.rebuildNonEmptyCursor fillExerciseCursorList,
+      fillExerciseInstructions = fillExerciseCursorInstructions
+    }
 
 fillExerciseCursorSeek :: FillExerciseCursor -> Maybe FillExerciseCursor
 fillExerciseCursorSeek = fillExerciseCursorSeekHelper Simple.nonEmptyCursorSelectNext
@@ -105,13 +114,21 @@ fillExerciseCursorSeekBack = fillExerciseCursorSeekHelper Simple.nonEmptyCursorS
 fillExerciseCursorSeekHelper :: (forall a. Simple.NonEmptyCursor a -> Maybe (Simple.NonEmptyCursor a)) -> FillExerciseCursor -> Maybe FillExerciseCursor
 fillExerciseCursorSeekHelper func fec = do
   nec <- func (fillExerciseCursorList fec)
-  FillExerciseCursor <$> go nec
+  (\c -> fec {fillExerciseCursorList = c}) <$> go nec
   where
     go :: Simple.NonEmptyCursor FillExercisePartCursor -> Maybe (Simple.NonEmptyCursor FillExercisePartCursor)
     go nec =
       if fillExercisePartCursorIsFill (nonEmptyCursorCurrent nec)
         then pure nec
         else func nec >>= go
+
+fillExerciseCursorCountHoles :: FillExerciseCursor -> Word
+fillExerciseCursorCountHoles = foldNonEmptyCursor (\befores cur afters -> sum $ map count $ befores ++ [cur] ++ afters) . fillExerciseCursorList
+  where
+    count :: FillExercisePartCursor -> Word
+    count = \case
+      LitPartCursor _ -> 0
+      FillPartCursor _ _ -> 1
 
 fillExerciseCursorCorrect :: FillExerciseCursor -> Bool
 fillExerciseCursorCorrect = foldNonEmptyCursor (\befores cur afters -> all fillExercisePartCursorCorrect $ befores ++ [cur] ++ afters) . fillExerciseCursorList

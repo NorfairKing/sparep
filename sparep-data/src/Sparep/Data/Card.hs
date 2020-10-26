@@ -10,12 +10,13 @@ import Data.Validity.Path ()
 import Data.Validity.Text ()
 import GHC.Generics (Generic)
 import Path
+import Sparep.Data.Instructions
 
 -- | A card is a thing with a front side and a back side.
 -- You see the front side and try to remember the back side.
 data Card
   = Card
-      { cardInstructions :: !(Maybe Text),
+      { cardInstructions :: !(Maybe Instructions),
         cardFront :: !CardSide,
         cardBack :: !CardSide
       }
