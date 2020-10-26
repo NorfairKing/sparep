@@ -54,7 +54,7 @@ handleMenuEvent qChan s e =
   case e of
     VtyEvent vtye ->
       case vtye of
-        EvKey (KChar 'q') [] -> halt $ StateMenu s
+        EvKey KEsc [] -> halt $ StateMenu s
         EvKey (KChar 'd') [] -> do
           let decks = menuStateDecks s
           forM_ decks $ \d -> liftIO $ writeBChan qChan $ QueryGetDeckSelection d
@@ -74,7 +74,7 @@ handleDecksEvent qChan s e = case decksStateCursor s of
     case e of
       VtyEvent vtye ->
         case vtye of
-          EvKey (KChar 'q') [] -> halt $ StateDecks s
+          EvKey KEsc [] -> halt $ StateDecks s
           _ -> continue $ StateDecks s
       _ -> continue $ StateDecks s
   Just cursor ->
@@ -84,7 +84,7 @@ handleDecksEvent qChan s e = case decksStateCursor s of
               let cursor' = fromMaybe cursor $ func cursor
                in continue $ StateDecks $ s {decksStateCursor = Just cursor'}
          in case vtye of
-              EvKey (KChar 'q') [] -> halt $ StateDecks s
+              EvKey KEsc [] -> halt $ StateDecks s
               EvKey KUp [] -> mDo Simple.nonEmptyCursorSelectPrev
               EvKey (KChar 'k') [] -> mDo Simple.nonEmptyCursorSelectPrev
               EvKey KDown [] -> mDo Simple.nonEmptyCursorSelectNext
@@ -130,14 +130,13 @@ handleStudyUnitsEvent qChan s e =
                   _ -> pure ()
                 continue $ StateStudyUnits s
        in case vtye of
-            EvKey (KChar 'q') [] -> halt $ StateStudyUnits s
+            EvKey KEsc [] -> halt $ StateStudyUnits s
             EvKey KUp [] -> mDo Simple.nonEmptyCursorSelectPrev
             EvKey (KChar 'k') [] -> mDo Simple.nonEmptyCursorSelectPrev
             EvKey KDown [] -> mDo Simple.nonEmptyCursorSelectNext
             EvKey (KChar 'j') [] -> mDo Simple.nonEmptyCursorSelectNext
             EvKey (KChar 'f') [] -> tryPlay Front
             EvKey (KChar 'b') [] -> tryPlay Back
-            EvKey KEsc [] -> halt $ StateStudyUnits s
             EvKey KEnter [] -> handleStudy qChan [studyUnitsStateDeck s]
             _ -> continue $ StateStudyUnits s
     AppEvent (ResponseGetStudyUnitDates c dates) -> do

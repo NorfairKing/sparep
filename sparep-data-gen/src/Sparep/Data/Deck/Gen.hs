@@ -9,6 +9,7 @@ import Data.GenValidity.Path ()
 import Data.GenValidity.Text ()
 import Sparep.Data.Deck
 import Sparep.Data.FillExercise.Gen ()
+import Sparep.Data.Instructions.Gen ()
 
 instance GenValid Deck where
   genValid = genValidStructurallyWithoutExtraChecking
@@ -31,10 +32,6 @@ instance GenValid CardManySidedDef where
   shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 
 instance GenValid CardSideDef where
-  genValid = genValidStructurallyWithoutExtraChecking
-  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
-
-instance GenValid Instructions where
   genValid = genValidStructurallyWithoutExtraChecking
   shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
 

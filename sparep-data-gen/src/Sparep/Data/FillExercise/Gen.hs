@@ -7,6 +7,7 @@ import Data.GenValidity.ByteString ()
 import Data.GenValidity.Path ()
 import Data.GenValidity.Text ()
 import Sparep.Data.FillExercise
+import Sparep.Data.Instructions.Gen ()
 
 instance GenValid FillExercise where
   genValid = genValidStructurallyWithoutExtraChecking

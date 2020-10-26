@@ -25,6 +25,7 @@ library
       Sparep.Data.Difficulty.Gen
       Sparep.Data.FillExercise.Gen
       Sparep.Data.Gen
+      Sparep.Data.Instructions.Gen
       Sparep.Data.Repetition.Gen
       Sparep.Data.StudyUnit.Gen
       Sparep.Data.StudyUnitId.Gen

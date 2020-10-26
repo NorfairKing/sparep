@@ -1,18 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Sparep.Data.Card.Gen where
+module Sparep.Data.Instructions.Gen where
 
 import Data.GenValidity
 import Data.GenValidity.ByteString ()
+import Data.GenValidity.Containers ()
 import Data.GenValidity.Path ()
 import Data.GenValidity.Text ()
-import Sparep.Data.Card
-import Sparep.Data.Instructions.Gen ()
+import Sparep.Data.Instructions
 
-instance GenValid Card where
-  genValid = genValidStructurallyWithoutExtraChecking
-  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
-
-instance GenValid CardSide where
+instance GenValid Instructions where
   genValid = genValidStructurallyWithoutExtraChecking
   shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
