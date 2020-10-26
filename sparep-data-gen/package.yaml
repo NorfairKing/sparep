@@ -33,5 +33,8 @@ tests:
     - genvalidity-hspec
     - genvalidity-hspec-persistent
     - hspec
+    - path
+    - path-io
     - sparep-data
     - sparep-data-gen
+    - yamlparse-applicative

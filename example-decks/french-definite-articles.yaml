@@ -1,9 +1,1 @@
-name: French definite articles
-instructions: "Give the corresponding definite article for the given gramatical gender and plurality in French"
-cards:
-- front: Masculine singular
-  back: le
-- front: Feminine singular
-  back: la
-- front: Plural
-  back: les
+../sparep-data-gen/test_resources/french-definite-articles.yaml

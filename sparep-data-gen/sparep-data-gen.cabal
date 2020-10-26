@@ -51,6 +51,7 @@ test-suite sparep-data-test
   other-modules:
       Sparep.Data.CardSpec
       Sparep.Data.DifficultySpec
+      Sparep.Data.GoldenSpec
       Sparep.Data.RepetitionSpec
       Sparep.Data.StudyUnitIdSpec
       Sparep.Data.StudyUnitSpec
@@ -63,6 +64,9 @@ test-suite sparep-data-test
     , genvalidity-hspec
     , genvalidity-hspec-persistent
     , hspec
+    , path
+    , path-io
     , sparep-data
     , sparep-data-gen
+    , yamlparse-applicative
   default-language: Haskell2010
