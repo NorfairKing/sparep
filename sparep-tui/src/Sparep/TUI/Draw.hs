@@ -45,16 +45,17 @@ drawMenuState MenuState {..} =
             [ case menuStateSelection of
                 Loading -> []
                 Loaded Selection {..} ->
-                  [ str $
-                      unwords
-                        [ "Done:",
-                          show (length selectionTooSoon),
-                          " Ready:",
-                          show (length selectionReady),
-                          " New:",
-                          show (length selectionNew)
-                        ]
-                  ],
+                  let numStr attr n =
+                        (if n == 0 then id else withAttr attr) (str (show n))
+                   in [ hBox
+                          [ str "Done: ",
+                            numStr doneAttr $ length selectionTooSoon,
+                            str "  Ready: ",
+                            numStr readyAttr $ length selectionReady,
+                            str "  New: ",
+                            numStr newAttr $ length selectionNew
+                          ]
+                      ],
               [ padTop (Pad 1) $ str "Press enter to study now",
                 str "Press d to show decks"
               ]
@@ -88,7 +89,7 @@ drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection a)) -> Widget n
 drawDeckList =
   verticalNonEmptyCursorTableWithHeader
     go
-    (map (withAttr selectedAttr) . go)
+    (map (forceAttr selectedAttr) . go)
     go
     ( map
         (withAttr headingAttr)
@@ -99,6 +100,8 @@ drawDeckList =
         ]
     )
   where
+    numStr attr n =
+      (if n == 0 then id else withAttr attr) (str (show n))
     go (RootedDeck _ Deck {..}, ls) =
       concat
         [ [ padRight Max $ txt $ fromMaybe " " deckName
@@ -110,34 +113,48 @@ drawDeckList =
                 str "Loading"
               ]
             Loaded Selection {..} ->
-              [ str (show (length selectionTooSoon)),
-                str (show (length selectionReady)),
-                str (show (length selectionNew))
+              [ numStr doneAttr $ length selectionTooSoon,
+                numStr readyAttr $ length selectionReady,
+                numStr newAttr $ length selectionNew
               ]
         ]
 
 drawDeckDetails :: RootedDeck -> Loading (Selection a) -> Widget n
 drawDeckDetails (RootedDeck _ Deck {..}) ls =
-  vBox $
-    concat
-      [ [ maybe emptyWidget (txtWrap . ("Name: " <>)) deckName,
-          maybe emptyWidget (txtWrap . ("Description: " <>)) deckDescription,
-          str " "
-        ],
-        case ls of
-          Loading ->
-            [ str "Loading",
-              str "Loading",
-              str "Loading",
-              str "Loading"
-            ]
-          Loaded Selection {..} ->
-            [ str ("Total:  " <> show (length selectionTooSoon + length selectionReady + length selectionNew)),
-              str ("Done:  " <> show (length selectionTooSoon)),
-              str ("Ready: " <> show (length selectionReady)),
-              str ("New:   " <> show (length selectionNew))
-            ]
-      ]
+  let numStr attr n =
+        (if n == 0 then id else withAttr attr) (str (show n))
+   in vBox $
+        concat
+          [ [ maybe emptyWidget (txtWrap . ("Name: " <>)) deckName,
+              maybe emptyWidget (txtWrap . ("Description: " <>)) deckDescription,
+              str " "
+            ],
+            case ls of
+              Loading ->
+                [ str "Loading",
+                  str "Loading",
+                  str "Loading",
+                  str "Loading"
+                ]
+              Loaded Selection {..} ->
+                [ hBox
+                    [ str "Total:  ",
+                      numStr totalAttr (length selectionTooSoon + length selectionReady + length selectionNew)
+                    ],
+                  hBox
+                    [ str "Done:  ",
+                      numStr doneAttr (length selectionTooSoon)
+                    ],
+                  hBox
+                    [ str "Ready: ",
+                      numStr readyAttr (length selectionReady)
+                    ],
+                  hBox
+                    [ str "New:   ",
+                      numStr newAttr (length selectionNew)
+                    ]
+                ]
+          ]
 
 drawStudyUnitsState :: StudyUnitsState -> [Widget n]
 drawStudyUnitsState StudyUnitsState {..} =
@@ -344,7 +361,11 @@ tuiAttrMap =
       (fillIncorrectAttr, fg red),
       (fillCorrectAttr, fg green),
       (fillPartAttr <> fillCursorPartAttr, withStyle (fg magenta) reverseVideo),
-      (fillCorrectAttr <> fillCursorPartAttr, withStyle (fg green) reverseVideo)
+      (fillCorrectAttr <> fillCursorPartAttr, withStyle (fg green) reverseVideo),
+      (totalAttr, fg blue),
+      (doneAttr, fg green),
+      (readyAttr, fg yellow),
+      (newAttr, fg red)
     ]
 
 headingAttr :: AttrName
@@ -373,3 +394,15 @@ fillIncorrectAttr = "fill-part-correct"
 
 instructionsAttr :: AttrName
 instructionsAttr = "instructions"
+
+totalAttr :: AttrName
+totalAttr = "total"
+
+doneAttr :: AttrName
+doneAttr = "done"
+
+readyAttr :: AttrName
+readyAttr = "ready"
+
+newAttr :: AttrName
+newAttr = "new"
