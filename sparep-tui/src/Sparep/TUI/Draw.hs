@@ -334,7 +334,7 @@ drawFillExerciseCursor fec@FillExerciseCursor {..} =
 tuiAttrMap :: AttrMap
 tuiAttrMap =
   attrMap
-    (bg brightBlack)
+    defAttr
     [ (selectedAttr, fg brightWhite),
       (headingAttr, defAttr `withStyle` underline),
       (instructionsAttr, fg yellow),
