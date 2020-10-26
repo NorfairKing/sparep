@@ -33,10 +33,10 @@ decks:
 3. Study daily
 
 ```
-$ sparep
+$ sparep-tui
 ```
 
-![Study](study.png)
+[![asciicast](https://asciinema.org/a/5rvxM2QPY6ABPtnuMbjYZRv21.svg)](https://asciinema.org/a/5rvxM2QPY6ABPtnuMbjYZRv21)
 
 Sparep takes care of showing you the right cards to study at the right time.
 
