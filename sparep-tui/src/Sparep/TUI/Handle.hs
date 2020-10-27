@@ -37,7 +37,7 @@ data Response
   = ResponseGetDeckSelection RootedDeck (Selection StudyUnit)
   | ResponseGetDecksSelection (Selection StudyUnit)
   | ResponseGetStudyUnitDates StudyUnit (Maybe (UTCTime, UTCTime))
-  | ResponseGetStudyUnits [StudyUnit]
+  | ResponseGetStudyUnits [StudyContext StudyUnit]
 
 handleTuiEvent ::
   BChan Query -> State -> BrickEvent n Response -> EventM n (Next State)
@@ -162,7 +162,7 @@ handleStudyEvent s e =
             s
               { studyStateCursor =
                   Loaded $
-                    makeNonEmptyCursor makeStudyUnitCursor <$> NE.nonEmpty cs
+                    makeNonEmptyCursor (fmap makeStudyUnitCursor) <$> NE.nonEmpty cs
               }
         _ -> continue s
     Loaded mCursor ->
@@ -177,25 +177,26 @@ handleStudyEvent s e =
                     now <- liftIO getCurrentTime
                     let rep =
                           ClientRepetition
-                            { clientRepetitionUnit = hashStudyUnit (rebuildStudyUnitCursor cur),
+                            { clientRepetitionUnit = hashStudyUnit (rebuildStudyUnitCursor (studyContextUnit cur)),
                               clientRepetitionDifficulty = difficulty,
                               clientRepetitionTimestamp = now,
                               clientRepetitionServerId = Nothing
                             }
-                    let mcursor' = nonEmptyCursorSelectNext rebuildStudyUnitCursor makeStudyUnitCursor cursor
+                    let mcursor' = nonEmptyCursorSelectNext (fmap rebuildStudyUnitCursor) (fmap makeStudyUnitCursor) cursor
                     let mcursor'' =
                           -- Require re-studying incorrect studyUnits
                           if difficulty == Incorrect
                             then Just $ case mcursor' of
                               Nothing -> singletonNonEmptyCursor cur
-                              Just cursor' -> nonEmptyCursorAppendAtEnd (rebuildStudyUnitCursor cur) cursor'
+                              Just cursor' -> nonEmptyCursorAppendAtEnd (rebuildStudyUnitCursor <$> cur) cursor'
                             else mcursor'
                     continue $
                       s
                         { studyStateCursor = Loaded mcursor'',
                           studyStateRepetitions = rep : studyStateRepetitions s
                         }
-               in case nonEmptyCursorCurrent cursor of
+                  unit = nonEmptyCursorCurrent cursor
+               in case studyContextUnit unit of
                     CardUnitCursor cc@CardCursor {..} ->
                       let tryShowExtra :: FrontBack -> EventM n (Next StudyState)
                           tryShowExtra fb = do
@@ -214,7 +215,7 @@ handleStudyEvent s e =
                                 EvKey (KChar ' ') [] ->
                                   continue $
                                     s
-                                      { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ CardUnitCursor (cardCursorShowBack cc)
+                                      { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ (unit {studyContextUnit = CardUnitCursor (cardCursorShowBack cc)})
                                       }
                                 _ -> continue s
                             Back ->
@@ -232,7 +233,7 @@ handleStudyEvent s e =
                             let fec' = fromMaybe fec $ func fec
                              in continue $
                                   s
-                                    { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ FillExerciseUnitCursor fec'
+                                    { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ (unit {studyContextUnit = FillExerciseUnitCursor fec'})
                                     }
                           textDo func =
                             let fec' =
@@ -250,7 +251,7 @@ handleStudyEvent s e =
                                   else
                                     continue $
                                       s
-                                        { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ FillExerciseUnitCursor fec'
+                                        { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ (unit {studyContextUnit = FillExerciseUnitCursor fec'})
                                         }
                           tryFinishStudyUnit diff =
                             if fillExerciseCursorCorrect fec && not fillExerciseCursorShow

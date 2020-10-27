@@ -104,7 +104,7 @@ drawDeckList =
       (if n == 0 then id else withAttr attr) (str (show n))
     go (RootedDeck _ Deck {..}, ls) =
       concat
-        [ [ padRight Max $ txt $ fromMaybe " " deckName
+        [ [ padRight Max $ txt $ maybe " " unDeckName deckName
           ],
           case ls of
             Loading ->
@@ -125,7 +125,7 @@ drawDeckDetails (RootedDeck _ Deck {..}) ls =
         (if n == 0 then id else withAttr attr) (str (show n))
    in vBox $
         concat
-          [ [ maybe emptyWidget (txtWrap . ("Name: " <>)) deckName,
+          [ [ maybe emptyWidget (txtWrap . ("Name: " <>) . unDeckName) deckName,
               maybe emptyWidget (txtWrap . ("Description: " <>)) deckDescription,
               str " "
             ],
@@ -237,12 +237,17 @@ drawStudyState StudyState {..} =
         case mCursor of
           Nothing -> centerLayer $ str "Done"
           Just cursor ->
-            vBox
-              [ hCenterLayer
-                  $ str
-                  $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
-                vCenterLayer $ drawStudyUnitCursor (nonEmptyCursorCurrent cursor)
-              ]
+            let StudyContext {..} = nonEmptyCursorCurrent cursor
+             in vBox
+                  [ hCenterLayer
+                      $ str
+                      $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
+                    vCenterLayer $ vBox $
+                      concat
+                        [ [hCenterLayer $ withAttr newLabelAttr (str "New") | studyContextNew],
+                          [padAll 1 $ drawStudyUnitCursor studyContextUnit]
+                        ]
+                  ]
   ]
 
 drawStudyUnitCursor :: StudyUnitCursor -> Widget ResourceName
@@ -372,7 +377,8 @@ tuiAttrMap =
       (totalAttr, fg blue),
       (doneAttr, fg green),
       (readyAttr, fg yellow),
-      (newAttr, fg red)
+      (newAttr, fg red),
+      (newLabelAttr, withStyle (fg green) underline)
     ]
 
 headingAttr :: AttrName
@@ -416,3 +422,6 @@ readyAttr = "ready"
 
 newAttr :: AttrName
 newAttr = "new"
+
+newLabelAttr :: AttrName
+newLabelAttr = "new-label"

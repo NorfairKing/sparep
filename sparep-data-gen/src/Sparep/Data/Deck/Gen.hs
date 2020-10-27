@@ -8,6 +8,7 @@ import Data.GenValidity.Containers ()
 import Data.GenValidity.Path ()
 import Data.GenValidity.Text ()
 import Sparep.Data.Deck
+import Sparep.Data.DeckName.Gen ()
 import Sparep.Data.FillExercise.Gen ()
 import Sparep.Data.Instructions.Gen ()
 

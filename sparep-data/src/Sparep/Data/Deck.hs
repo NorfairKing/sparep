@@ -25,6 +25,7 @@ import GHC.Generics (Generic)
 import Path
 import Path.IO
 import Sparep.Data.Card
+import Sparep.Data.DeckName
 import Sparep.Data.FillExercise
 import Sparep.Data.Instructions
 import Sparep.Data.StudyUnit
@@ -64,7 +65,7 @@ resolveRootedDeck RootedDeck {..} = resolveDeck rootedDeckPath rootedDeckDeck
 
 data Deck
   = Deck
-      { deckName :: !(Maybe Text),
+      { deckName :: !(Maybe DeckName),
         deckDescription :: !(Maybe Text),
         deckInstructions :: !(Maybe Instructions),
         deckReverse :: !(Maybe Bool),

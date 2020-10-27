@@ -13,7 +13,7 @@ import GHC.Generics (Generic)
 import YamlParse.Applicative as YamlParse
 
 newtype Instructions = Instructions {unInstructions :: Text}
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Validity Instructions
 

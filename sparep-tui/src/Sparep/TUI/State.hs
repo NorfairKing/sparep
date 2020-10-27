@@ -46,7 +46,7 @@ data StudyUnitsState
 
 data StudyState
   = StudyState
-      { studyStateCursor :: !(Loading (Maybe (NonEmptyCursor StudyUnitCursor StudyUnit))),
+      { studyStateCursor :: !(Loading (Maybe (NonEmptyCursor (StudyContext StudyUnitCursor) (StudyContext StudyUnit)))),
         studyStateRepetitions :: ![ClientRepetition]
       }
   deriving (Show, Eq)

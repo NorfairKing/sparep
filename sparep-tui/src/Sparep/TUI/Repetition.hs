@@ -2,7 +2,13 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Sparep.TUI.Repetition where
+module Sparep.TUI.Repetition
+  ( generateStudySelection,
+    getStudyUnitDates,
+    generateStudyDeck,
+    Selection (..),
+  )
+where
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -17,11 +23,15 @@ import System.Random.Shuffle
 
 getStudyUnitDates :: StudyUnit -> SqlPersistT IO (Maybe (UTCTime, UTCTime))
 getStudyUnitDates unit = do
-  reps <- map (clientMakeRepetition . entityVal) <$> selectList [ClientRepetitionUnit ==. hashStudyUnit unit] [Desc ClientRepetitionTimestamp]
+  reps <-
+    map (clientMakeRepetition . entityVal)
+      <$> selectList
+        [ClientRepetitionUnit ==. hashStudyUnit unit]
+        [Desc ClientRepetitionTimestamp]
   pure $ (,) <$> (repetitionTimestamp <$> headMay reps) <*> nextRepititionSM2 reps
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
-generateStudyDeck :: [StudyUnit] -> Word -> SqlPersistT IO [StudyUnit]
+generateStudyDeck :: [StudyUnit] -> Word -> SqlPersistT IO [StudyContext StudyUnit]
 generateStudyDeck cards numCards = generateStudySelection cards >>= (liftIO . studyFromSelection numCards)
 
 generateStudySelection :: [StudyUnit] -> SqlPersistT IO (Selection StudyUnit)
@@ -119,11 +129,16 @@ data Selection a
       }
   deriving (Show, Eq, Functor)
 
-studyFromSelection :: Word -> Selection a -> IO [a]
+studyFromSelection :: Word -> Selection a -> IO [StudyContext a]
 studyFromSelection i Selection {..} = do
   readyShuffled <- shuffleM selectionReady
   newShuffled <- shuffleM selectionNew
-  shuffleM $ chooseFromListsInOrder i [readyShuffled, newShuffled]
+  shuffleM $
+    chooseFromListsInOrder
+      i
+      [ map (\u -> StudyContext {studyContextNew = False, studyContextUnit = u}) readyShuffled,
+        map (\u -> StudyContext {studyContextNew = True, studyContextUnit = u}) newShuffled
+      ]
 
 -- Choose i elements from the lists in order, choosing as many as possible from previous lists.
 chooseFromListsInOrder :: Word -> [[a]] -> [a]

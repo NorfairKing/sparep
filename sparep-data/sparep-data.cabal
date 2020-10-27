@@ -22,7 +22,9 @@ library
   exposed-modules:
       Sparep.Data
       Sparep.Data.Card
+      Sparep.Data.Context
       Sparep.Data.Deck
+      Sparep.Data.DeckName
       Sparep.Data.Difficulty
       Sparep.Data.FillExercise
       Sparep.Data.Instructions
