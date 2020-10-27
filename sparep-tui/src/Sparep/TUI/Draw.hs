@@ -325,16 +325,22 @@ drawFillExerciseCursor fec@FillExerciseCursor {..} =
                                         then fillCorrectAttr
                                         else fillPartAttr
                                     (t1, t2) = textCursorSplit tc
-                                 in case T.unpack (rebuildTextCursor t2) of
-                                      [] ->
-                                        [ rebuildTextCursor t1 @? attr,
-                                          T.singleton ' ' @? (attr <> fillCursorPartAttr)
+                                 in if fillExerciseCursorShow
+                                      then
+                                        [ if t' == t
+                                            then t' @? fillCorrectAttr
+                                            else t @? fillShownAttr
                                         ]
-                                      (c : _) ->
-                                        [ rebuildTextCursor t1 @? attr,
-                                          T.singleton c @? (attr <> fillCursorPartAttr),
-                                          rebuildTextCursor t2 @? attr
-                                        ],
+                                      else case T.unpack (rebuildTextCursor t2) of
+                                        [] ->
+                                          [ rebuildTextCursor t1 @? attr,
+                                            T.singleton ' ' @? (attr <> fillCursorPartAttr)
+                                          ]
+                                        (c : _) ->
+                                          [ rebuildTextCursor t1 @? attr,
+                                            T.singleton c @? (attr <> fillCursorPartAttr),
+                                            rebuildTextCursor t2 @? attr
+                                          ],
                             map partCursorMarkup afters
                           ]
                   )
@@ -344,7 +350,7 @@ drawFillExerciseCursor fec@FillExerciseCursor {..} =
             [ hCenterLayer $ padAll 1 $
                 if fillExerciseCursorCorrect fec
                   then str "Incorrect: Alt-i,  Hard: Alt-h,  Good: Alt-g,  Easy: Alt-e"
-                  else str "Incorrect: Alt-i"
+                  else str "Incorrect: Alt-i,  Show solution: Alt-<space>"
             ]
           ]
 
@@ -362,6 +368,7 @@ tuiAttrMap =
       (fillCorrectAttr, fg green),
       (fillPartAttr <> fillCursorPartAttr, withStyle (fg magenta) reverseVideo),
       (fillCorrectAttr <> fillCursorPartAttr, withStyle (fg green) reverseVideo),
+      (fillShownAttr, fg blue),
       (totalAttr, fg blue),
       (doneAttr, fg green),
       (readyAttr, fg yellow),
@@ -391,6 +398,9 @@ fillCorrectAttr = "fill-part-incorrect"
 
 fillIncorrectAttr :: AttrName
 fillIncorrectAttr = "fill-part-correct"
+
+fillShownAttr :: AttrName
+fillShownAttr = "fill-shown"
 
 instructionsAttr :: AttrName
 instructionsAttr = "instructions"

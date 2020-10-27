@@ -245,10 +245,13 @@ handleStudyEvent s e =
                                                  FillPartCursor tc t -> FillPartCursor <$> func tc <*> pure t
                                              )
                                     }
-                             in continue $
-                                  s
-                                    { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ FillExerciseUnitCursor fec'
-                                    }
+                             in if fillExerciseCursorShow
+                                  then continue s
+                                  else
+                                    continue $
+                                      s
+                                        { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ FillExerciseUnitCursor fec'
+                                        }
                           tryFinishStudyUnit diff =
                             if fillExerciseCursorCorrect fec
                               then finishStudyUnit diff
@@ -257,6 +260,7 @@ handleStudyEvent s e =
                             EvKey KEsc [] -> halt s
                             EvKey (KChar '\t') [] -> funcDo fillExerciseCursorSeek
                             EvKey KBackTab [] -> funcDo fillExerciseCursorSeekBack
+                            EvKey (KChar ' ') [MMeta] -> funcDo $ pure . (\fec -> fec {fillExerciseCursorShow = True})
                             EvKey (KChar 'i') [MMeta] -> finishStudyUnit Incorrect
                             EvKey (KChar 'h') [MMeta] -> tryFinishStudyUnit Hard
                             EvKey (KChar 'g') [MMeta] -> tryFinishStudyUnit Good

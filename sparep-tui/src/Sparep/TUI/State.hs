@@ -85,7 +85,8 @@ rebuildCardCursor = cardCursorCard
 data FillExerciseCursor
   = FillExerciseCursor
       { fillExerciseCursorList :: Simple.NonEmptyCursor FillExercisePartCursor,
-        fillExerciseCursorInstructions :: Maybe Instructions
+        fillExerciseCursorInstructions :: Maybe Instructions,
+        fillExerciseCursorShow :: Bool -- True means shown
       }
   deriving (Show, Eq)
 
@@ -94,7 +95,8 @@ makeFillExerciseCursor FillExercise {..} =
   let fec =
         FillExerciseCursor
           { fillExerciseCursorList = Simple.makeNonEmptyCursor $ fmap makeFillExercisePartCursor fillExerciseSequence,
-            fillExerciseCursorInstructions = fillExerciseInstructions
+            fillExerciseCursorInstructions = fillExerciseInstructions,
+            fillExerciseCursorShow = False
           }
    in fromMaybe fec $ fillExerciseCursorSeek fec
 
