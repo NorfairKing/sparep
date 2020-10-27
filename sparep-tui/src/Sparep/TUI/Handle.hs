@@ -253,7 +253,7 @@ handleStudyEvent s e =
                                         { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ FillExerciseUnitCursor fec'
                                         }
                           tryFinishStudyUnit diff =
-                            if fillExerciseCursorCorrect fec
+                            if fillExerciseCursorCorrect fec && not fillExerciseCursorShow
                               then finishStudyUnit diff
                               else continue s
                        in case vtye of
