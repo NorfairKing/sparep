@@ -260,7 +260,7 @@ handleStudyEvent s e =
                             EvKey KEsc [] -> halt s
                             EvKey (KChar '\t') [] -> funcDo fillExerciseCursorSeek
                             EvKey KBackTab [] -> funcDo fillExerciseCursorSeekBack
-                            EvKey (KChar ' ') [MMeta] -> funcDo $ pure . (\fec -> fec {fillExerciseCursorShow = True})
+                            EvKey (KChar ' ') [MMeta] -> funcDo $ pure . (\fec_ -> fec_ {fillExerciseCursorShow = True})
                             EvKey (KChar 'i') [MMeta] -> finishStudyUnit Incorrect
                             EvKey (KChar 'h') [MMeta] -> tryFinishStudyUnit Hard
                             EvKey (KChar 'g') [MMeta] -> tryFinishStudyUnit Good
