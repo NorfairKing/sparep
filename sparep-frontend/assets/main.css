@@ -1,0 +1,119 @@
+/*TODO: Small screens*/
+
+:root{
+  --red: #ea3802;
+  --preview-bar-width: 300px;
+}
+
+body{
+  margin: 0;
+}
+
+h1{
+  color: white;
+  font-family: "Sofia";
+  margin: 0;
+  padding: 10px;
+}
+
+h2{
+  color: grey;
+  font-family: "Roboto Mono";
+  padding: 10px;
+}
+
+p{
+  font-family: "Roboto Mono";
+}
+
+.navBar{
+  position: fixed;
+  top: 0px;
+  width: 100%;
+  background-color: var(--red);
+  box-shadow: 0px 1px 3px grey;
+  z-index: 99;
+}
+
+.previewBar{
+  position: fixed;
+  background-color: white;
+  padding-top: 70px;
+  top: 0px;
+  right: 0;
+  width: var(--preview-bar-width);
+  height: 100%;
+  float: right;
+  border-left: 1px solid #bbbbbb;
+  box-shadow: 1px 1px 3px #bbbbbb;
+}
+
+.previewBar > h2{
+  text-align: center;
+}
+
+.logo{
+  height: 50px;
+  float: left;
+  padding: 10px 20px 10px 20px;
+}
+
+.content{
+  padding-top: 70px;
+  padding-left: 20px;
+  padding-right: var(--preview-bar-width);
+}
+
+.card{
+  display: flex;
+  flex-direction: column;
+  float: left;
+  justify-content: space-evenly;
+  width: 160px;
+  height: 220px;
+  padding: 10px;
+  margin: 0px 20px 20px 0px;
+  background-image: url("/sprites/card.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.cardSide{
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+.cardSide > p {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.deck{
+  display: flex;
+  float: left;
+  width: 160px;
+  height: 220px;
+  margin: 0px 20px 20px 0px;
+  padding: 10px;
+  justify-content: center;
+  background-image: url("/sprites/deck.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.deck > p {
+  display: flex;
+  align-items: center;
+  text-align: center;
+}

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="425" height="575" viewBox="0 0 425 575">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3 {
+        fill: #fff;
+        stroke: #bbb;
+        stroke-width: 2.5px;
+        fill-rule: evenodd;
+      }
+
+      .cls-1 {
+        filter: url(#filter);
+      }
+
+      .cls-2 {
+        filter: url(#filter-2);
+      }
+
+      .cls-3 {
+        filter: url(#filter-3);
+      }
+    </style>
+    <filter id="filter" x="24" y="29" width="403" height="542" filterUnits="userSpaceOnUse">
+      <feOffset result="offset" dx="1.805" dy="2.396" in="SourceAlpha"/>
+      <feGaussianBlur result="blur" stdDeviation="2.236"/>
+      <feFlood result="flood" flood-color="#bbb"/>
+      <feComposite result="composite" operator="in" in2="blur"/>
+      <feBlend result="blend" in="SourceGraphic"/>
+    </filter>
+    <filter id="filter-2" x="19" y="23" width="403" height="542" filterUnits="userSpaceOnUse">
+      <feOffset result="offset" dx="1.805" dy="2.396" in="SourceAlpha"/>
+      <feGaussianBlur result="blur" stdDeviation="2.236"/>
+      <feFlood result="flood" flood-color="#bbb"/>
+      <feComposite result="composite" operator="in" in2="blur"/>
+      <feBlend result="blend" in="SourceGraphic"/>
+    </filter>
+    <filter id="filter-3" x="13" y="18" width="403" height="541" filterUnits="userSpaceOnUse">
+      <feOffset result="offset" dx="1.805" dy="2.396" in="SourceAlpha"/>
+      <feGaussianBlur result="blur" stdDeviation="2.236"/>
+      <feFlood result="flood" flood-color="#bbb"/>
+      <feComposite result="composite" operator="in" in2="blur"/>
+      <feBlend result="blend" in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="Artboard_1" data-name="Artboard 1">
+    <g style="fill: #fff; filter: url(#filter)">
+      <path id="Rounded_Rectangle_1" data-name="Rounded Rectangle 1" class="cls-1" d="M51.9,31.653H395.014a25,25,0,0,1,25,25V538.509a25,25,0,0,1-25,25H51.9a25,25,0,0,1-25-25V56.653A25,25,0,0,1,51.9,31.653Z" style="stroke: inherit; filter: none; fill: inherit"/>
+    </g>
+    <use xlink:href="#Rounded_Rectangle_1" style="stroke: #bbb; filter: none; fill: none"/>
+    <g style="fill: #fff; filter: url(#filter-2)">
+      <path id="Rounded_Rectangle_1-2" data-name="Rounded Rectangle 1" class="cls-2" d="M46.134,25.886H389.245a25,25,0,0,1,25,25V532.742a25,25,0,0,1-25,25H46.134a25,25,0,0,1-25-25V50.886A25,25,0,0,1,46.134,25.886Z" style="stroke: inherit; filter: none; fill: inherit"/>
+    </g>
+    <use xlink:href="#Rounded_Rectangle_1-2" style="stroke: #bbb; filter: none; fill: none"/>
+    <g style="fill: #fff; filter: url(#filter-3)">
+      <path id="Rounded_Rectangle_1-3" data-name="Rounded Rectangle 1" class="cls-3" d="M40.366,20.12H383.477a25,25,0,0,1,25,25V526.976a25,25,0,0,1-25,25H40.366a25,25,0,0,1-25-25V45.12A25,25,0,0,1,40.366,20.12Z" style="stroke: inherit; filter: none; fill: inherit"/>
+    </g>
+    <use xlink:href="#Rounded_Rectangle_1-3" style="stroke: #bbb; filter: none; fill: none"/>
+  </g>
+</svg>
