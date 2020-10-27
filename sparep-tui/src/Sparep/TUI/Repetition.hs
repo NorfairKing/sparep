@@ -13,7 +13,6 @@ where
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.List
-import Data.Ord
 import Data.Time
 import Database.Persist.Sql
 import Safe
@@ -45,42 +44,6 @@ generateStudySelection units = do
           [Desc ClientRepetitionTimestamp]
   now <- liftIO getCurrentTime
   pure $ decideStudyDeckSM2 now cardData
-
--- My own algorithm that just takes the least-recently studied cards
-decideStudyDeck :: [(a, [Repetition])] -> Word -> [a]
-decideStudyDeck cardData numCards =
-  let (neverStudied, studiedAtLeastOnce) = partition (null . snd) cardData
-      neverStudiedSelected = take (fromIntegral numCards) neverStudied
-      studiedAtLeastOnceSorted =
-        sortOn (repetitionTimestamp . head . snd) studiedAtLeastOnce
-      studiedAtLeastOnceSelected =
-        take (fromIntegral numCards - length neverStudiedSelected) studiedAtLeastOnceSorted
-   in map fst $ neverStudiedSelected ++ studiedAtLeastOnceSelected
-
--- SM-0, from https://www.supermemo.com/en/archives1990-2015/english/ol/beginning
-decideStudyDeckSM0 :: UTCTime -> [(a, [Repetition])] -> Selection a
-decideStudyDeckSM0 now cardData =
-  let (selectionNew, studiedAtLeastOnce) = partition (null . snd) cardData
-      isTooSoon :: (a, [Repetition]) -> Bool
-      isTooSoon (_, reps) =
-        case sortOn (Down . repetitionTimestamp) (filter ((/= Incorrect) . repetitionDifficulty) reps) of
-          [] -> False
-          (latestRepetition : _) ->
-            let i = realToFrac (intervalSize (genericLength reps)) * nominalDay
-             in addUTCTime i (repetitionTimestamp latestRepetition) > now
-      (selectionTooSoon, selectionReady) = partition isTooSoon studiedAtLeastOnce
-   in fst <$> Selection {..}
-  where
-    -- How long to wait after the n'th study session before doing the n+1th study session
-    -- in number of days
-    intervalSize :: Word -> Word
-    intervalSize =
-      \case
-        1 -> 1
-        2 -> 7
-        3 -> 16
-        4 -> 35
-        i -> intervalSize (i - 1) * 2
 
 -- SM-2, from https://www.supermemo.com/en/archives1990-2015/english/ol/sm2
 decideStudyDeckSM2 :: UTCTime -> [(a, [Repetition])] -> Selection a
