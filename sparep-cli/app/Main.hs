@@ -1,6 +1,6 @@
 module Main where
 
-import Sparep
+import Sparep.CLI
 
 main :: IO ()
-main = sparep
+main = sparepCLI

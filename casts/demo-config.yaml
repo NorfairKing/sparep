@@ -1,0 +1,3 @@
+database: demo-repetition-database.sqlite3
+decks:
+- ./demo-decks/french-definite-articles.yaml

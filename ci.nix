@@ -5,7 +5,7 @@ let
       builtins.fetchTarball "https://github.com/hercules-ci/nix-pre-commit-hooks/archive/4dd50ef441796b439a56f1e0f8b127d4129f8947.tar.gz"
     );
 in
-pkgs.sparepPackages // {
+pkgs.sparepPackages // pkgs.sparepCasts // {
   pre-commit-check = nix-pre-commit-hooks.run {
     src = ./.;
     hooks = {

@@ -1,6 +1,17 @@
 resolver: lts-15.15
 packages:
+- sparep-api
+- sparep-api-gen
+- sparep-api-server
+- sparep-api-server-data
+- sparep-api-server-data-gen
+- sparep-api-server-gen
 - sparep-cli
+- sparep-client
+- sparep-client-data
+- sparep-data
+- sparep-data-gen
+- sparep-tui
 - sparep-web-server
 extra-deps:
 - github: NorfairKing/yamlparse-applicative
@@ -9,10 +20,65 @@ extra-deps:
   - yamlparse-applicative
 - github: supki/envparse
   commit: de5944fb09e9d941fafa35c0f05446af348e7b4d
+- github: NorfairKing/cursor
+  commit: 14e7a87c8f47ea35eb92ac39ce7853ce54a47519
+  subdirs:
+  - cursor
+  - cursor-gen
 - github: NorfairKing/cursor-brick
   commit: a7b47b03c8c5525234aaccc0c372e49a80134b9d
   subdirs:
   - cursor-brick
+- github: NorfairKing/appendful
+  commit: 98d1a191941f94fa0379d5c08371ba0963d3462e
+  subdirs:
+  - appendful
+  - appendful-persistent
+  - genvalidity-appendful
+- servant-auth-client-0.4.1.0@sha256:a93f041c3c293eca6e2e2e1a2ed97e58fbbd0e123caeff9e484a68d56272632f,3342
+- base16-0.3.0.1@sha256:9ceab7e77e998c4324c11e4fae884fe11dceaba354bd291dab6913898420cce7,2422
+
+- github: NorfairKing/validity
+  commit: 2ef8be2fba631460d770d8cbc7dd67709400fe3d
+  subdirs:
+  - validity
+  - validity-aeson
+  - validity-bytestring
+  - validity-containers
+  - validity-path
+  - validity-persistent
+  - validity-primitive
+  - validity-scientific
+  - validity-text
+  - validity-time
+  - validity-unordered-containers
+  - validity-uuid
+  - validity-vector
+  - genvalidity
+  - genvalidity-aeson
+  - genvalidity-bytestring
+  - genvalidity-containers
+  - genvalidity-criterion
+  - genvalidity-hspec
+  - genvalidity-hspec-aeson
+  - genvalidity-hspec-binary
+  - genvalidity-hspec-cereal
+  - genvalidity-hspec-hashable
+  - genvalidity-hspec-optics
+  - genvalidity-hspec-persistent
+  - genvalidity-path
+  - genvalidity-persistent
+  - genvalidity-property
+  - genvalidity-scientific
+  - genvalidity-text
+  - genvalidity-time
+  - genvalidity-unordered-containers
+  - genvalidity-uuid
+  - genvalidity-vector
+
+
 nix:
   packages:
     - zlib
+    - haskellPackages.autoexporter
+    - killall

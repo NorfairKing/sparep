@@ -12,16 +12,13 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-  - async
-  - brick
-  - bytestring
-  - containers
-  - cryptohash-sha256
-  - cursor
-  - cursor-brick
-  - directory
+  - appendful
+  - appendful-persistent
+  - cookie
   - envparse
-  - filepath
+  - filelock
+  - http-client
+  - http-client-tls
   - monad-logger
   - mtl
   - optparse-applicative
@@ -29,19 +26,15 @@ library:
   - path-io
   - persistent
   - persistent-sqlite
-  - persistent-template
-  - pretty-show
-  - random-shuffle
-  - safe
+  - servant
+  - servant-auth-client
+  - servant-client
+  - sparep-api
+  - sparep-api-server-data
+  - sparep-client
+  - sparep-client-data
+  - sparep-data
   - text
-  - time
-  - typed-process
-  - validity
-  - validity-path
-  - validity-bytestring
-  - validity-containers
-  - validity-text
-  - vty
   - yaml
   - yamlparse-applicative
 
@@ -66,11 +59,13 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - genvalidity
-    - genvalidity-bytestring
-    - genvalidity-containers
     - genvalidity-hspec
-    - genvalidity-hspec-persistent
-    - genvalidity-path
-    - genvalidity-text
     - hspec
+    - path
+    - path-io
+    - servant-client
+    - sparep-api
+    - sparep-api-server-gen
     - sparep-cli
+    - sparep-api-server-data
+    - text

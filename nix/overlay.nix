@@ -2,6 +2,22 @@ final: previous:
 with final.haskell.lib;
 
 {
+  sparepCasts =
+    let
+      mkCastDerivation = import (
+        builtins.fetchGit {
+          url = "https://github.com/NorfairKing/autorecorder";
+          rev = "da5bf9d61108a4a89addc8203b1579a364ce8c01";
+          ref = "master";
+        } + "/nix/cast.nix"
+      ) { pkgs = final // final.sparepPackages; };
+    in
+      {
+        sparep-basics-cast = mkCastDerivation {
+          name = "sparep-basics-cast";
+          src = ../casts/basics.yaml;
+        };
+      };
   sparepPackages =
     let
       sparepPkg =
@@ -22,7 +38,18 @@ with final.haskell.lib;
 
     in
       {
+        "sparep-api" = sparepPkg "sparep-api";
+        "sparep-api-gen" = sparepPkg "sparep-api-gen";
+        "sparep-api-server" = sparepPkgWithOwnComp "sparep-api-server";
+        "sparep-api-server-data" = sparepPkg "sparep-api-server-data";
+        "sparep-api-server-data-gen" = sparepPkg "sparep-api-server-data-gen";
+        "sparep-api-server-gen" = sparepPkg "sparep-api-server-gen";
+        "sparep-tui" = sparepPkgWithOwnComp "sparep-tui";
         "sparep-cli" = sparepPkgWithComp "sparep" "sparep-cli";
+        "sparep-client" = sparepPkg "sparep-client";
+        "sparep-client-data" = sparepPkg "sparep-client-data";
+        "sparep-data" = sparepPkg "sparep-data";
+        "sparep-data-gen" = sparepPkg "sparep-data-gen";
         "sparep-web-server" = sparepPkgWithOwnComp "sparep-web-server";
       };
   haskellPackages =
@@ -60,10 +87,31 @@ with final.haskell.lib;
                       sha256 = "sha256:1wk2sixf1ld48j6a14zgfadg41si6rl8gwmwdlkn0cqjiw9n7f4p";
                     };
                   cursorBrickPkg = self.callCabal2nix "cursor-brick" (cursorBrickRepo + "/cursor-brick") {};
+                  appendfulRepo =
+                    final.fetchFromGitHub {
+                      owner = "NorfairKing";
+                      repo = "appendful";
+                      rev = "98d1a191941f94fa0379d5c08371ba0963d3462e";
+                      sha256 = "sha256:1lkxhpn1cvxjqa4v45k9b0n9hgw1psvs40abp09gqrc3009v974l";
+                    };
+                  appendfulPkg = name: self.callCabal2nix "appendful" (appendfulRepo + "/${name}") {};
+                  base16Repo =
+                    final.fetchFromGitHub {
+                      owner = "emilypi";
+                      repo = "base16";
+                      rev = "f340b4a9a496320010930368e503ba6b7907f725";
+                      sha256 = "sha256:1c6910h9y3nmj2277d7bif3nilgacp4qafl4g5b3r2c0295hbq7z";
+                    };
+                  base16Pkg = self.callCabal2nix "base16" base16Repo {};
+
                 in
                   final.sparepPackages // {
                     envparse = envparsePkg;
                     cursor-brick = cursorBrickPkg;
+                    appendful = appendfulPkg "appendful";
+                    appendful-persistent = appendfulPkg "appendful-persistent";
+                    genvalidity-appendful = appendfulPkg "genvalidity-appendful";
+                    base16 = base16Pkg;
                   }
             );
         }
