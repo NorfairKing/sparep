@@ -62,7 +62,7 @@ sparepTUI = do
 
 migrateSparep :: MonadIO m => SqlPersistT m ()
 migrateSparep = do
-  runMigration clientMigration
+  _ <- runMigrationQuiet clientMigration
   migrateRepetition
 
 migrateRepetition :: MonadIO m => SqlPersistT m ()
