@@ -26,3 +26,4 @@ spec = serverSpec
     testSparep ["register"]
     testSparep ["login"]
     testSparep ["sync"]
+    testSparep ["count"]

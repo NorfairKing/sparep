@@ -319,7 +319,7 @@ handleStudyEvent s e =
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
 handleStudy :: BChan Query -> [RootedDeck] -> EventM n (Next State)
 handleStudy qChan decks = do
-  liftIO $ writeBChan qChan $ QueryGetStudyUnits decks 25
+  liftIO $ writeBChan qChan $ QueryGetStudyUnits decks 25 -- Make this number configurable
   let studyStateRepetitions = []
   let studyStateCursor = Loading
   continue $ StateStudy $ StudyState {..}

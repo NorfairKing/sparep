@@ -15,8 +15,7 @@ import Network.HTTP.Client.TLS as HTTP
 import Path
 import Path.IO
 import Servant.Client
-import Sparep.CLI.Commands
-import Sparep.Client.Data
+import Sparep.CLI.Commands as Commands
 import System.FileLock
 
 sparepCLI :: IO ()
@@ -41,6 +40,7 @@ sparepCLI = do
 
 dispatch :: Dispatch -> C ()
 dispatch = \case
-  DispatchRegister -> register
-  DispatchLogin -> login
-  DispatchSync -> sync
+  DispatchRegister -> Commands.register
+  DispatchLogin -> Commands.login
+  DispatchSync -> Commands.sync
+  DispatchCount cs -> Commands.count cs

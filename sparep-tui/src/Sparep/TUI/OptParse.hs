@@ -45,33 +45,6 @@ combineToInstructions Flags {..} Environment {..} mConf = do
     mmc :: (Configuration -> Maybe a) -> Maybe a
     mmc f = mConf >>= f
 
-parseDecks :: FilePath -> IO [RootedDeck]
-parseDecks fp = do
-  fileExists <- FP.doesFileExist fp
-  if fileExists
-    then do
-      p <- resolveFile' fp
-      maybeToList <$> readRootedDeck p
-    else do
-      dirExists <- FP.doesDirectoryExist fp
-      if dirExists
-        then do
-          p <- resolveDir' fp
-          fs <- snd <$> listDirRecur p
-          fmap catMaybes
-            $ forM fs
-            $ \f -> do
-              errOrDefs <- readRootedDeckOrErr f
-              pure $ either (const Nothing) Just =<< errOrDefs
-        else pure []
-
-readDeckOrDie :: Path Abs File -> IO Deck
-readDeckOrDie p = do
-  md <- YamlParse.readConfigFile p
-  case md of
-    Nothing -> die $ "Deck file not found: " <> fromAbsFile p
-    Just d -> pure d
-
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of

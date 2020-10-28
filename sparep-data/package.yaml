@@ -17,10 +17,14 @@ library:
     - bytestring
     - containers
     - cryptohash-sha256
+    - directory
+    - filepath
     - path
     - path
     - path-io
     - persistent
+    - random-shuffle
+    - safe
     - text
     - time
     - validity

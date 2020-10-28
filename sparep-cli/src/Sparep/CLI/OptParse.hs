@@ -9,6 +9,7 @@ module Sparep.CLI.OptParse
     Instructions (..),
     Dispatch (..),
     Settings (..),
+    CountSettings (..),
     getDefaultClientDatabase,
     getDefaultDataDir,
     getDefaultConfigFile,
@@ -30,6 +31,7 @@ import Path
 import Path.IO
 import Servant.Client
 import Sparep.API.Server.Data
+import Sparep.Data (RootedDeck (..), parseDecks)
 import YamlParse.Applicative as YamlParse
 
 data Instructions
@@ -59,6 +61,13 @@ data Dispatch
   = DispatchRegister
   | DispatchLogin
   | DispatchSync
+  | DispatchCount !CountSettings
+  deriving (Show, Eq, Generic)
+
+data CountSettings
+  = CountSettings
+      { countSettingDecks :: ![RootedDeck]
+      }
   deriving (Show, Eq, Generic)
 
 combineToInstructions :: Arguments -> Environment -> Maybe Configuration -> IO Instructions
@@ -81,8 +90,13 @@ combineToInstructions (Arguments cmd Flags {..}) Environment {..} mConf = do
       CommandRegister -> pure DispatchRegister
       CommandLogin -> pure DispatchLogin
       CommandSync -> pure DispatchSync
+      CommandCount -> do
+        countSettingDecks <- concat <$> mapM parseDecks (fromMaybe [] $ c configSpecifications)
+        pure $ DispatchCount CountSettings {..}
   pure $ Instructions disp sets
   where
+    c :: (Configuration -> a) -> Maybe a
+    c f = f <$> mConf
     mc :: (Configuration -> Maybe a) -> Maybe a
     mc f = mConf >>= f
 
@@ -105,7 +119,8 @@ data Configuration
         configUsername :: Maybe Username,
         configPassword :: Maybe Text,
         configDbFile :: Maybe FilePath,
-        configLogLevel :: Maybe LogLevel
+        configLogLevel :: Maybe LogLevel,
+        configSpecifications :: [FilePath]
       }
   deriving (Show, Eq, Generic)
 
@@ -121,6 +136,7 @@ instance YamlSchema Configuration where
         <*> optionalField "password" "Server account password"
         <*> optionalField "database" "The path to the database"
         <*> optionalFieldWith "log-level" "The minimal severity for log messages" viaRead
+        <*> optionalFieldWithDefault "decks" [] "The files and directories containing card definitions"
 
 -- | Get the configuration
 --
@@ -208,6 +224,7 @@ data Command
   = CommandRegister
   | CommandLogin
   | CommandSync
+  | CommandCount
   deriving (Show, Eq, Generic)
 
 parseCommand :: OptParse.Parser Command
@@ -216,7 +233,8 @@ parseCommand =
     mconcat
       [ OptParse.command "register" parseCommandRegister,
         OptParse.command "login" parseCommandLogin,
-        OptParse.command "sync" parseCommandSync
+        OptParse.command "sync" parseCommandSync,
+        OptParse.command "count" parseCommandCount
       ]
 
 parseCommandRegister :: OptParse.ParserInfo Command
@@ -236,6 +254,12 @@ parseCommandSync = OptParse.info parser modifier
   where
     modifier = OptParse.fullDesc <> OptParse.progDesc "Synchronise the repetition database"
     parser = pure CommandSync
+
+parseCommandCount :: OptParse.ParserInfo Command
+parseCommandCount = OptParse.info parser modifier
+  where
+    modifier = OptParse.fullDesc <> OptParse.progDesc "Print the number of cards left to study today"
+    parser = pure CommandCount
 
 -- | The flags that are common across commands.
 data Flags

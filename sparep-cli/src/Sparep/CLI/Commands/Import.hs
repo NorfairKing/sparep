@@ -7,3 +7,4 @@ import Sparep.API.Data as X
 import Sparep.CLI.Env as X
 import Sparep.CLI.OptParse as X
 import Sparep.Client as X
+import Sparep.Client.Data as X

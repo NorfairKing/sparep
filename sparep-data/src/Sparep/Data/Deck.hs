@@ -30,8 +30,29 @@ import Sparep.Data.DefinitionContext
 import Sparep.Data.FillExercise
 import Sparep.Data.Instructions
 import Sparep.Data.StudyUnit
+import System.Directory as FP
 import System.Exit
 import YamlParse.Applicative as YamlParse
+
+parseDecks :: FilePath -> IO [RootedDeck]
+parseDecks fp = do
+  fileExists <- FP.doesFileExist fp
+  if fileExists
+    then do
+      p <- resolveFile' fp
+      maybeToList <$> readRootedDeck p
+    else do
+      dirExists <- FP.doesDirectoryExist fp
+      if dirExists
+        then do
+          p <- resolveDir' fp
+          fs <- snd <$> listDirRecur p
+          fmap catMaybes
+            $ forM fs
+            $ \f -> do
+              errOrDefs <- readRootedDeckOrErr f
+              pure $ either (const Nothing) Just =<< errOrDefs
+        else pure []
 
 data RootedDeck
   = RootedDeck

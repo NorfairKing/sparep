@@ -25,7 +25,6 @@ library
       Sparep.TUI.Handle
       Sparep.TUI.OptParse
       Sparep.TUI.OptParse.Types
-      Sparep.TUI.Repetition
       Sparep.TUI.State
   other-modules:
       Paths_sparep_tui
