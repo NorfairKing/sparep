@@ -12,7 +12,6 @@ import Data.Text (Text)
 import Data.Time
 import Sparep.Client.Data
 import Sparep.Data
-import Sparep.TUI.Repetition
 
 data Loading a = Loading | Loaded a
   deriving (Show, Eq)

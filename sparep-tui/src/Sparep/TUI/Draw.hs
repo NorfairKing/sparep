@@ -22,7 +22,6 @@ import qualified Data.Text as T
 import Data.Time
 import Graphics.Vty.Attributes
 import Sparep.Data
-import Sparep.TUI.Repetition
 import Sparep.TUI.State
 
 drawTui :: State -> [Widget ResourceName]

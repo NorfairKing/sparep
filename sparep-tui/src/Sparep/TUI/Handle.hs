@@ -23,7 +23,6 @@ import Lens.Micro
 import Path
 import Sparep.Client.Data
 import Sparep.Data
-import Sparep.TUI.Repetition
 import Sparep.TUI.State
 import System.Process.Typed
 

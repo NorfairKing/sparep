@@ -12,14 +12,11 @@ import qualified Data.Text as T
 import qualified Env
 import Options.Applicative
 import qualified Options.Applicative.Help as OptParse
-import Path
 import Path.IO
 import Sparep.CLI.OptParse (getDefaultClientDatabase, getDefaultConfigFile)
 import Sparep.Data
 import Sparep.TUI.OptParse.Types
-import qualified System.Directory as FP
 import qualified System.Environment as System
-import System.Exit
 import qualified YamlParse.Applicative as YamlParse
 
 getSettings :: IO Settings

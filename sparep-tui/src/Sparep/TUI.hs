@@ -27,7 +27,6 @@ import Sparep.TUI.Draw
 import Sparep.TUI.Handle
 import Sparep.TUI.OptParse
 import Sparep.TUI.OptParse.Types
-import Sparep.TUI.Repetition
 import Sparep.TUI.State
 import System.Exit
 import System.FileLock
