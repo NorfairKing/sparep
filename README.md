@@ -44,3 +44,5 @@ Sparep takes care of showing you the right cards to study at the right time.
 
 To play sound files, you will need to have a `play` command in your path.
 You can get this from `sox`.
+
+To show image files, you will need to have a `feh` command in your path.

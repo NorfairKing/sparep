@@ -25,6 +25,7 @@ instance Validity Card
 data CardSide
   = TextSide !Text
   | SoundSide !(Path Abs File) !ByteString
+  | ImageSide !(Path Abs File) !ByteString
   deriving (Show, Eq, Generic)
 
 instance Validity CardSide

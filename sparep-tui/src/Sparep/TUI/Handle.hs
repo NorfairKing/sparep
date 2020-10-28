@@ -97,7 +97,10 @@ handleDecksEvent qChan s e = case decksStateCursor s of
               EvKey KEnter [] -> handleStudy qChan [fst (nonEmptyCursorCurrent cursor)]
               _ -> continue $ StateDecks s
       AppEvent (ResponseGetDeckSelection d sel) -> do
-        let mCursor' = flip fmap (decksStateCursor s) $ Simple.mapNonEmptyCursor (\t@(d', _) -> if d == d' then (d', Loaded sel) else t)
+        let mCursor' =
+              flip fmap (decksStateCursor s) $
+                Simple.mapNonEmptyCursor
+                  (\t@(d', _) -> if d == d' then (d', Loaded sel) else t)
         let s' = s {decksStateCursor = mCursor'}
         continue $ StateDecks s'
       _ -> continue $ StateDecks s
@@ -126,6 +129,7 @@ handleStudyUnitsEvent qChan s e =
                     case side of
                       TextSide _ -> pure ()
                       SoundSide fp _ -> playSoundFile fp
+                      ImageSide fp _ -> showImageFile fp
                   _ -> pure ()
                 continue $ StateStudyUnits s
        in case vtye of
@@ -213,6 +217,7 @@ handleStudyEvent s e =
                             case side of
                               TextSide _ -> pure ()
                               SoundSide fp _ -> playSoundFile fp
+                              ImageSide fp _ -> showImageFile fp
                             continue s
                        in case cardCursorFrontBack of
                             Front ->
@@ -325,3 +330,6 @@ handleStudy qChan decks = do
 
 playSoundFile :: Path Abs File -> EventM n ()
 playSoundFile p = runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "play" [fromAbsFile p]
+
+showImageFile :: Path Abs File -> EventM n ()
+showImageFile p = runProcess_ $ setStdout nullStream $ setStderr nullStream $ proc "feh" [fromAbsFile p]

@@ -244,6 +244,7 @@ resolveCardManySidedDef fp mDeckName mDefaultInstructions CardManySidedDef {..} 
 data CardSideDef
   = TextSideDef !Text
   | SoundSideDef !FilePath
+  | ImageSideDef !FilePath
   deriving (Show, Eq, Generic)
 
 instance Validity CardSideDef
@@ -256,7 +257,12 @@ instance YamlSchema CardSideDef where
           ( SoundSideDef
               <$ requiredFieldWith "type" "Declare that it's a sound" (literalString "sound")
           )
-            <*> requiredField "path" "The path to the sound file, from the deck definition"
+            <*> requiredField "path" "The path to the sound file, from the deck definition",
+        objectParser "ImageSideDef" $
+          ( ImageSideDef
+              <$ requiredFieldWith "type" "Declare that it's an image" (literalString "image")
+          )
+            <*> requiredField "path" "The path to the image file, from the deck definition"
       ]
 
 instance FromJSON CardSideDef where
@@ -269,6 +275,10 @@ resolveCardSideDef dfp = \case
     afp <- resolveFile (parent dfp) fp
     contents <- SB.readFile $ fromAbsFile afp
     pure $ SoundSide afp contents
+  ImageSideDef fp -> liftIO $ do
+    afp <- resolveFile (parent dfp) fp
+    contents <- SB.readFile $ fromAbsFile afp
+    pure $ ImageSide afp contents
 
 data FillExerciseDef
   = FillExerciseDef

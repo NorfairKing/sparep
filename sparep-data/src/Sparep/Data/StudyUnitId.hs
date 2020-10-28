@@ -40,6 +40,7 @@ cardContents Card {..} =
   let sideBytes = \case
         TextSide t -> TE.encodeUtf8 (T.strip t)
         SoundSide _ contents -> contents
+        ImageSide _ contents -> contents
    in SB.concat
         [ sideBytes cardFront,
           sideBytes cardBack

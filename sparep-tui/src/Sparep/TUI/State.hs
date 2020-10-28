@@ -26,20 +26,48 @@ data State
 data MenuState
   = MenuState
       { menuStateDecks :: [RootedDeck],
-        menuStateSelection :: Loading (Selection (DefinitionContext StudyUnit))
+        menuStateSelection ::
+          Loading
+            ( Selection
+                ( DefinitionContext StudyUnit
+                )
+            )
       }
   deriving (Show, Eq)
 
 data DecksState
   = DecksState
-      { decksStateCursor :: !(Maybe (Simple.NonEmptyCursor (RootedDeck, Loading (Selection (DefinitionContext StudyUnit)))))
+      { decksStateCursor ::
+          !( Maybe
+               ( Simple.NonEmptyCursor
+                   ( RootedDeck,
+                     Loading
+                       ( Selection
+                           ( DefinitionContext StudyUnit
+                           )
+                       )
+                   )
+               )
+           )
       }
   deriving (Show, Eq)
 
 data StudyUnitsState
   = StudyUnitsState
       { studyUnitsStateDeck :: !RootedDeck,
-        studyUnitsStateCursor :: !(Maybe (Simple.NonEmptyCursor (DefinitionContext StudyUnit, Loading (Maybe (UTCTime, UTCTime)))))
+        studyUnitsStateCursor ::
+          !( Maybe
+               ( Simple.NonEmptyCursor
+                   ( DefinitionContext StudyUnit,
+                     Loading
+                       ( Maybe
+                           ( UTCTime,
+                             UTCTime
+                           )
+                       )
+                   )
+               )
+           )
       }
   deriving (Show, Eq)
 

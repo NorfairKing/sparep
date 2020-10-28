@@ -298,11 +298,13 @@ drawFrontSide :: CardSide -> Widget n
 drawFrontSide = withAttr sideAttr . \case
   TextSide t -> txtWrap t
   SoundSide _ _ -> str "Press 'f' to play sound"
+  ImageSide _ _ -> str "Press 'f' to show image"
 
 drawBackSide :: CardSide -> Widget n
 drawBackSide = withAttr sideAttr . \case
   TextSide t -> txtWrap t
   SoundSide _ _ -> str "Press 'b' to play sound"
+  ImageSide _ _ -> str "Press 'b' to show image"
 
 drawFillExerciseCursor :: DefinitionContext FillExerciseCursor -> Widget ResourceName
 drawFillExerciseCursor DefinitionContext {..} =
