@@ -178,7 +178,7 @@ drawStudyUnitsState StudyUnitsState {..} =
         ]
   ]
 
-drawStudyUnitList :: NonEmptyCursor (StudyUnit, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
+drawStudyUnitList :: NonEmptyCursor (DefinitionContext StudyUnit, Loading (Maybe (UTCTime, UTCTime))) -> Widget n
 drawStudyUnitList =
   verticalNonEmptyCursorTableWithHeader
     go
@@ -190,33 +190,34 @@ drawStudyUnitList =
         ]
     )
   where
-    go (su, _) =
-      [ padRight Max $ txt $ renderStudyUnitIdHex $ hashStudyUnit su
+    go (DefinitionContext {..}, _) =
+      [ padRight Max $ txt $ renderStudyUnitIdHex $ hashStudyUnit definitionContextUnit
       ]
 
-drawStudyUnitDetails :: StudyUnit -> Loading (Maybe (UTCTime, UTCTime)) -> Widget n
-drawStudyUnitDetails su lTimes =
+drawStudyUnitDetails :: DefinitionContext StudyUnit -> Loading (Maybe (UTCTime, UTCTime)) -> Widget n
+drawStudyUnitDetails DefinitionContext {..} lTimes =
   vBox $
     concat
-      [ [txt $ "Id: " <> renderStudyUnitIdHex (hashStudyUnit su)],
-        case su of
+      [ [txt $ "Id: " <> renderStudyUnitIdHex (hashStudyUnit definitionContextUnit)],
+        [ withAttr deckNameAttr $ txt $ "Deck name: " <> dn
+          | DeckName dn <- maybeToList definitionContextDeckName
+        ],
+        [ withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins
+          | Instructions ins <- maybeToList definitionContextInstructions
+        ],
+        case definitionContextUnit of
           CardUnit card@Card {..} ->
-            concat
-              [ [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | Instructions ins <- maybeToList cardInstructions],
-                [hCenterLayer $ drawCard Back card]
-              ]
+            [ hCenterLayer $ drawCard Back card
+            ]
           FillExerciseUnit FillExercise {..} ->
-            concat
-              [ [withAttr instructionsAttr $ txtWrap $ "Instructions: " <> ins | Instructions ins <- maybeToList fillExerciseInstructions],
-                [ hCenterLayer $ hLimit 40 $ border $ padAll 1 $ markup $ sconcat $
-                    NE.map
-                      ( \case
-                          LitPart t -> t @? litPartAttr
-                          FillPart t -> t @? fillPartAttr
-                      )
-                      fillExerciseSequence
-                ]
-              ],
+            [ hCenterLayer $ hLimit 40 $ border $ padAll 1 $ markup $ sconcat $
+                NE.map
+                  ( \case
+                      LitPart t -> t @? litPartAttr
+                      FillPart t -> t @? fillPartAttr
+                  )
+                  fillExerciseSequence
+            ],
         case lTimes of
           Loading -> [str "Loading", str "Loading"]
           Loaded mTimes -> case mTimes of
@@ -244,27 +245,32 @@ drawStudyState StudyState {..} =
                       $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
                     vCenterLayer $ vBox $
                       concat
-                        [ [hCenterLayer $ withAttr newLabelAttr (str "New") | studyContextNew],
+                        [ [hCenterLayer $ withAttr newLabelAttr (str "! New ! ") | studyContextNew],
                           [padAll 1 $ drawStudyUnitCursor studyContextUnit]
                         ]
                   ]
   ]
 
-drawStudyUnitCursor :: StudyUnitCursor -> Widget ResourceName
-drawStudyUnitCursor su = case su of
-  CardUnitCursor cc -> drawCardCursor cc
-  FillExerciseUnitCursor fec -> drawFillExerciseCursor fec
+drawStudyUnitCursor :: DefinitionContext StudyUnitCursor -> Widget ResourceName
+drawStudyUnitCursor du = case definitionContextUnit du of
+  CardUnitCursor cc -> drawCardCursor $ cc <$ du
+  FillExerciseUnitCursor fec -> drawFillExerciseCursor $ fec <$ du
 
-drawCardCursor :: CardCursor -> Widget n
-drawCardCursor CardCursor {..} =
-  let Card {..} = cardCursorCard
+drawCardCursor :: DefinitionContext CardCursor -> Widget n
+drawCardCursor DefinitionContext {..} =
+  let CardCursor {..} = definitionContextUnit
+      Card {..} = cardCursorCard
    in vBox $
         concat
-          [ [ hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | Instructions ins <- maybeToList cardInstructions
+          [ [ hCenterLayer $ withAttr deckNameAttr $ txt dn
+              | DeckName dn <- maybeToList definitionContextDeckName
+            ],
+            [ padTop (Pad 1) $ hCenterLayer $ withAttr instructionsAttr $ txt ins
+              | Instructions ins <- maybeToList definitionContextInstructions
             ],
             [ hCenterLayer $ drawCard cardCursorFrontBack cardCursorCard,
               vBox
-                [ hCenterLayer $ padLeftRight 3 $
+                [ hCenterLayer $
                     case cardCursorFrontBack of
                       Front -> str "Show back: space"
                       Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
@@ -299,9 +305,10 @@ drawBackSide = withAttr sideAttr . \case
   TextSide t -> txtWrap t
   SoundSide _ _ -> str "Press 'b' to play sound"
 
-drawFillExerciseCursor :: FillExerciseCursor -> Widget ResourceName
-drawFillExerciseCursor fec@FillExerciseCursor {..} =
-  let partCursorMarkup =
+drawFillExerciseCursor :: DefinitionContext FillExerciseCursor -> Widget ResourceName
+drawFillExerciseCursor DefinitionContext {..} =
+  let fec@FillExerciseCursor {..} = definitionContextUnit
+      partCursorMarkup =
         \case
           LitPartCursor t -> t @? litPartAttr
           FillPartCursor tc t ->
@@ -314,7 +321,12 @@ drawFillExerciseCursor fec@FillExerciseCursor {..} =
             )
    in vBox $
         concat
-          [ [hCenterLayer $ padLeftRight 3 $ withAttr instructionsAttr $ txt ins | Instructions ins <- maybeToList fillExerciseCursorInstructions],
+          [ [ hCenterLayer $ withAttr deckNameAttr $ txt dn
+              | DeckName dn <- maybeToList definitionContextDeckName
+            ],
+            [ padTop (Pad 1) $ hCenterLayer $ withAttr instructionsAttr $ txt ins
+              | Instructions ins <- maybeToList definitionContextInstructions
+            ],
             [ hCenterLayer $ hLimit 40 . border . padAll 1 $
                 NEC.foldNonEmptyCursor
                   ( \befores current afters ->
@@ -365,6 +377,7 @@ tuiAttrMap =
     defAttr
     [ (selectedAttr, fg brightWhite),
       (headingAttr, defAttr `withStyle` underline),
+      (deckNameAttr, fg yellow `withStyle` underline),
       (instructionsAttr, fg yellow),
       (sideAttr, fg brightWhite),
       (litPartAttr, fg brightWhite),
@@ -378,7 +391,7 @@ tuiAttrMap =
       (doneAttr, fg green),
       (readyAttr, fg yellow),
       (newAttr, fg red),
-      (newLabelAttr, withStyle (fg green) underline)
+      (newLabelAttr, withStyle (fg green) blink)
     ]
 
 headingAttr :: AttrName
@@ -407,6 +420,9 @@ fillIncorrectAttr = "fill-part-correct"
 
 fillShownAttr :: AttrName
 fillShownAttr = "fill-shown"
+
+deckNameAttr :: AttrName
+deckNameAttr = "deck-name"
 
 instructionsAttr :: AttrName
 instructionsAttr = "instructions"

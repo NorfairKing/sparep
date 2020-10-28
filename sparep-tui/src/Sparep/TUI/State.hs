@@ -27,26 +27,41 @@ data State
 data MenuState
   = MenuState
       { menuStateDecks :: [RootedDeck],
-        menuStateSelection :: Loading (Selection StudyUnit)
+        menuStateSelection :: Loading (Selection (DefinitionContext StudyUnit))
       }
   deriving (Show, Eq)
 
 data DecksState
   = DecksState
-      { decksStateCursor :: !(Maybe (Simple.NonEmptyCursor (RootedDeck, Loading (Selection StudyUnit))))
+      { decksStateCursor :: !(Maybe (Simple.NonEmptyCursor (RootedDeck, Loading (Selection (DefinitionContext StudyUnit)))))
       }
   deriving (Show, Eq)
 
 data StudyUnitsState
   = StudyUnitsState
       { studyUnitsStateDeck :: !RootedDeck,
-        studyUnitsStateCursor :: !(Maybe (Simple.NonEmptyCursor (StudyUnit, Loading (Maybe (UTCTime, UTCTime)))))
+        studyUnitsStateCursor :: !(Maybe (Simple.NonEmptyCursor (DefinitionContext StudyUnit, Loading (Maybe (UTCTime, UTCTime)))))
       }
   deriving (Show, Eq)
 
+-- TODO see if this ungodly mess can be refactored.
 data StudyState
   = StudyState
-      { studyStateCursor :: !(Loading (Maybe (NonEmptyCursor (StudyContext StudyUnitCursor) (StudyContext StudyUnit)))),
+      { studyStateCursor ::
+          !( Loading
+               ( Maybe
+                   ( NonEmptyCursor
+                       ( StudyContext
+                           ( DefinitionContext StudyUnitCursor
+                           )
+                       )
+                       ( StudyContext
+                           ( DefinitionContext StudyUnit
+                           )
+                       )
+                   )
+               )
+           ),
         studyStateRepetitions :: ![ClientRepetition]
       }
   deriving (Show, Eq)
@@ -85,7 +100,6 @@ rebuildCardCursor = cardCursorCard
 data FillExerciseCursor
   = FillExerciseCursor
       { fillExerciseCursorList :: Simple.NonEmptyCursor FillExercisePartCursor,
-        fillExerciseCursorInstructions :: Maybe Instructions,
         fillExerciseCursorShow :: Bool -- True means shown
       }
   deriving (Show, Eq)
@@ -95,7 +109,6 @@ makeFillExerciseCursor FillExercise {..} =
   let fec =
         FillExerciseCursor
           { fillExerciseCursorList = Simple.makeNonEmptyCursor $ fmap makeFillExercisePartCursor fillExerciseSequence,
-            fillExerciseCursorInstructions = fillExerciseInstructions,
             fillExerciseCursorShow = False
           }
    in fromMaybe fec $ fillExerciseCursorSeek fec
@@ -103,8 +116,7 @@ makeFillExerciseCursor FillExercise {..} =
 rebuildFillExerciseCursor :: FillExerciseCursor -> FillExercise
 rebuildFillExerciseCursor FillExerciseCursor {..} =
   FillExercise
-    { fillExerciseSequence = rebuildFillExercisePartCursor <$> Simple.rebuildNonEmptyCursor fillExerciseCursorList,
-      fillExerciseInstructions = fillExerciseCursorInstructions
+    { fillExerciseSequence = rebuildFillExercisePartCursor <$> Simple.rebuildNonEmptyCursor fillExerciseCursorList
     }
 
 fillExerciseCursorSeek :: FillExerciseCursor -> Maybe FillExerciseCursor

@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Sparep.Data.Context where
+module Sparep.Data.StudyContext where
 
 import Data.Validity
 import GHC.Generics (Generic)

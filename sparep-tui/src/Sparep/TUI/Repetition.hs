@@ -20,27 +20,28 @@ import Sparep.Client.Data
 import Sparep.Data
 import System.Random.Shuffle
 
-getStudyUnitDates :: StudyUnit -> SqlPersistT IO (Maybe (UTCTime, UTCTime))
+getStudyUnitDates :: DefinitionContext StudyUnit -> SqlPersistT IO (Maybe (UTCTime, UTCTime))
 getStudyUnitDates unit = do
   reps <-
     map (clientMakeRepetition . entityVal)
       <$> selectList
-        [ClientRepetitionUnit ==. hashStudyUnit unit]
+        [ClientRepetitionUnit ==. hashStudyUnit (definitionContextUnit unit)]
         [Desc ClientRepetitionTimestamp]
   pure $ (,) <$> (repetitionTimestamp <$> headMay reps) <*> nextRepititionSM2 reps
 
 -- This computation may take a while, move it to a separate thread with a nice progress bar.
-generateStudyDeck :: [StudyUnit] -> Word -> SqlPersistT IO [StudyContext StudyUnit]
-generateStudyDeck cards numCards = generateStudySelection cards >>= (liftIO . studyFromSelection numCards)
+generateStudyDeck :: [DefinitionContext StudyUnit] -> Word -> SqlPersistT IO [StudyContext (DefinitionContext StudyUnit)]
+generateStudyDeck cards numCards =
+  generateStudySelection cards >>= (liftIO . studyFromSelection numCards)
 
-generateStudySelection :: [StudyUnit] -> SqlPersistT IO (Selection StudyUnit)
+generateStudySelection :: [DefinitionContext StudyUnit] -> SqlPersistT IO (Selection (DefinitionContext StudyUnit))
 generateStudySelection units = do
   cardData <-
     forM units $ \c ->
       (,) c
         . map (clientMakeRepetition . entityVal)
         <$> selectList
-          [ClientRepetitionUnit ==. hashStudyUnit c]
+          [ClientRepetitionUnit ==. hashStudyUnit (definitionContextUnit c)]
           [Desc ClientRepetitionTimestamp]
   now <- liftIO getCurrentTime
   pure $ decideStudyDeckSM2 now cardData

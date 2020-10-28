@@ -30,14 +30,14 @@ import System.Process.Typed
 data Query
   = QueryGetDeckSelection RootedDeck
   | QueryGetDecksSelection [RootedDeck]
-  | QueryGetStudyUnitDates StudyUnit
+  | QueryGetStudyUnitDates (DefinitionContext StudyUnit)
   | QueryGetStudyUnits [RootedDeck] Word
 
 data Response
-  = ResponseGetDeckSelection RootedDeck (Selection StudyUnit)
-  | ResponseGetDecksSelection (Selection StudyUnit)
-  | ResponseGetStudyUnitDates StudyUnit (Maybe (UTCTime, UTCTime))
-  | ResponseGetStudyUnits [StudyContext StudyUnit]
+  = ResponseGetDeckSelection RootedDeck (Selection (DefinitionContext StudyUnit))
+  | ResponseGetDecksSelection (Selection (DefinitionContext StudyUnit))
+  | ResponseGetStudyUnitDates (DefinitionContext StudyUnit) (Maybe (UTCTime, UTCTime))
+  | ResponseGetStudyUnits [StudyContext (DefinitionContext StudyUnit)]
 
 handleTuiEvent ::
   BChan Query -> State -> BrickEvent n Response -> EventM n (Next State)
@@ -119,7 +119,7 @@ handleStudyUnitsEvent qChan s e =
               Nothing -> continue $ StateStudyUnits s
               Just cursor -> do
                 let studyUnit = fst (nonEmptyCursorCurrent cursor)
-                case studyUnit of
+                case definitionContextUnit studyUnit of
                   CardUnit card -> do
                     let side = case fb of
                           Front -> cardFront card
@@ -162,7 +162,7 @@ handleStudyEvent s e =
             s
               { studyStateCursor =
                   Loaded $
-                    makeNonEmptyCursor (fmap makeStudyUnitCursor) <$> NE.nonEmpty cs
+                    makeNonEmptyCursor (fmap (fmap makeStudyUnitCursor)) <$> NE.nonEmpty cs
               }
         _ -> continue s
     Loaded mCursor ->
@@ -177,18 +177,25 @@ handleStudyEvent s e =
                     now <- liftIO getCurrentTime
                     let rep =
                           ClientRepetition
-                            { clientRepetitionUnit = hashStudyUnit (rebuildStudyUnitCursor (studyContextUnit cur)),
+                            { clientRepetitionUnit =
+                                hashStudyUnit
+                                  ( rebuildStudyUnitCursor
+                                      ( definitionContextUnit
+                                          ( studyContextUnit cur
+                                          )
+                                      )
+                                  ),
                               clientRepetitionDifficulty = difficulty,
                               clientRepetitionTimestamp = now,
                               clientRepetitionServerId = Nothing
                             }
-                    let mcursor' = nonEmptyCursorSelectNext (fmap rebuildStudyUnitCursor) (fmap makeStudyUnitCursor) cursor
+                    let mcursor' = nonEmptyCursorSelectNext (fmap (fmap rebuildStudyUnitCursor)) (fmap (fmap makeStudyUnitCursor)) cursor
                     let mcursor'' =
                           -- Require re-studying incorrect studyUnits
                           if difficulty == Incorrect
                             then Just $ case mcursor' of
                               Nothing -> singletonNonEmptyCursor cur
-                              Just cursor' -> nonEmptyCursorAppendAtEnd (rebuildStudyUnitCursor <$> cur) cursor'
+                              Just cursor' -> nonEmptyCursorAppendAtEnd (fmap rebuildStudyUnitCursor <$> cur) cursor'
                             else mcursor'
                     continue $
                       s
@@ -196,7 +203,8 @@ handleStudyEvent s e =
                           studyStateRepetitions = rep : studyStateRepetitions s
                         }
                   unit = nonEmptyCursorCurrent cursor
-               in case studyContextUnit unit of
+                  definitionUnit = studyContextUnit unit
+               in case definitionContextUnit definitionUnit of
                     CardUnitCursor cc@CardCursor {..} ->
                       let tryShowExtra :: FrontBack -> EventM n (Next StudyState)
                           tryShowExtra fb = do
@@ -215,7 +223,19 @@ handleStudyEvent s e =
                                 EvKey (KChar ' ') [] ->
                                   continue $
                                     s
-                                      { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ (unit {studyContextUnit = CardUnitCursor (cardCursorShowBack cc)})
+                                      { studyStateCursor =
+                                          Loaded $ Just $
+                                            cursor & nonEmptyCursorElemL
+                                              .~ ( unit
+                                                     { studyContextUnit =
+                                                         definitionUnit
+                                                           { definitionContextUnit =
+                                                               CardUnitCursor
+                                                                 ( cardCursorShowBack cc
+                                                                 )
+                                                           }
+                                                     }
+                                                 )
                                       }
                                 _ -> continue s
                             Back ->
@@ -233,7 +253,17 @@ handleStudyEvent s e =
                             let fec' = fromMaybe fec $ func fec
                              in continue $
                                   s
-                                    { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ (unit {studyContextUnit = FillExerciseUnitCursor fec'})
+                                    { studyStateCursor =
+                                        Loaded $ Just $
+                                          cursor & nonEmptyCursorElemL
+                                            .~ ( unit
+                                                   { studyContextUnit =
+                                                       definitionUnit
+                                                         { definitionContextUnit =
+                                                             FillExerciseUnitCursor fec'
+                                                         }
+                                                   }
+                                               )
                                     }
                           textDo func =
                             let fec' =
@@ -251,7 +281,17 @@ handleStudyEvent s e =
                                   else
                                     continue $
                                       s
-                                        { studyStateCursor = Loaded $ Just $ cursor & nonEmptyCursorElemL .~ (unit {studyContextUnit = FillExerciseUnitCursor fec'})
+                                        { studyStateCursor =
+                                            Loaded $ Just $
+                                              cursor & nonEmptyCursorElemL
+                                                .~ ( unit
+                                                       { studyContextUnit =
+                                                           definitionUnit
+                                                             { definitionContextUnit =
+                                                                 FillExerciseUnitCursor fec'
+                                                             }
+                                                       }
+                                                   )
                                         }
                           tryFinishStudyUnit diff =
                             if fillExerciseCursorCorrect fec && not fillExerciseCursorShow
