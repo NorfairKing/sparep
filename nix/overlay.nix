@@ -87,14 +87,6 @@ with final.haskell.lib;
                       sha256 = "sha256:1wk2sixf1ld48j6a14zgfadg41si6rl8gwmwdlkn0cqjiw9n7f4p";
                     };
                   cursorBrickPkg = self.callCabal2nix "cursor-brick" (cursorBrickRepo + "/cursor-brick") {};
-                  appendfulRepo =
-                    final.fetchFromGitHub {
-                      owner = "NorfairKing";
-                      repo = "appendful";
-                      rev = "98d1a191941f94fa0379d5c08371ba0963d3462e";
-                      sha256 = "sha256:1lkxhpn1cvxjqa4v45k9b0n9hgw1psvs40abp09gqrc3009v974l";
-                    };
-                  appendfulPkg = name: self.callCabal2nix "appendful" (appendfulRepo + "/${name}") {};
                   base16Repo =
                     final.fetchFromGitHub {
                       owner = "emilypi";
@@ -108,9 +100,6 @@ with final.haskell.lib;
                   final.sparepPackages // {
                     envparse = envparsePkg;
                     cursor-brick = cursorBrickPkg;
-                    appendful = appendfulPkg "appendful";
-                    appendful-persistent = appendfulPkg "appendful-persistent";
-                    genvalidity-appendful = appendfulPkg "genvalidity-appendful";
                     base16 = base16Pkg;
                   }
             );
