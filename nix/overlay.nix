@@ -52,6 +52,13 @@ with final.haskell.lib;
         "sparep-data-gen" = sparepPkg "sparep-data-gen";
         "sparep-web-server" = sparepPkgWithOwnComp "sparep-web-server";
       };
+
+  sparepRelease =
+    final.symlinkJoin {
+      name = "sparep-release";
+      paths = final.lib.attrValues final.sparepPackages;
+    };
+
   haskellPackages =
     previous.haskellPackages.override (
       old:

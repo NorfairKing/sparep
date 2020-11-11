@@ -13,8 +13,23 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: cachix/install-nix-action@v11
-    - uses: cachix/cachix-action@v6
+    - uses: cachix/cachix-action@v7
       with:
         name: sparep
+        extraPullNames: validity, appendful, cursor, yamlparse
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-    - run: nix-build ci.nix
+    - run: nix-build ci.nix -A pre-commit-check
+
+  build:
+    name: CI Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v11
+    - uses: cachix/cachix-action@v7
+      with:
+        name: sparep
+        extraPullNames: validity, appendful, cursor, yamlparse
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+    - run: nix-build ci.nix -A release
+
