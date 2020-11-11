@@ -27,7 +27,8 @@ in
                   hosts =
                     mkOption {
                       type = types.listOf (types.str);
-                      example = "api.sparep.cs-syd.eu";
+                      default = [];
+                      example = [ "api.sparep.cs-syd.eu" ];
                       description = "The host to serve api requests on";
                     };
                   port =
@@ -80,7 +81,8 @@ in
                   hosts =
                     mkOption {
                       type = types.listOf (types.str);
-                      example = "sparep.cs-syd.eu";
+                      default = [];
+                      example = [ "sparep.cs-syd.eu" ];
                       description = "The host to serve web requests on";
                     };
                   port =
@@ -151,7 +153,7 @@ in
       api-server-host =
         with cfg.api-server;
 
-        optionalAttrs enable {
+        optionalAttrs (enable && hosts != []) {
           "${head hosts}" =
             {
               enableACME = true;
@@ -179,11 +181,11 @@ in
                 script =
                   ''
                     mkdir -p ${backup-dir}
+                    cd ${working-dir}
                     file="${backup-dir}/''$(date +%F_%T).db"
                     ${pkgs.sqlite}/bin/sqlite3 ${api-server-database-file} ".backup ''${file}"
                   '';
                 serviceConfig = {
-                  WorkingDirectory = working-dir;
                   Type = "oneshot";
                 };
               };
@@ -230,12 +232,12 @@ in
             script =
               ''
                 mkdir -p "${web-server-working-dir}"
+                cd ${web-server-working-dir}
                 ${sparepPkgs.sparep-web-server}/bin/sparep-web-server \
                   serve
               '';
             serviceConfig =
               {
-                WorkingDirectory = web-server-working-dir;
                 Restart = "always";
                 RestartSec = 1;
                 Nice = 15;
@@ -250,7 +252,7 @@ in
       web-server-host =
         with cfg.web-server;
 
-        optionalAttrs enable {
+        optionalAttrs (enable && hosts != []) {
           "${head hosts}" =
             {
               enableACME = true;
