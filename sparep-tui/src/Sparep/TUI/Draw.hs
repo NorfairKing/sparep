@@ -241,7 +241,12 @@ drawStudyState StudyState {..} =
              in vBox
                   [ hCenterLayer
                       $ str
-                      $ show (length (nonEmptyCursorNext cursor)) ++ " cards left",
+                      $ unwords
+                        [ show (length (nonEmptyCursorPrev cursor)),
+                          "cards studied ",
+                          show (length (nonEmptyCursorNext cursor)),
+                          "cards left"
+                        ],
                     vCenterLayer $ vBox $
                       concat
                         [ [hCenterLayer $ withAttr newLabelAttr (str "! New ! ") | studyContextNew],
@@ -271,7 +276,7 @@ drawCardCursor DefinitionContext {..} =
               vBox
                 [ hCenterLayer $
                     case cardCursorFrontBack of
-                      Front -> str "Show back: space"
+                      Front -> str "Show back: space,  Undo: u"
                       Back -> padAll 1 $ str "Incorrect: i,  Hard: h,  Good: g,  Easy: e"
                 ]
             ]
@@ -368,7 +373,7 @@ drawFillExerciseCursor DefinitionContext {..} =
             [ hCenterLayer $ padAll 1 $
                 if fillExerciseCursorCorrect fec
                   then str "Incorrect: Alt-i,  Hard: Alt-h,  Good: Alt-g,  Easy: Alt-e"
-                  else str "Incorrect: Alt-i,  Show solution: Alt-<space>"
+                  else str "Incorrect: Alt-i,  Show solution: Alt-<space>,  Undo: Alt-u"
             ]
           ]
 
