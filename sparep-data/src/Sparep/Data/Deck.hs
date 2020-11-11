@@ -35,7 +35,8 @@ import System.Exit
 import YamlParse.Applicative as YamlParse
 
 parseDecks :: FilePath -> IO [RootedDeck]
-parseDecks fp = do
+parseDecks fp' = do
+  fp <- normaliseDeckFilePath fp'
   fileExists <- FP.doesFileExist fp
   if fileExists
     then do
@@ -53,6 +54,14 @@ parseDecks fp = do
               errOrDefs <- readRootedDeckOrErr f
               pure $ either (const Nothing) Just =<< errOrDefs
         else pure []
+
+normaliseDeckFilePath :: FilePath -> IO FilePath
+normaliseDeckFilePath fp = case fp of
+  '~' : '/' : rest -> do
+    home <- getHomeDir
+    let fp' = fromAbsDir home ++ rest
+    pure fp'
+  _ -> pure fp
 
 data RootedDeck
   = RootedDeck
