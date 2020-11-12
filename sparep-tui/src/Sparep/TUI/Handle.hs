@@ -174,7 +174,15 @@ handleStudyEvent s e =
           case mCursor of
             Nothing -> halt s
             Just cursor ->
-              let finishStudyUnit :: Difficulty -> EventM n (Next StudyState)
+              let doUndo :: EventM n (Next StudyState)
+                  doUndo = case studyStateCursor s of
+                    Loading -> continue s -- Not loaded yet
+                    Loaded mnec -> case mnec of
+                      Nothing -> continue s -- No items
+                      Just nec -> case nonEmptyCursorSelectPrev (fmap (fmap rebuildStudyUnitCursor)) (fmap (fmap makeStudyUnitCursor)) nec of
+                        Nothing -> continue s -- At the start
+                        Just nec' -> continue $ s {studyStateCursor = Loaded (Just nec'), studyStateRepetitions = tail $ studyStateRepetitions s}
+                  finishStudyUnit :: Difficulty -> EventM n (Next StudyState)
                   finishStudyUnit difficulty = do
                     let cur = nonEmptyCursorCurrent cursor
                     now <- liftIO getCurrentTime
@@ -241,6 +249,7 @@ handleStudyEvent s e =
                                                      }
                                                  )
                                       }
+                                EvKey (KChar 'u') [] -> doUndo
                                 _ -> continue s
                             Back ->
                               case vtye of
@@ -310,6 +319,7 @@ handleStudyEvent s e =
                             EvKey (KChar 'h') [MMeta] -> tryFinishStudyUnit Hard
                             EvKey (KChar 'g') [MMeta] -> tryFinishStudyUnit Good
                             EvKey (KChar 'e') [MMeta] -> tryFinishStudyUnit Easy
+                            EvKey (KChar 'u') [MMeta] -> doUndo
                             EvKey (KChar c) [] -> textDo $ textCursorInsert c
                             EvKey KBS [] -> textDo $ dullMDelete . textCursorRemove
                             EvKey KDel [] -> textDo $ dullMDelete . textCursorDelete

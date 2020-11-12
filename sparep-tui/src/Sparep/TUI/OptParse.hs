@@ -29,7 +29,7 @@ getSettings = do
 combineToInstructions ::
   Flags -> Environment -> Maybe Configuration -> IO Settings
 combineToInstructions Flags {..} Environment {..} mConf = do
-  decksFromFlags <- mapM (readRootedDeckOrDie <=< resolveFile') flagDecks
+  decksFromFlags <- mapM (readRootedDeckOrDie <=< resolveFile' <=< normaliseDeckFilePath) flagDecks
   setDecks <-
     (decksFromFlags ++) . concat <$> mapM parseDecks (fromMaybe [] (mc confSpecifications))
   setRepetitionDb <- case flagRepetitionDbFile <|> envRepetitionDbFile <|> mmc confRepetitionDbFile of
