@@ -46,12 +46,12 @@ render s = case head s.path of
 renderNavBar :: forall q. String -> H.ComponentHTML Action q Aff
 renderNavBar t =
   HH.div [ HP.class_ (HC.ClassName "navBar"), HE.onClick \_ -> Just Init ]
-    [ HH.img [ HP.src "/sprites/logo.svg", HP.class_ (HC.ClassName "logo")]
+    [ HH.img [ HP.src "/sprites/Logo.png", HP.class_ (HC.ClassName "logo")]
     , HH.h1_ [ HH.text t ]
     ]
 
 renderDeckPreviewTile :: forall q. Deck -> H.ComponentHTML Action q Aff
-renderDeckPreviewTile d@(MakeDeck {name, decks, cards}) =
+renderDeckPreviewTile d@(MakeDeck {name, description, decks, cards}) =
   HH.div_
     [
         HH.div [ HP.class_ (HC.ClassName "deck"), HE.onClick \_ -> Just $ LaunchDeck d]
@@ -67,7 +67,7 @@ renderError =
     ]
 
 renderDeck:: forall q. State -> Deck -> H.ComponentHTML Action q Aff
-renderDeck s d@(MakeDeck {name, decks, cards}) =
+renderDeck s d@(MakeDeck {name, description, decks, cards}) =
   HH.div_
     [ renderNavBar "Spaced Out"
     , renderDeckPreviewBar d
@@ -83,15 +83,35 @@ printPath s =
   intercalate [HH.text " > "] (map printDeckInPath $ reverse s.path)
 
 printDeckInPath :: forall q. Deck -> Array (H.ComponentHTML Action q Aff)
-printDeckInPath d@(MakeDeck {name, decks, cards}) =
+printDeckInPath d@(MakeDeck {name, description, decks, cards}) =
   [HH.text name]
 
 
 renderDeckPreviewBar :: forall a q. Deck -> H.ComponentHTML a q Aff
-renderDeckPreviewBar d@(MakeDeck {name, decks, cards}) =
+renderDeckPreviewBar d@(MakeDeck {name, description, decks, cards}) =
   HH.div [ HP.class_ (HC.ClassName "previewBar") ]
     [
       HH.h2_ [ HH.text name ]
+      , HH.p_ [ HH.text description ]
+      , HH.div [ HP.class_ (HC.ClassName "deckMenu") ]
+      [
+        HH.div [ HP.class_ (HC.ClassName "menuButton") ]
+        [
+          HH.img [ HP.src "/sprites/Practice.png"]
+        ]
+        , HH.div [ HP.class_ (HC.ClassName "menuButton") ]
+        [
+          HH.img [ HP.src "/sprites/Progression.png"]
+        ]
+        , HH.div [ HP.class_ (HC.ClassName "menuButton") ]
+        [
+          HH.img [ HP.src "/sprites/Settings.png"]
+        ]
+        , HH.div [ HP.class_ (HC.ClassName "menuButton") ]
+        [
+          HH.img [ HP.src "/sprites/Share.png"]
+        ]
+      ]
     ]
 
 renderCardPreviewTile :: forall a q. Card -> H.ComponentHTML a q Aff
@@ -117,11 +137,12 @@ handle a = case a of
   LaunchDeck d -> modify_ (\s -> s { path = cons d s.path })
 
 data Card = MakeCard { front :: String, back :: String }
-data Deck = MakeDeck { name :: String, decks :: Array Deck, cards :: Array Card}
+data Deck = MakeDeck { name :: String, description :: String, decks :: Array Deck, cards :: Array Card}
 
 germanDeck :: Deck
 germanDeck = MakeDeck {
   name: "German"
+  , description: "With this deck, you will learn German, starting with german pronouns."
   , decks: []
   , cards: [ MakeCard { front: "neutral singular, genitive", back: "des" }
             , MakeCard { front: "plural, genitive", back: "der" }
@@ -131,17 +152,19 @@ germanDeck = MakeDeck {
 frenchDeck :: Deck
 frenchDeck = MakeDeck {
   name: "French"
+  , description: "With this deck, you will learn French, starting with the name of the animals."
   , decks: []
-  , cards: [ MakeCard { front: "chat", back: "cat" }
-            , MakeCard { front: "chien", back: "dog" }
-            , MakeCard { front: "canard", back: "duck" }
-            , MakeCard { front: "pieuvre", back: "octopus" }
+  , cards: [ MakeCard { front: "le chat", back: "cat" }
+            , MakeCard { front: "le chien", back: "dog" }
+            , MakeCard { front: "le canard", back: "duck" }
+            , MakeCard { front: "la pieuvre", back: "octopus" }
            ]
 }
 
 homeDeck :: Deck
 homeDeck = MakeDeck {
   name: "~"
+  , description: "Learn ALL the things."
   , decks: [ frenchDeck, germanDeck ]
   , cards: [ MakeCard { front: "What is the answer to the universe?", back: "42" } ]
 }

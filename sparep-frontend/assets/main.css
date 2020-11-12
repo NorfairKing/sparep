@@ -1,4 +1,5 @@
 /*TODO: Small screens*/
+/*TODO: Selection color*/
 
 :root{
   --red: #ea3802;
@@ -24,6 +25,7 @@ h2{
 
 p{
   font-family: "Roboto Mono";
+  text-align: center;
 }
 
 .navBar{
@@ -38,7 +40,7 @@ p{
 .previewBar{
   position: fixed;
   background-color: white;
-  padding-top: 70px;
+  padding: 70px 20px 20px 20px;
   top: 0px;
   right: 0;
   width: var(--preview-bar-width);
@@ -82,6 +84,7 @@ p{
   text-align: center;
   display: flex;
   justify-content: center;
+  padding: 0px 10px 0px 10px;
 }
 
 .cardSide > p {
@@ -116,4 +119,28 @@ button {
   display: flex;
   align-items: center;
   text-align: center;
+}
+
+.deckMenu{
+  width: 200px;
+  margin: auto;
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.menuButton{
+  border: 1px solid #bbbbbb;
+  border-radius: 8px;
+  box-shadow: 1px 1px 3px #dddddd;
+  width: 50px;
+  height: 50px;
+  margin: 10px;
+  padding: 10px;
+}
+
+.menuButton > img{
+  width: 50px;
 }
