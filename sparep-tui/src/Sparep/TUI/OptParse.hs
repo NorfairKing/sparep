@@ -35,6 +35,7 @@ combineToInstructions Flags {..} Environment {..} mConf = do
   setRepetitionDb <- case flagRepetitionDbFile <|> envRepetitionDbFile <|> mmc confRepetitionDbFile of
     Nothing -> getDefaultClientDatabase
     Just fp -> resolveFile' fp
+  let setCompletionCommand = flagCompletionCommand <|> envCompletionCommand <|> mmc confCompletionCommand
   pure Settings {..}
   where
     mc :: (Configuration -> a) -> Maybe a
@@ -59,6 +60,7 @@ environmentParser =
     Environment
       <$> Env.var (fmap Just . Env.str) "CONFIG_FILE" (mE <> Env.help "Config file")
       <*> Env.var (fmap Just . Env.str) "DATABASE" (mE <> Env.help "The file to store the repetition database in")
+      <*> Env.var (fmap Just . Env.str) "COMPLETION_COMMAND" (mE <> Env.help "The command to run when completing a study session. The number of cards completed is added at the end")
   where
     mE = Env.def Nothing
 
@@ -122,6 +124,15 @@ parseFlags =
               [ long "deck",
                 help "A path to more decks",
                 metavar "PATH"
+              ]
+          )
+      )
+    <*> optional
+      ( strOption
+          ( mconcat
+              [ long "completion-command",
+                help "The command to run when completing a study session. The number of cards completed is added at the end",
+                metavar "COMMAND"
               ]
           )
       )

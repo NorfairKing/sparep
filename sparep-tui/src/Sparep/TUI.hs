@@ -15,6 +15,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Logger
 import Control.Monad.Reader
 import qualified Data.Text as T
+import Data.Time
 import Database.Persist
 import Database.Persist.Sql
 import Database.Persist.Sqlite
@@ -30,6 +31,7 @@ import Sparep.TUI.OptParse.Types
 import Sparep.TUI.State
 import System.Exit
 import System.FileLock
+import System.Process.Typed
 
 sparepTUI :: IO ()
 sparepTUI = do
@@ -55,9 +57,19 @@ sparepTUI = do
           case endState of
             StateStudy ss -> runSqlPool (insertMany_ (studyStateRepetitions ss)) pool
             _ -> pure ()
+        runSqlPool (completion setCompletionCommand) pool
   case mLocked of
-    Just () -> pure () -- Everything went file
+    Just _ -> pure ()
     Nothing -> die "Unable to lock repetitions database."
+
+completion :: MonadIO m => Maybe String -> SqlPersistT m ()
+completion = mapM_ $ \command -> do
+  today <- liftIO $ utctDay <$> getCurrentTime
+  let dayStart = UTCTime today (timeOfDayToTime midnight)
+  let dayEnd = UTCTime (addDays 1 today) (timeOfDayToTime midnight)
+  cardsStudied <- count [ClientRepetitionTimestamp >=. dayStart, ClientRepetitionTimestamp <. dayEnd]
+  let pc = shell $ command ++ " " ++ show cardsStudied
+  liftIO $ runProcess_ pc
 
 migrateSparep :: MonadIO m => SqlPersistT m ()
 migrateSparep = do

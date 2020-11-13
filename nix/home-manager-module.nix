@@ -20,6 +20,13 @@ in
               default = [];
               description = "Where to find the decks to study";
             };
+          completion-command =
+            mkOption {
+              type = types.nullOr types.str;
+              example = "habitscipline-cli entry sparep";
+              default = null;
+              description = "The command to run upon completing a study session";
+            };
           extraConfig =
             mkOption {
               type = types.str;
@@ -67,6 +74,7 @@ in
       configContents = cfg: ''
         
 decks: ${builtins.toJSON cfg.decks}
+${optionalString (!builtins.isNull cfg.completion-command) cfg.completion-command}
 ${cfg.extraConfig}
 
       '';
