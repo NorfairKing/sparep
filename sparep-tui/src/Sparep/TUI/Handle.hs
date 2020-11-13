@@ -258,8 +258,11 @@ handleStudyEvent s e =
                                 EvKey (KChar 'b') [] -> tryShowExtra Back
                                 EvKey (KChar 'i') [] -> finishStudyUnit Incorrect
                                 EvKey (KChar 'h') [] -> finishStudyUnit Hard
+                                EvKey (KChar 'h') [MMeta] -> finishStudyUnit Hard
                                 EvKey (KChar 'g') [] -> finishStudyUnit Good
+                                EvKey (KChar 'g') [MMeta] -> finishStudyUnit Good
                                 EvKey (KChar 'e') [] -> finishStudyUnit Easy
+                                EvKey (KChar 'e') [MMeta] -> finishStudyUnit Easy
                                 _ -> continue s
                     FillExerciseUnitCursor fec@FillExerciseCursor {..} ->
                       let funcDo func =
