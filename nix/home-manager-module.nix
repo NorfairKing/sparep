@@ -29,9 +29,8 @@ in
             };
           extraConfig =
             mkOption {
-              type = types.str;
+              default = {};
               description = "Extra contents for the config file";
-              default = "";
             };
           sync =
             mkOption {
@@ -71,23 +70,14 @@ in
   config =
     let
       sparepPkgs = (import ./pkgs.nix).sparepPackages;
-      configContents = cfg: ''
-        
-decks: ${builtins.toJSON cfg.decks}
-${optionalString (!builtins.isNull cfg.completion-command) cfg.completion-command}
-${cfg.extraConfig}
-
-      '';
-      syncConfigContents = syncCfg:
-        optionalString (syncCfg.enable or false) ''
-
-server-url: "${cfg.sync.server-url}"
-username: "${cfg.sync.username}"
-password: "${cfg.sync.password}"
-
-      '';
-
-
+      configContents = with cfg;
+        optionalAttrs (decks != []) { inherit decks; } // optionalAttrs (!builtins.isNull cfg.completion-command) { inherit completion-command; } // syncConfigContents sync // extraConfig;
+      syncConfigContents = syncCfg: with syncCfg;
+        optionalAttrs (syncCfg.enable) {
+          inherit server-url;
+          inherit username;
+          inherit password;
+        };
       syncSparepName = "sync-sparep";
       syncSparepService =
         {
@@ -124,12 +114,7 @@ password: "${cfg.sync.password}"
             };
         };
 
-      sparepConfigContents =
-        concatStringsSep "\n" [
-          (configContents cfg)
-          (syncConfigContents cfg.sync)
-        ];
-
+      sparepConfigContents = builtins.toJSON configContents;
       services =
         (
           optionalAttrs (cfg.sync.enable or false) {

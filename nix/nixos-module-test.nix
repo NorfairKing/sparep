@@ -40,6 +40,7 @@ pkgs.nixosTest (
         home.stateVersion = "20.09";
         programs.sparep = {
           enable = true;
+          completion-command = "echo 'hi'";
           sync = {
             enable = true;
             server-url = "localhost:${builtins.toString api-port}";
