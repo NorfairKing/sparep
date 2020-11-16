@@ -209,7 +209,7 @@ drawStudyUnitDetails DefinitionContext {..} lTimes =
             [ hCenterLayer $ drawCard Back card
             ]
           FillExerciseUnit FillExercise {..} ->
-            [ hCenterLayer $ hLimit 40 $ border $ padAll 1 $ markup $ sconcat $
+            [ hCenterLayer $ border $ padAll 1 $ markup $ sconcat $
                 NE.map
                   ( \case
                       LitPart t -> t @? litPartAttr
@@ -333,7 +333,7 @@ drawFillExerciseCursor DefinitionContext {..} =
             [ padTop (Pad 1) $ hCenterLayer $ withAttr instructionsAttr $ txt ins
               | Instructions ins <- maybeToList definitionContextInstructions
             ],
-            [ hCenterLayer $ hLimit 40 . border . padAll 1 $
+            [ hCenterLayer $ border . padAll 1 $
                 NEC.foldNonEmptyCursor
                   ( \befores current afters ->
                       markup $ mconcat $

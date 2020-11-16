@@ -67,6 +67,7 @@ library
     , validity-path
     , validity-text
     , vty
+    , word-wrap
     , yaml
     , yamlparse-applicative
   default-language: Haskell2010
