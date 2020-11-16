@@ -1,9 +1,9 @@
 .stack-work/
 *~
 stack.yaml.lock
-sparep.cabal
 .pre-commit-config.yaml
 result*
 *.sqlite3*
 signing-key.json
 .hie/
+*.cabal
