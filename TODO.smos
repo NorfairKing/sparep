@@ -1,0 +1,17 @@
+version: 1.0.0
+value:
+- entry: Sparep
+  forest:
+  - Video cards
+  - make algorithm to use customisable?
+  - visualise repetitions
+  - list repetitions in study unit overview
+  - latex support?
+  - hook up deepl api to auto-complete cards
+  - markup on cards
+  - nix functions to define cards
+  - tags for decks
+  - make it possible to select which decks to study, by path
+  - Make it possible to select how many cards to study, how many new cards etc
+  - header: there is a bug on the very last card
+    contents: Try to reproduce it
