@@ -1,4 +1,4 @@
-resolver: lts-15.15
+resolver: lts-18.16
 packages:
 - sparep-api
 - sparep-api-gen
@@ -78,7 +78,4 @@ extra-deps:
 
 
 nix:
-  packages:
-    - zlib
-    - haskellPackages.autoexporter
-    - killall
+  shell-file: shell.nix
