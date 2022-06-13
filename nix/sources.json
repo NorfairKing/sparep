@@ -11,6 +11,18 @@
         "url": "https://github.com/NorfairKing/appendful/archive/2227532f27b8f7d9f53341aca643f1df8381f033.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "autodocodec": {
+        "branch": "master",
+        "description": "self(auto)- documenting encoders and decoders",
+        "homepage": "",
+        "owner": "NorfairKing",
+        "repo": "autodocodec",
+        "rev": "00649ce4174bc693de36077ffdfc3e0d7151ef08",
+        "sha256": "02ld72axdadbbxmkpy06r93w29zbarrpffnkck92754q745wnlkd",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/autodocodec/archive/00649ce4174bc693de36077ffdfc3e0d7151ef08.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "cursor": {
         "branch": "master",
         "description": "Cursor data and manipulation",

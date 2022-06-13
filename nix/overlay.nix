@@ -93,28 +93,10 @@ with final.haskell.lib;
                     dontCheck (
                       self.callCabal2nix "envparse" envparseRepo { }
                     );
-                  cursorBrickRepo =
-                    final.fetchFromGitHub {
-                      owner = "NorfairKing";
-                      repo = "cursor-brick";
-                      rev = "a7b47b03c8c5525234aaccc0c372e49a80134b9d";
-                      sha256 = "sha256:1wk2sixf1ld48j6a14zgfadg41si6rl8gwmwdlkn0cqjiw9n7f4p";
-                    };
-                  cursorBrickPkg = self.callCabal2nix "cursor-brick" (cursorBrickRepo + "/cursor-brick") { };
-                  base16Repo =
-                    final.fetchFromGitHub {
-                      owner = "emilypi";
-                      repo = "base16";
-                      rev = "f340b4a9a496320010930368e503ba6b7907f725";
-                      sha256 = "sha256:1c6910h9y3nmj2277d7bif3nilgacp4qafl4g5b3r2c0295hbq7z";
-                    };
-                  base16Pkg = self.callCabal2nix "base16" base16Repo { };
 
                 in
                 final.sparepPackages // {
                   envparse = envparsePkg;
-                  cursor-brick = cursorBrickPkg;
-                  base16 = base16Pkg;
                 }
             );
       }

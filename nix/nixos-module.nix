@@ -111,7 +111,7 @@ in
     };
   config =
     let
-      sparepPkgs = (import ./pkgs.nix).sparepPackages;
+      sparepPkgs = (import ./pkgs.nix { }).sparepPackages;
       working-dir = "/www/sparep/${envname}/";
       # The docs server
       api-server-working-dir = working-dir + "api-server/";

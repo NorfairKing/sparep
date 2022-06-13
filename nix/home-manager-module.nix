@@ -69,7 +69,7 @@ in
     };
   config =
     let
-      sparepPkgs = (import ./pkgs.nix).sparepPackages;
+      sparepPkgs = (import ./pkgs.nix { }).sparepPackages;
       configContents = with cfg;
         optionalAttrs (decks != [ ]) { inherit decks; } // optionalAttrs (!builtins.isNull cfg.completion-command) { inherit completion-command; } // syncConfigContents sync // extraConfig;
       syncConfigContents = syncCfg: with syncCfg;
