@@ -205,7 +205,7 @@ drawStudyUnitDetails DefinitionContext {..} lTimes =
           | Instructions ins <- maybeToList definitionContextInstructions
         ],
         case definitionContextUnit of
-          CardUnit card@Card {..} ->
+          CardUnit card ->
             [ hCenterLayer $ drawCard Back card
             ]
           FillExerciseUnit FillExercise {..} ->
@@ -268,7 +268,6 @@ drawStudyUnitCursor du = case definitionContextUnit du of
 drawCardCursor :: DefinitionContext CardCursor -> Widget n
 drawCardCursor DefinitionContext {..} =
   let CardCursor {..} = definitionContextUnit
-      Card {..} = cardCursorCard
    in vBox $
         concat
           [ [ hCenterLayer $ withAttr deckNameAttr $ txt dn

@@ -1,5 +1,7 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -13,7 +15,7 @@
 
 module Sparep.API.Server.Data.DB where
 
-import Data.Password
+import Data.Password.Bcrypt
 import Data.Password.Instances ()
 import Data.Time
 import Data.Validity
@@ -21,6 +23,7 @@ import Data.Validity.Persist ()
 import Database.Persist.Sqlite
 import Database.Persist.TH
 import GHC.Generics (Generic)
+import Sparep.API.Server.Data.Password ()
 import Sparep.API.Server.Data.Username
 import Sparep.Data
 
@@ -30,7 +33,7 @@ share
 
 User
   name Username
-  password PassHash
+  password (PasswordHash Bcrypt)
 
   UniqueUsername name
 
@@ -46,15 +49,6 @@ ServerRepetition sql=repetition
   deriving Show Eq Ord Generic
 
 |]
-
-instance Validity Salt where
-  validate = trivialValidation
-
-instance Validity Pass where
-  validate = trivialValidation
-
-instance Validity PassHash where
-  validate = trivialValidation
 
 instance Validity User
 

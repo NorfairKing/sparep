@@ -14,4 +14,4 @@ import Test.Validity.Persist
 spec :: Spec
 spec = do
   genValidSpec @Difficulty
-  persistSpecOnValid @Difficulty
+  persistSpec @Difficulty

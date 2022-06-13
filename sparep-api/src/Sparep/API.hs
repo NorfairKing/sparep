@@ -32,7 +32,7 @@ type PostRegister =
 type PostLogin =
   "login"
     :> ReqBody '[JSON] LoginForm
-    :> PostNoContent '[JSON] (Headers '[Header "Set-Cookie" Text] NoContent)
+    :> Verb 'POST 204 '[JSON] (Headers '[Header "Set-Cookie" Text] NoContent)
 
 type ProtectAPI = Auth '[JWT] AuthCookie
 

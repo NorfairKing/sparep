@@ -175,13 +175,9 @@ handleStudyEvent s e =
             Nothing -> halt s
             Just cursor ->
               let doUndo :: EventM n (Next StudyState)
-                  doUndo = case studyStateCursor s of
-                    Loading -> continue s -- Not loaded yet
-                    Loaded mnec -> case mnec of
-                      Nothing -> continue s -- No items
-                      Just nec -> case nonEmptyCursorSelectPrev (fmap (fmap rebuildStudyUnitCursor)) (fmap (fmap makeStudyUnitCursor)) nec of
-                        Nothing -> continue s -- At the start
-                        Just nec' -> continue $ s {studyStateCursor = Loaded (Just nec'), studyStateRepetitions = tail $ studyStateRepetitions s}
+                  doUndo = case nonEmptyCursorSelectPrev (fmap (fmap rebuildStudyUnitCursor)) (fmap (fmap makeStudyUnitCursor)) cursor of
+                    Nothing -> continue s -- At the start
+                    Just nec' -> continue $ s {studyStateCursor = Loaded (Just nec'), studyStateRepetitions = tail $ studyStateRepetitions s}
                   finishStudyUnit :: Difficulty -> EventM n (Next StudyState)
                   finishStudyUnit difficulty = do
                     let cur = nonEmptyCursorCurrent cursor

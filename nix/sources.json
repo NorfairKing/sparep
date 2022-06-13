@@ -23,6 +23,18 @@
         "url": "https://github.com/NorfairKing/cursor/archive/5f18d58d1b34a752d24a94590c2cd35e8b6d557b.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "cursor-brick": {
+        "branch": "master",
+        "description": "Brick widgets for cursors",
+        "homepage": null,
+        "owner": "NorfairKing",
+        "repo": "cursor-brick",
+        "rev": "5c1d1306632403a3dc11ddeda10deee932c0b307",
+        "sha256": "1kinwggmc9zdw4d3aszrvmf0baw4pf0hm040jgwv1j7731xwil3j",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/cursor-brick/archive/5c1d1306632403a3dc11ddeda10deee932c0b307.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "gitignore": {
         "branch": "master",
         "description": "Nix functions for filtering local git sources",
