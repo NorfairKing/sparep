@@ -236,18 +236,19 @@ handleStudyEvent s e =
                                   continue $
                                     s
                                       { studyStateCursor =
-                                          Loaded $ Just $
-                                            cursor & nonEmptyCursorElemL
-                                              .~ ( unit
-                                                     { studyContextUnit =
-                                                         definitionUnit
-                                                           { definitionContextUnit =
-                                                               CardUnitCursor
-                                                                 ( cardCursorShowBack cc
-                                                                 )
-                                                           }
-                                                     }
-                                                 )
+                                          Loaded $
+                                            Just $
+                                              cursor & nonEmptyCursorElemL
+                                                .~ ( unit
+                                                       { studyContextUnit =
+                                                           definitionUnit
+                                                             { definitionContextUnit =
+                                                                 CardUnitCursor
+                                                                   ( cardCursorShowBack cc
+                                                                   )
+                                                             }
+                                                       }
+                                                   )
                                       }
                                 EvKey (KChar 'u') [] -> doUndo
                                 _ -> continue s
@@ -270,16 +271,17 @@ handleStudyEvent s e =
                              in continue $
                                   s
                                     { studyStateCursor =
-                                        Loaded $ Just $
-                                          cursor & nonEmptyCursorElemL
-                                            .~ ( unit
-                                                   { studyContextUnit =
-                                                       definitionUnit
-                                                         { definitionContextUnit =
-                                                             FillExerciseUnitCursor fec'
-                                                         }
-                                                   }
-                                               )
+                                        Loaded $
+                                          Just $
+                                            cursor & nonEmptyCursorElemL
+                                              .~ ( unit
+                                                     { studyContextUnit =
+                                                         definitionUnit
+                                                           { definitionContextUnit =
+                                                               FillExerciseUnitCursor fec'
+                                                           }
+                                                     }
+                                                 )
                                     }
                           textDo func =
                             let fec' =
@@ -298,16 +300,17 @@ handleStudyEvent s e =
                                     continue $
                                       s
                                         { studyStateCursor =
-                                            Loaded $ Just $
-                                              cursor & nonEmptyCursorElemL
-                                                .~ ( unit
-                                                       { studyContextUnit =
-                                                           definitionUnit
-                                                             { definitionContextUnit =
-                                                                 FillExerciseUnitCursor fec'
-                                                             }
-                                                       }
-                                                   )
+                                            Loaded $
+                                              Just $
+                                                cursor & nonEmptyCursorElemL
+                                                  .~ ( unit
+                                                         { studyContextUnit =
+                                                             definitionUnit
+                                                               { definitionContextUnit =
+                                                                   FillExerciseUnitCursor fec'
+                                                               }
+                                                         }
+                                                     )
                                         }
                           tryFinishStudyUnit diff =
                             if fillExerciseCursorCorrect fec && not fillExerciseCursorShow

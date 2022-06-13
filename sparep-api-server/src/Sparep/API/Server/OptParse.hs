@@ -25,12 +25,11 @@ getSettings = do
   config <- getConfiguration flags env
   combineToSettings flags env config
 
-data Settings
-  = Settings
-      { settingPort :: Int,
-        settingDbFile :: Path Abs File,
-        settingSigningKeyFile :: Path Abs File
-      }
+data Settings = Settings
+  { settingPort :: Int,
+    settingDbFile :: Path Abs File,
+    settingSigningKeyFile :: Path Abs File
+  }
   deriving (Show, Eq, Generic)
 
 combineToSettings :: Flags -> Environment -> Maybe Configuration -> IO Settings
@@ -45,11 +44,10 @@ combineToSettings Flags {..} Environment {..} mConf = do
     mc :: (Configuration -> Maybe a) -> Maybe a
     mc f = mConf >>= f
 
-data Configuration
-  = Configuration
-      { configPort :: Maybe Int,
-        configDbFile :: Maybe FilePath
-      }
+data Configuration = Configuration
+  { configPort :: Maybe Int,
+    configDbFile :: Maybe FilePath
+  }
   deriving (Show, Eq, Generic)
 
 instance FromJSON Configuration where
@@ -75,12 +73,11 @@ defaultConfigFile = do
   xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|optparse-sparep|])
   resolveFile xdgConfigDir "config.yaml"
 
-data Environment
-  = Environment
-      { envConfigFile :: Maybe FilePath,
-        envPort :: Maybe Int,
-        envDbFile :: Maybe FilePath
-      }
+data Environment = Environment
+  { envConfigFile :: Maybe FilePath,
+    envPort :: Maybe Int,
+    envDbFile :: Maybe FilePath
+  }
   deriving (Show, Eq, Generic)
 
 getEnvironment :: IO Environment
@@ -120,12 +117,11 @@ flagsParser =
           T.unpack (YamlParse.prettyColourisedSchemaDoc @Configuration)
         ]
 
-data Flags
-  = Flags
-      { flagConfigFile :: Maybe FilePath,
-        flagPort :: Maybe Int,
-        flagDbFile :: Maybe FilePath
-      }
+data Flags = Flags
+  { flagConfigFile :: Maybe FilePath,
+    flagPort :: Maybe Int,
+    flagDbFile :: Maybe FilePath
+  }
   deriving (Show, Eq, Generic)
 
 parseFlags :: OptParse.Parser Flags

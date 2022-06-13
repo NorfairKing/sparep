@@ -46,14 +46,13 @@ getInstructions = do
   combineToInstructions args env config
 
 -- | A product type for the settings that are common across commands
-data Settings
-  = Settings
-      { settingBaseUrl :: Maybe BaseUrl,
-        settingUsername :: Maybe Username,
-        settingPassword :: Maybe Text,
-        settingDbFile :: Path Abs File,
-        settingLogLevel :: LogLevel
-      }
+data Settings = Settings
+  { settingBaseUrl :: Maybe BaseUrl,
+    settingUsername :: Maybe Username,
+    settingPassword :: Maybe Text,
+    settingDbFile :: Path Abs File,
+    settingLogLevel :: LogLevel
+  }
   deriving (Show, Eq, Generic)
 
 -- | A sum type for the commands and their specific settings
@@ -64,10 +63,9 @@ data Dispatch
   | DispatchCount !CountSettings
   deriving (Show, Eq, Generic)
 
-data CountSettings
-  = CountSettings
-      { countSettingDecks :: ![RootedDeck]
-      }
+data CountSettings = CountSettings
+  { countSettingDecks :: ![RootedDeck]
+  }
   deriving (Show, Eq, Generic)
 
 combineToInstructions :: Arguments -> Environment -> Maybe Configuration -> IO Instructions
@@ -113,15 +111,14 @@ getDefaultConfigFile = do
   xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|sparep|])
   resolveFile xdgConfigDir "config.yaml"
 
-data Configuration
-  = Configuration
-      { configBaseUrl :: Maybe BaseUrl,
-        configUsername :: Maybe Username,
-        configPassword :: Maybe Text,
-        configDbFile :: Maybe FilePath,
-        configLogLevel :: Maybe LogLevel,
-        configSpecifications :: [FilePath]
-      }
+data Configuration = Configuration
+  { configBaseUrl :: Maybe BaseUrl,
+    configUsername :: Maybe Username,
+    configPassword :: Maybe Text,
+    configDbFile :: Maybe FilePath,
+    configLogLevel :: Maybe LogLevel,
+    configSpecifications :: [FilePath]
+  }
   deriving (Show, Eq, Generic)
 
 instance FromJSON Configuration where
@@ -154,15 +151,14 @@ getConfiguration Flags {..} Environment {..} =
 --
 -- Do nothing clever here, just represent the relevant parts of the environment.
 -- For example, use 'Text', not 'SqliteConfig'.
-data Environment
-  = Environment
-      { envConfigFile :: Maybe FilePath,
-        envBaseUrl :: Maybe BaseUrl,
-        envUsername :: Maybe Username,
-        envPassword :: Maybe Text,
-        envDbFile :: Maybe FilePath,
-        envLogLevel :: Maybe LogLevel
-      }
+data Environment = Environment
+  { envConfigFile :: Maybe FilePath,
+    envBaseUrl :: Maybe BaseUrl,
+    envUsername :: Maybe Username,
+    envPassword :: Maybe Text,
+    envDbFile :: Maybe FilePath,
+    envLogLevel :: Maybe LogLevel
+  }
   deriving (Show, Eq, Generic)
 
 getEnvironment :: IO Environment
@@ -262,15 +258,14 @@ parseCommandCount = OptParse.info parser modifier
     parser = pure CommandCount
 
 -- | The flags that are common across commands.
-data Flags
-  = Flags
-      { flagConfigFile :: Maybe FilePath,
-        flagBaseUrl :: Maybe BaseUrl,
-        flagUsername :: Maybe Username,
-        flagPassword :: Maybe Text,
-        flagDbFile :: Maybe FilePath,
-        flagLogLevel :: Maybe LogLevel
-      }
+data Flags = Flags
+  { flagConfigFile :: Maybe FilePath,
+    flagBaseUrl :: Maybe BaseUrl,
+    flagUsername :: Maybe Username,
+    flagPassword :: Maybe Text,
+    flagDbFile :: Maybe FilePath,
+    flagLogLevel :: Maybe LogLevel
+  }
   deriving (Show, Eq, Generic)
 
 -- | The 'optparse-applicative' parser for the 'Flags'.

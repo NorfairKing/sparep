@@ -16,6 +16,6 @@ spec :: Spec
 spec = do
   genValidSpec @StudyUnitId
   persistSpecOnValid @StudyUnitId
-  describe "hashStudyUnit"
-    $ it "produces valid card ids"
-    $ producesValidsOnValids hashStudyUnit
+  describe "hashStudyUnit" $
+    it "produces valid card ids" $
+      producesValidsOnValids hashStudyUnit

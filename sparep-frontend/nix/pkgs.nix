@@ -1,6 +1,6 @@
 let
   pkgsv = import (import ../../nix/nixpkgs.nix);
-  pkgs = pkgsv {};
+  pkgs = pkgsv { };
   sparepFrontPkgs =
     pkgsv {
       overlays =

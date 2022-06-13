@@ -17,12 +17,11 @@ sparepAPI = Proxy
 
 type SparepAPI = ToServantApi SparepRoutes
 
-data SparepRoutes route
-  = SparepRoutes
-      { postRegister :: !(route :- PostRegister),
-        postLogin :: !(route :- PostLogin),
-        postSync :: !(route :- PostSync)
-      }
+data SparepRoutes route = SparepRoutes
+  { postRegister :: !(route :- PostRegister),
+    postLogin :: !(route :- PostLogin),
+    postSync :: !(route :- PostSync)
+  }
   deriving (Generic)
 
 type PostRegister =

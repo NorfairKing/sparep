@@ -9,12 +9,12 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString as SB
-import Data.List.NonEmpty ((<|), NonEmpty (..))
-import qualified Data.Map as M
+import Data.List.NonEmpty (NonEmpty (..), (<|))
 import Data.Map (Map)
+import qualified Data.Map as M
 import Data.Maybe
-import qualified Data.Text as T
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Validity
 import Data.Validity.ByteString ()
 import Data.Validity.Containers ()
@@ -48,11 +48,11 @@ parseDecks fp' = do
         then do
           p <- resolveDir' fp
           fs <- snd <$> listDirRecur p
-          fmap catMaybes
-            $ forM fs
-            $ \f -> do
-              errOrDefs <- readRootedDeckOrErr f
-              pure $ either (const Nothing) Just =<< errOrDefs
+          fmap catMaybes $
+            forM fs $
+              \f -> do
+                errOrDefs <- readRootedDeckOrErr f
+                pure $ either (const Nothing) Just =<< errOrDefs
         else pure []
 
 normaliseDeckFilePath :: FilePath -> IO FilePath
@@ -63,11 +63,10 @@ normaliseDeckFilePath fp = case fp of
     pure fp'
   _ -> pure fp
 
-data RootedDeck
-  = RootedDeck
-      { rootedDeckPath :: !(Path Abs File),
-        rootedDeckDeck :: !Deck
-      }
+data RootedDeck = RootedDeck
+  { rootedDeckPath :: !(Path Abs File),
+    rootedDeckDeck :: !Deck
+  }
   deriving (Show, Eq, Generic)
 
 instance Validity RootedDeck
@@ -94,14 +93,13 @@ readRootedDeckOrErr afp = do
 resolveRootedDeck :: MonadIO m => RootedDeck -> m [DefinitionContext StudyUnit]
 resolveRootedDeck RootedDeck {..} = resolveDeck rootedDeckPath rootedDeckDeck
 
-data Deck
-  = Deck
-      { deckName :: !(Maybe DeckName),
-        deckDescription :: !(Maybe Text),
-        deckInstructions :: !(Maybe Instructions),
-        deckReverse :: !(Maybe Bool),
-        deckStudyUnits :: ![StudyUnitDef]
-      }
+data Deck = Deck
+  { deckName :: !(Maybe DeckName),
+    deckDescription :: !(Maybe Text),
+    deckInstructions :: !(Maybe Instructions),
+    deckReverse :: !(Maybe Bool),
+    deckStudyUnits :: ![StudyUnitDef]
+  }
   deriving (Show, Eq, Generic)
 
 instance Validity Deck
@@ -163,13 +161,12 @@ resolveCardDef fp mDeckName mDefaultReverse mDefaultInstructions = \case
   CardFrontBack cfbd -> resolveCardFrontBackDef fp mDeckName mDefaultReverse mDefaultInstructions cfbd
   CardManySided cmsd -> resolveCardManySidedDef fp mDeckName mDefaultInstructions cmsd
 
-data CardFrontBackDef
-  = CardFrontBackDef
-      { cardFrontBackDefFront :: !CardSideDef,
-        cardFrontBackDefBack :: !CardSideDef,
-        cardFrontBackDefReverse :: !(Maybe Bool),
-        cardFrontBackDefInstructions :: !(Maybe Instructions)
-      }
+data CardFrontBackDef = CardFrontBackDef
+  { cardFrontBackDefFront :: !CardSideDef,
+    cardFrontBackDefBack :: !CardSideDef,
+    cardFrontBackDefReverse :: !(Maybe Bool),
+    cardFrontBackDefInstructions :: !(Maybe Instructions)
+  }
   deriving (Show, Eq, Generic)
 
 instance Validity CardFrontBackDef
@@ -211,11 +208,10 @@ resolveCardFrontBackDef fp mDeckName mDefaultReverse mDefaultInstructions CardFr
       doReversal = fromMaybe defaultReverse cardFrontBackDefReverse
   pure $ map withCtx $ rightWayRoundCard : [reversedCard | doReversal]
 
-data CardManySidedDef
-  = CardManySidedDef
-      { cardManySidedDefSides :: !(Map Text CardSideDef),
-        cardManySidedDefInstructions :: !(Maybe Instructions)
-      }
+data CardManySidedDef = CardManySidedDef
+  { cardManySidedDefSides :: !(Map Text CardSideDef),
+    cardManySidedDefInstructions :: !(Maybe Instructions)
+  }
   deriving (Show, Eq, Generic)
 
 instance Validity CardManySidedDef
@@ -243,11 +239,13 @@ resolveCardManySidedDef fp mDeckName mDefaultInstructions CardManySidedDef {..} 
               },
           definitionContextDeckName = mDeckName,
           definitionContextInstructions =
-            Just $ Instructions $ T.unwords $
-              concat
-                [ [i | Instructions i <- maybeToList mInstructions],
-                  ["(", side1Name, "->", side2Name, ")"]
-                ]
+            Just $
+              Instructions $
+                T.unwords $
+                  concat
+                    [ [i | Instructions i <- maybeToList mInstructions],
+                      ["(", side1Name, "->", side2Name, ")"]
+                    ]
         }
 
 data CardSideDef
@@ -289,11 +287,10 @@ resolveCardSideDef dfp = \case
     contents <- SB.readFile $ fromAbsFile afp
     pure $ ImageSide afp contents
 
-data FillExerciseDef
-  = FillExerciseDef
-      { fillExerciseDefSequence :: NonEmpty FillExercisePart,
-        fillExerciseDefInstructions :: Maybe Instructions
-      }
+data FillExerciseDef = FillExerciseDef
+  { fillExerciseDefSequence :: NonEmpty FillExercisePart,
+    fillExerciseDefInstructions :: Maybe Instructions
+  }
   deriving (Show, Eq, Generic)
 
 instance Validity FillExerciseDef

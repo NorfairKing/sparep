@@ -36,29 +36,29 @@ drawMenuState :: MenuState -> [Widget n]
 drawMenuState MenuState {..} =
   [ vBox
       [ centerLayer $ withAttr headingAttr (str "SPAREP"),
-        centerLayer
-          $ border
-          $ padAll 1
-          $ vBox
-          $ concat
-            [ case menuStateSelection of
-                Loading -> []
-                Loaded Selection {..} ->
-                  let numStr attr n =
-                        (if n == 0 then id else withAttr attr) (str (show n))
-                   in [ hBox
-                          [ str "Done: ",
-                            numStr doneAttr $ length selectionTooSoon,
-                            str "  Ready: ",
-                            numStr readyAttr $ length selectionReady,
-                            str "  New: ",
-                            numStr newAttr $ length selectionNew
-                          ]
-                      ],
-              [ padTop (Pad 1) $ str "Press enter to study now",
-                str "Press d to show decks"
-              ]
-            ]
+        centerLayer $
+          border $
+            padAll 1 $
+              vBox $
+                concat
+                  [ case menuStateSelection of
+                      Loading -> []
+                      Loaded Selection {..} ->
+                        let numStr attr n =
+                              (if n == 0 then id else withAttr attr) (str (show n))
+                         in [ hBox
+                                [ str "Done: ",
+                                  numStr doneAttr $ length selectionTooSoon,
+                                  str "  Ready: ",
+                                  numStr readyAttr $ length selectionReady,
+                                  str "  New: ",
+                                  numStr newAttr $ length selectionNew
+                                ]
+                            ],
+                    [ padTop (Pad 1) $ str "Press enter to study now",
+                      str "Press d to show decks"
+                    ]
+                  ]
       ]
   ]
 
@@ -209,13 +209,17 @@ drawStudyUnitDetails DefinitionContext {..} lTimes =
             [ hCenterLayer $ drawCard Back card
             ]
           FillExerciseUnit FillExercise {..} ->
-            [ hCenterLayer $ border $ padAll 1 $ markup $ sconcat $
-                NE.map
-                  ( \case
-                      LitPart t -> t @? litPartAttr
-                      FillPart t -> t @? fillPartAttr
-                  )
-                  fillExerciseSequence
+            [ hCenterLayer $
+                border $
+                  padAll 1 $
+                    markup $
+                      sconcat $
+                        NE.map
+                          ( \case
+                              LitPart t -> t @? litPartAttr
+                              FillPart t -> t @? fillPartAttr
+                          )
+                          fillExerciseSequence
             ],
         case lTimes of
           Loading -> [str "Loading", str "Loading"]
@@ -239,19 +243,20 @@ drawStudyState StudyState {..} =
           Just cursor ->
             let StudyContext {..} = nonEmptyCursorCurrent cursor
              in vBox
-                  [ hCenterLayer
-                      $ str
-                      $ unwords
-                        [ show (length (nonEmptyCursorPrev cursor)),
-                          "cards studied ",
-                          show (length (nonEmptyCursorNext cursor)),
-                          "cards left"
-                        ],
-                    vCenterLayer $ vBox $
-                      concat
-                        [ [hCenterLayer $ withAttr newLabelAttr (str "! New ! ") | studyContextNew],
-                          [padAll 1 $ drawStudyUnitCursor studyContextUnit]
-                        ]
+                  [ hCenterLayer $
+                      str $
+                        unwords
+                          [ show (length (nonEmptyCursorPrev cursor)),
+                            "cards studied ",
+                            show (length (nonEmptyCursorNext cursor)),
+                            "cards left"
+                          ],
+                    vCenterLayer $
+                      vBox $
+                        concat
+                          [ [hCenterLayer $ withAttr newLabelAttr (str "! New ! ") | studyContextNew],
+                            [padAll 1 $ drawStudyUnitCursor studyContextUnit]
+                          ]
                   ]
   ]
 
@@ -284,32 +289,35 @@ drawCardCursor DefinitionContext {..} =
 
 drawCard :: FrontBack -> Card -> Widget n
 drawCard fb Card {..} =
-  padAll 1 $ hLimit 40
-    $ joinBorders
-    $ border
-    $ vBox
-    $ concat
-      [ [ padAll 1 $ drawFrontSide cardFront
-        ],
-        case fb of
-          Front -> []
-          Back ->
-            [ hBorder,
-              padAll 1 $ drawBackSide cardBack
-            ]
-      ]
+  padAll 1 $
+    hLimit 40 $
+      joinBorders $
+        border $
+          vBox $
+            concat
+              [ [ padAll 1 $ drawFrontSide cardFront
+                ],
+                case fb of
+                  Front -> []
+                  Back ->
+                    [ hBorder,
+                      padAll 1 $ drawBackSide cardBack
+                    ]
+              ]
 
 drawFrontSide :: CardSide -> Widget n
-drawFrontSide = withAttr sideAttr . \case
-  TextSide t -> txtWrap t
-  SoundSide _ _ -> str "Press 'f' to play sound"
-  ImageSide _ _ -> str "Press 'f' to show image"
+drawFrontSide =
+  withAttr sideAttr . \case
+    TextSide t -> txtWrap t
+    SoundSide _ _ -> str "Press 'f' to play sound"
+    ImageSide _ _ -> str "Press 'f' to show image"
 
 drawBackSide :: CardSide -> Widget n
-drawBackSide = withAttr sideAttr . \case
-  TextSide t -> txtWrap t
-  SoundSide _ _ -> str "Press 'b' to play sound"
-  ImageSide _ _ -> str "Press 'b' to show image"
+drawBackSide =
+  withAttr sideAttr . \case
+    TextSide t -> txtWrap t
+    SoundSide _ _ -> str "Press 'b' to play sound"
+    ImageSide _ _ -> str "Press 'b' to show image"
 
 drawFillExerciseCursor :: DefinitionContext FillExerciseCursor -> Widget ResourceName
 drawFillExerciseCursor DefinitionContext {..} =
@@ -333,47 +341,50 @@ drawFillExerciseCursor DefinitionContext {..} =
             [ padTop (Pad 1) $ hCenterLayer $ withAttr instructionsAttr $ txt ins
               | Instructions ins <- maybeToList definitionContextInstructions
             ],
-            [ hCenterLayer $ border . padAll 1 $
-                NEC.foldNonEmptyCursor
-                  ( \befores current afters ->
-                      markup $ mconcat $
-                        concat
-                          [ map partCursorMarkup befores,
-                            case current of
-                              LitPartCursor t -> [t @? litPartAttr] -- Should not happen.
-                              FillPartCursor tc t ->
-                                let t' = rebuildTextCursor tc
-                                    attr =
-                                      if t' == t
-                                        then fillCorrectAttr
-                                        else fillPartAttr
-                                    (t1, t2) = textCursorSplit tc
-                                 in if fillExerciseCursorShow
-                                      then
-                                        [ if t' == t
-                                            then t' @? fillCorrectAttr
-                                            else t @? fillShownAttr
-                                        ]
-                                      else case T.unpack (rebuildTextCursor t2) of
-                                        [] ->
-                                          [ rebuildTextCursor t1 @? attr,
-                                            T.singleton ' ' @? (attr <> fillCursorPartAttr)
-                                          ]
-                                        (c : _) ->
-                                          [ rebuildTextCursor t1 @? attr,
-                                            T.singleton c @? (attr <> fillCursorPartAttr),
-                                            rebuildTextCursor t2 @? attr
-                                          ],
-                            map partCursorMarkup afters
-                          ]
-                  )
-                  fillExerciseCursorList
+            [ hCenterLayer $
+                border . padAll 1 $
+                  NEC.foldNonEmptyCursor
+                    ( \befores current afters ->
+                        markup $
+                          mconcat $
+                            concat
+                              [ map partCursorMarkup befores,
+                                case current of
+                                  LitPartCursor t -> [t @? litPartAttr] -- Should not happen.
+                                  FillPartCursor tc t ->
+                                    let t' = rebuildTextCursor tc
+                                        attr =
+                                          if t' == t
+                                            then fillCorrectAttr
+                                            else fillPartAttr
+                                        (t1, t2) = textCursorSplit tc
+                                     in if fillExerciseCursorShow
+                                          then
+                                            [ if t' == t
+                                                then t' @? fillCorrectAttr
+                                                else t @? fillShownAttr
+                                            ]
+                                          else case T.unpack (rebuildTextCursor t2) of
+                                            [] ->
+                                              [ rebuildTextCursor t1 @? attr,
+                                                T.singleton ' ' @? (attr <> fillCursorPartAttr)
+                                              ]
+                                            (c : _) ->
+                                              [ rebuildTextCursor t1 @? attr,
+                                                T.singleton c @? (attr <> fillCursorPartAttr),
+                                                rebuildTextCursor t2 @? attr
+                                              ],
+                                map partCursorMarkup afters
+                              ]
+                    )
+                    fillExerciseCursorList
             ],
             [hCenterLayer $ padAll 1 $ str "Next hole: Tab,  Previous hole: Shift-Tab" | fillExerciseCursorCountHoles fec > 1],
-            [ hCenterLayer $ padAll 1 $
-                if fillExerciseCursorCorrect fec
-                  then str "Incorrect: Alt-i,  Hard: Alt-h,  Good: Alt-g,  Easy: Alt-e"
-                  else str "Incorrect: Alt-i,  Show solution: Alt-<space>,  Undo: Alt-u"
+            [ hCenterLayer $
+                padAll 1 $
+                  if fillExerciseCursorCorrect fec
+                    then str "Incorrect: Alt-i,  Hard: Alt-h,  Good: Alt-g,  Easy: Alt-e"
+                    else str "Incorrect: Alt-i,  Show solution: Alt-<space>,  Undo: Alt-u"
             ]
           ]
 

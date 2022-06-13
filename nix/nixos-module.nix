@@ -4,7 +4,7 @@ with lib;
 
 let
   cfg = config.services.sparep."${envname}";
-  concatAttrs = attrList: fold (x: y: x // y) {} attrList;
+  concatAttrs = attrList: fold (x: y: x // y) { } attrList;
 in
 {
   options.services.sparep."${envname}" =
@@ -27,7 +27,7 @@ in
                   hosts =
                     mkOption {
                       type = types.listOf (types.str);
-                      default = [];
+                      default = [ ];
                       example = [ "api.sparep.cs-syd.eu" ];
                       description = "The host to serve api requests on";
                     };
@@ -81,7 +81,7 @@ in
                   hosts =
                     mkOption {
                       type = types.listOf (types.str);
-                      default = [];
+                      default = [ ];
                       example = [ "sparep.cs-syd.eu" ];
                       description = "The host to serve web requests on";
                     };
@@ -153,7 +153,7 @@ in
       api-server-host =
         with cfg.api-server;
 
-        optionalAttrs (enable && hosts != []) {
+        optionalAttrs (enable && hosts != [ ]) {
           "${head hosts}" =
             {
               enableACME = true;
@@ -177,7 +177,7 @@ in
             {
               "sparep-api-server-local-backup-${envname}" = {
                 description = "Backup sparep-api-server database locally for ${envname}";
-                wantedBy = [];
+                wantedBy = [ ];
                 script =
                   ''
                     mkdir -p ${backup-dir}
@@ -252,7 +252,7 @@ in
       web-server-host =
         with cfg.web-server;
 
-        optionalAttrs (enable && hosts != []) {
+        optionalAttrs (enable && hosts != [ ]) {
           "${head hosts}" =
             {
               enableACME = true;
@@ -268,25 +268,25 @@ in
             };
         };
     in
-      mkIf cfg.enable {
-        systemd.services =
-          concatAttrs [
-            api-server-service
-            web-server-service
-            local-backup-service
-          ];
-        systemd.timers =
-          concatAttrs [
-            local-backup-timer
-          ];
-        networking.firewall.allowedTCPPorts = builtins.concatLists [
-          (optional cfg.api-server.enable cfg.api-server.port)
-          (optional cfg.web-server.enable cfg.web-server.port)
+    mkIf cfg.enable {
+      systemd.services =
+        concatAttrs [
+          api-server-service
+          web-server-service
+          local-backup-service
         ];
-        services.nginx.virtualHosts =
-          concatAttrs [
-            api-server-host
-            web-server-host
-          ];
-      };
+      systemd.timers =
+        concatAttrs [
+          local-backup-timer
+        ];
+      networking.firewall.allowedTCPPorts = builtins.concatLists [
+        (optional cfg.api-server.enable cfg.api-server.port)
+        (optional cfg.web-server.enable cfg.web-server.port)
+      ];
+      services.nginx.virtualHosts =
+        concatAttrs [
+          api-server-host
+          web-server-host
+        ];
+    };
 }

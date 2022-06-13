@@ -1,13 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators #-}
 
 module Sparep.API.Server.Data.Username where
 
 import Data.Aeson
-import qualified Data.Text as T
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Validity
 import Data.Validity.Text ()
 import Database.Persist
@@ -15,10 +14,9 @@ import Database.Persist.Sql
 import GHC.Generics (Generic)
 import YamlParse.Applicative
 
-newtype Username
-  = Username
-      { usernameText :: Text
-      }
+newtype Username = Username
+  { usernameText :: Text
+  }
   deriving (Show, Eq, Ord, Generic, FromJSONKey, ToJSONKey, FromJSON, ToJSON)
 
 instance Validity Username where

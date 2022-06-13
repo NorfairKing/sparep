@@ -7,8 +7,8 @@ module Sparep.Data.Difficulty where
 import Control.Monad
 import Data.Aeson
 import Data.Proxy
-import qualified Data.Text as T
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Validity
 import Database.Persist
 import Database.Persist.Sql

@@ -4,7 +4,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -25,11 +24,10 @@ import Sparep.API.Server.Data
 import Sparep.Client.Data
 import Sparep.Data
 
-data RegistrationForm
-  = RegistrationForm
-      { registrationFormUsername :: Username,
-        registrationFormPassword :: Text
-      }
+data RegistrationForm = RegistrationForm
+  { registrationFormUsername :: Username,
+    registrationFormPassword :: Text
+  }
   deriving (Show, Eq, Ord, Generic)
 
 instance Validity RegistrationForm where
@@ -51,11 +49,10 @@ instance FromJSON RegistrationForm where
     withObject "RegistrationForm" $ \o ->
       RegistrationForm <$> o .: "name" <*> o .: "password"
 
-data LoginForm
-  = LoginForm
-      { loginFormUsername :: Username,
-        loginFormPassword :: Text
-      }
+data LoginForm = LoginForm
+  { loginFormUsername :: Username,
+    loginFormPassword :: Text
+  }
   deriving (Show, Eq, Ord, Generic)
 
 instance Validity LoginForm
@@ -71,10 +68,9 @@ instance ToJSON LoginForm where
         "password" .= loginFormPassword
       ]
 
-data AuthCookie
-  = AuthCookie
-      { authCookieUsername :: Username
-      }
+data AuthCookie = AuthCookie
+  { authCookieUsername :: Username
+  }
   deriving (Show, Eq, Ord, Generic)
 
 instance FromJSON AuthCookie

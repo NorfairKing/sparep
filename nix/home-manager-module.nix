@@ -17,7 +17,7 @@ in
             mkOption {
               type = types.listOf types.str;
               example = [ "~/decks" ];
-              default = [];
+              default = [ ];
               description = "Where to find the decks to study";
             };
           completion-command =
@@ -29,7 +29,7 @@ in
             };
           extraConfig =
             mkOption {
-              default = {};
+              default = { };
               description = "Extra contents for the config file";
             };
           sync =
@@ -71,7 +71,7 @@ in
     let
       sparepPkgs = (import ./pkgs.nix).sparepPackages;
       configContents = with cfg;
-        optionalAttrs (decks != []) { inherit decks; } // optionalAttrs (!builtins.isNull cfg.completion-command) { inherit completion-command; } // syncConfigContents sync // extraConfig;
+        optionalAttrs (decks != [ ]) { inherit decks; } // optionalAttrs (!builtins.isNull cfg.completion-command) { inherit completion-command; } // syncConfigContents sync // extraConfig;
       syncConfigContents = syncCfg: with syncCfg;
         optionalAttrs (syncCfg.enable) {
           inherit server-url;
@@ -135,16 +135,16 @@ in
 
 
     in
-      mkIf cfg.enable {
-        xdg = {
-          configFile."sparep/config.yaml".text = sparepConfigContents;
-        };
-        systemd.user =
-          {
-            startServices = true;
-            services = services;
-            timers = timers;
-          };
-        home.packages = packages;
+    mkIf cfg.enable {
+      xdg = {
+        configFile."sparep/config.yaml".text = sparepConfigContents;
       };
+      systemd.user =
+        {
+          startServices = true;
+          services = services;
+          timers = timers;
+        };
+      home.packages = packages;
+    };
 }

@@ -9,12 +9,11 @@ import Sparep.API.Server.Data
 
 type H = ReaderT Env Handler
 
-data Env
-  = Env
-      { envConnectionPool :: ConnectionPool,
-        envCookieSettings :: CookieSettings,
-        envJWTSettings :: JWTSettings
-      }
+data Env = Env
+  { envConnectionPool :: ConnectionPool,
+    envCookieSettings :: CookieSettings,
+    envJWTSettings :: JWTSettings
+  }
 
 runDB :: SqlPersistT IO a -> H a
 runDB func = do

@@ -40,24 +40,24 @@ sparepTUI = do
   let dbFile = fromAbsFile setRepetitionDb
   let lockFilePath = dbFile ++ ".lock"
   mLocked <- withTryFileLock lockFilePath Exclusive $ \_ ->
-    runNoLoggingT
-      $ withSqlitePool (T.pack dbFile) 1
-      $ \pool -> do
-        runSqlPool migrateSparep pool
-        liftIO $ do
-          qChan <- newBChan 1000
-          rChan <- newBChan 1000
-          initialState <- buildInitialState qChan setDecks
-          let vtyBuilder = mkVty defaultConfig
-          firstVty <- vtyBuilder
-          Right endState <-
-            race -- Race works because the dbworker never stops
-              (runReaderT (dbWorker qChan rChan) pool)
-              (customMain firstVty vtyBuilder (Just rChan) (tuiApp qChan) initialState)
-          case endState of
-            StateStudy ss -> runSqlPool (insertMany_ (studyStateRepetitions ss)) pool
-            _ -> pure ()
-        runSqlPool (completion setCompletionCommand) pool
+    runNoLoggingT $
+      withSqlitePool (T.pack dbFile) 1 $
+        \pool -> do
+          runSqlPool migrateSparep pool
+          liftIO $ do
+            qChan <- newBChan 1000
+            rChan <- newBChan 1000
+            initialState <- buildInitialState qChan setDecks
+            let vtyBuilder = mkVty defaultConfig
+            firstVty <- vtyBuilder
+            Right endState <-
+              race -- Race works because the dbworker never stops
+                (runReaderT (dbWorker qChan rChan) pool)
+                (customMain firstVty vtyBuilder (Just rChan) (tuiApp qChan) initialState)
+            case endState of
+              StateStudy ss -> runSqlPool (insertMany_ (studyStateRepetitions ss)) pool
+              _ -> pure ()
+          runSqlPool (completion setCompletionCommand) pool
   case mLocked of
     Just _ -> pure ()
     Nothing -> die "Unable to lock repetitions database."
@@ -123,8 +123,9 @@ tuiApp qChan =
 buildInitialState :: BChan Query -> [RootedDeck] -> IO State
 buildInitialState qChan decks = do
   writeBChan qChan $ QueryGetDecksSelection decks
-  pure $ StateMenu $
-    MenuState
-      { menuStateDecks = decks,
-        menuStateSelection = Loading
-      }
+  pure $
+    StateMenu $
+      MenuState
+        { menuStateDecks = decks,
+          menuStateSelection = Loading
+        }

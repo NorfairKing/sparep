@@ -27,16 +27,18 @@ sparepCLI = do
   ensureDir $ parent settingDbFile
   -- Block until locking succeeds
   withFileLock (fromAbsFile settingDbFile ++ ".lock") Exclusive $ \_ ->
-    runStderrLoggingT $ filterLogger (\_ ll -> ll >= settingLogLevel) $ withSqlitePool (T.pack (fromAbsFile settingDbFile)) 1 $ \pool -> do
-      _ <- runSqlPool (runMigrationQuiet clientMigration) pool
-      let env =
-            Env
-              { envClientEnv = mCenv,
-                envUsername = settingUsername,
-                envPassword = settingPassword,
-                envConnectionPool = pool
-              }
-      liftIO $ runReaderT (dispatch disp) env
+    runStderrLoggingT $
+      filterLogger (\_ ll -> ll >= settingLogLevel) $
+        withSqlitePool (T.pack (fromAbsFile settingDbFile)) 1 $ \pool -> do
+          _ <- runSqlPool (runMigrationQuiet clientMigration) pool
+          let env =
+                Env
+                  { envClientEnv = mCenv,
+                    envUsername = settingUsername,
+                    envPassword = settingPassword,
+                    envConnectionPool = pool
+                  }
+          liftIO $ runReaderT (dispatch disp) env
 
 dispatch :: Dispatch -> C ()
 dispatch = \case
