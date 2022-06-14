@@ -1,0 +1,34 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           sparep-api
+version:        0.0.0.0
+build-type:     Simple
+
+library
+  exposed-modules:
+      Sparep.API
+      Sparep.API.Data
+  other-modules:
+      Paths_sparep_api
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson
+    , appendful
+    , base >=4.7 && <5
+    , jose
+    , persistent
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , sparep-api-server-data
+    , sparep-client-data
+    , sparep-data
+    , text
+    , validity
+    , validity-text
+  default-language: Haskell2010

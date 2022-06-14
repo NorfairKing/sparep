@@ -1,0 +1,67 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           sparep-api-server
+version:        0.0.0.0
+build-type:     Simple
+
+library
+  exposed-modules:
+      Sparep.API.Server
+      Sparep.API.Server.Env
+      Sparep.API.Server.Handler
+      Sparep.API.Server.Handler.Auth
+      Sparep.API.Server.Handler.Import
+      Sparep.API.Server.Handler.Sync
+      Sparep.API.Server.OptParse
+      Sparep.API.Server.SigningKey
+  other-modules:
+      Paths_sparep_api_server
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson
+    , appendful
+    , appendful-persistent
+    , autodocodec
+    , autodocodec-yaml
+    , base >=4.7 && <5
+    , bytestring
+    , envparse
+    , jose
+    , monad-logger
+    , mtl
+    , optparse-applicative
+    , password
+    , password-instances
+    , path
+    , path-io
+    , persistent
+    , persistent-sqlite
+    , persistent-template
+    , servant-auth-server
+    , servant-server
+    , sparep-api
+    , sparep-api-server-data
+    , sparep-data
+    , text
+    , time
+    , wai
+    , warp
+    , yaml
+  default-language: Haskell2010
+
+executable sparep-api-server
+  main-is: Main.hs
+  other-modules:
+      Paths_sparep_api_server
+  hs-source-dirs:
+      app/
+  ghc-options: -rtsopts -threaded -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , sparep-api-server
+  default-language: Haskell2010

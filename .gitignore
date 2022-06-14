@@ -6,4 +6,3 @@ result*
 *.sqlite3*
 signing-key.json
 .hie/
-*.cabal

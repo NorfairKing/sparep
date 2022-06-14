@@ -22,7 +22,7 @@ with final.haskell.lib;
             (
               failOnAllWarnings (
                 disableLibraryProfiling (
-                  final.haskellPackages.callCabal2nix name (final.gitignoreSource (../. + "/${name}")) { }
+                  final.haskellPackages.callCabal2nixWithOptions name (final.gitignoreSource (../. + "/${name}")) "--no-hpack" { }
                 )
               )
             )
