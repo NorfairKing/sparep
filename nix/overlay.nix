@@ -4,15 +4,7 @@ with final.haskell.lib;
 {
   sparepCasts =
     let
-      mkCastDerivation = import
-        (
-          builtins.fetchGit
-            {
-              url = "https://github.com/NorfairKing/autorecorder";
-              rev = "da5bf9d61108a4a89addc8203b1579a364ce8c01";
-              ref = "master";
-            } + "/nix/cast.nix"
-        )
+      mkCastDerivation = import (souces.autorecorder + "/nix/cast.nix")
         { pkgs = final // final.sparepPackages; };
     in
     {

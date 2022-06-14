@@ -36,7 +36,6 @@ library:
   - sparep-data
   - text
   - yaml
-  - yamlparse-applicative
 
 executables:
   sparep:

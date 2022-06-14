@@ -15,6 +15,7 @@ library:
     - aeson
     - appendful
     - appendful-persistent
+    - autodocodec
     - bytestring
     - envparse
     - jose
@@ -38,7 +39,6 @@ library:
     - wai
     - warp
     - yaml
-    - yamlparse-applicative
 
 executables:
   sparep-api-server:

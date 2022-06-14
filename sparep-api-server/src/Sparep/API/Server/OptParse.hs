@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -6,17 +7,18 @@
 
 module Sparep.API.Server.OptParse where
 
+import Autodocodec
 import Control.Applicative
 import Data.Maybe
 import qualified Data.Text as T
-import Data.Yaml
+import qualified Data.Text.Encoding as TE
+import Data.Yaml (FromJSON, ToJSON)
 import qualified Env
 import GHC.Generics (Generic)
 import Options.Applicative as OptParse
 import qualified Options.Applicative.Help as OptParse (string)
 import Path
 import Path.IO
-import YamlParse.Applicative as YamlParse
 
 getSettings :: IO Settings
 getSettings = do
@@ -49,24 +51,22 @@ data Configuration = Configuration
     configDbFile :: Maybe FilePath
   }
   deriving (Show, Eq, Generic)
+  deriving (FromJSON, ToJSON) via (Autodocodec Configuration)
 
-instance FromJSON Configuration where
-  parseJSON = viaYamlSchema
-
-instance YamlSchema Configuration where
-  yamlSchema =
-    objectParser "Configuration" $
+instance HasCodec Configuration where
+  codec =
+    object "Configuration" $
       Configuration
-        <$> optionalField "port" "The port to serve api requests on"
-        <*> optionalField "database" "Path to the database"
+        <$> optionalField "port" "The port to serve api requests on" .= configPort
+        <*> optionalField "database" "Path to the database" .= configDbFile
 
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of
-    Nothing -> defaultConfigFile >>= YamlParse.readConfigFile
+    Nothing -> defaultConfigFile >>= readFirstConfigFile
     Just cf -> do
       afp <- resolveFile' cf
-      YamlParse.readConfigFile afp
+      readFirstConfigFile afp
 
 defaultConfigFile :: IO (Path Abs File)
 defaultConfigFile = do
@@ -114,7 +114,7 @@ flagsParser =
         [ Env.helpDoc environmentParser,
           "",
           "Configuration file format:",
-          T.unpack (YamlParse.prettyColourisedSchemaDoc @Configuration)
+          T.unpack (TE.decodeUtf8 (renderColouredSchemaViaCodec @Configuration))
         ]
 
 data Flags = Flags

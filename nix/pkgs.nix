@@ -5,8 +5,8 @@ import sources.nixpkgs {
     [
       (final: previous: { inherit (import sources.gitignore { inherit (final) lib; }) gitignoreSource; })
       (import (sources.appendful + "/nix/overlay.nix"))
+      (import (sources.autodocodec + "/nix/overlay.nix"))
       (import (sources.cursor + "/nix/overlay.nix"))
-      (import (sources.yamlparse-applicative + "/nix/overlay.nix"))
       (import (sources.validity + "/nix/overlay.nix"))
       (import ./overlay.nix)
     ];

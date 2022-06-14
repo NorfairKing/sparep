@@ -11,6 +11,8 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+  - autodocodec
+  - autodocodec-yaml
   - data-default
   - envparse
   - monad-logger
@@ -23,7 +25,6 @@ library:
   - template-haskell
   - text
   - yaml
-  - yamlparse-applicative
   - yesod
 
 executables:

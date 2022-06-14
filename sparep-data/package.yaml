@@ -13,6 +13,8 @@ library:
   source-dirs: src
   dependencies:
     - aeson
+    - autodocodec
+    - autodocodec-yaml
     - base16
     - bytestring
     - containers
@@ -34,4 +36,3 @@ library:
     - validity-text
     - validity-time
     - yaml
-    - yamlparse-applicative

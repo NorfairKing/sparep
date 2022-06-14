@@ -14,10 +14,12 @@ packages:
 - sparep-tui
 - sparep-web-server
 extra-deps:
-- github: NorfairKing/yamlparse-applicative
-  commit: 224a03aa8880d426b7641db16a05e0c7b311684f
+- github: NorfairKing/autodocodec
+  commit: 00649ce4174bc693de36077ffdfc3e0d7151ef08
   subdirs:
-  - yamlparse-applicative
+  - autodocodec
+  - autodocodec-schema
+  - autodocodec-yaml
 - github: supki/envparse
   commit: de5944fb09e9d941fafa35c0f05446af348e7b4d
 - github: NorfairKing/cursor

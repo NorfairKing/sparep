@@ -23,6 +23,18 @@
         "url": "https://github.com/NorfairKing/autodocodec/archive/00649ce4174bc693de36077ffdfc3e0d7151ef08.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "autorecorder": {
+        "branch": "master",
+        "description": "An automatic declarative ASCIInema recorder",
+        "homepage": null,
+        "owner": "NorfairKing",
+        "repo": "autorecorder",
+        "rev": "557cc2b6c8e9daa2dc5468a9bae6309216712e5d",
+        "sha256": "1nbj03b126l1dcy1djqi6sw3c61hsvxswz8lw3337xsgknhaikkk",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/autorecorder/archive/557cc2b6c8e9daa2dc5468a9bae6309216712e5d.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "cursor": {
         "branch": "master",
         "description": "Cursor data and manipulation",
@@ -117,18 +129,6 @@
         "sha256": "03a4s2gq1mjjd452xbhs0h1iycjpdidxprpvjiwy55hx0lzqfpli",
         "type": "tarball",
         "url": "https://github.com/NorfairKing/validity/archive/160e846cc5de8e92e6758172da341f5d81fe0374.tar.gz",
-        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
-    },
-    "yamlparse-applicative": {
-        "branch": "master",
-        "description": "DEPRECATED use autodocodec instead       An optparse-applicative -style explainable yaml parser.",
-        "homepage": "https://cs-syd.eu/posts/2020-06-28-yamlparse-applicative",
-        "owner": "NorfairKing",
-        "repo": "yamlparse-applicative",
-        "rev": "224a03aa8880d426b7641db16a05e0c7b311684f",
-        "sha256": "1a0jb1lrrawwc7x87i2hj99zbpyl70y90zjpkr2s0s04nnsxjk4f",
-        "type": "tarball",
-        "url": "https://github.com/NorfairKing/yamlparse-applicative/archive/224a03aa8880d426b7641db16a05e0c7b311684f.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

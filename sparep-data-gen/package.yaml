@@ -37,4 +37,3 @@ tests:
     - path-io
     - sparep-data
     - sparep-data-gen
-    - yamlparse-applicative

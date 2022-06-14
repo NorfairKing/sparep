@@ -48,7 +48,6 @@ library:
   - validity-text
   - vty
   - yaml
-  - yamlparse-applicative
 
 executables:
   sparep-tui:

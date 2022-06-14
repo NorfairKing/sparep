@@ -15,6 +15,7 @@ library:
     - aeson
     - appendful
     - appendful-persistent
+    - autodocodec
     - password
     - password-instances
     - persistent
@@ -27,4 +28,3 @@ library:
     - validity
     - validity-persistent
     - validity-text
-    - yamlparse-applicative
