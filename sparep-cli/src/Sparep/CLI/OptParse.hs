@@ -1,8 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Sparep.CLI.OptParse
   ( getInstructions,
@@ -16,13 +19,16 @@ module Sparep.CLI.OptParse
   )
 where
 
+import Autodocodec
+import Autodocodec.Yaml
 import Control.Applicative
 import Control.Arrow
 import Control.Monad.Logger
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Yaml
+import qualified Data.Text.Encoding as TE
+import Data.Yaml (FromJSON, ToJSON)
 import qualified Env
 import GHC.Generics (Generic)
 import Options.Applicative as OptParse
@@ -32,7 +38,6 @@ import Path.IO
 import Servant.Client
 import Sparep.API.Server.Data
 import Sparep.Data (RootedDeck (..), parseDecks)
-import YamlParse.Applicative as YamlParse
 
 data Instructions
   = Instructions Dispatch Settings
@@ -119,21 +124,28 @@ data Configuration = Configuration
     configLogLevel :: Maybe LogLevel,
     configSpecifications :: [FilePath]
   }
-  deriving (Show, Eq, Generic)
+  deriving stock (Show, Eq, Generic)
+  deriving (FromJSON, ToJSON) via (Autodocodec Configuration)
 
-instance FromJSON Configuration where
-  parseJSON = viaYamlSchema
-
-instance YamlSchema Configuration where
-  yamlSchema =
-    objectParser "Configuration" $
+instance HasCodec Configuration where
+  codec =
+    object "Configuration" $
       Configuration
-        <$> optionalFieldWith "server-url" "Server base url" (maybeParser parseBaseUrl yamlSchema)
-        <*> optionalField "username" "Server account username"
-        <*> optionalField "password" "Server account password"
-        <*> optionalField "database" "The path to the database"
-        <*> optionalFieldWith "log-level" "The minimal severity for log messages" viaRead
-        <*> optionalFieldWithDefault "decks" [] "The files and directories containing card definitions"
+        <$> optionalFieldWith "server-url" (bimapCodec (left show . parseBaseUrl) showBaseUrl codec) "Server base url" .= configBaseUrl
+        <*> optionalField "username" "Server account username" .= configUsername
+        <*> optionalField "password" "Server account password" .= configPassword
+        <*> optionalField "database" "The path to the database" .= configDbFile
+        <*> optionalField "log-level" "The minimal severity for log messages" .= configLogLevel
+        <*> optionalFieldWithDefault "decks" [] "The files and directories containing card definitions" .= configSpecifications
+
+instance HasCodec LogLevel where
+  codec =
+    stringConstCodec
+      [ (LevelDebug, "Debug"),
+        (LevelInfo, "Info"),
+        (LevelWarn, "Warn"),
+        (LevelError, "Error")
+      ]
 
 -- | Get the configuration
 --
@@ -142,10 +154,10 @@ instance YamlSchema Configuration where
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of
-    Nothing -> getDefaultConfigFile >>= YamlParse.readConfigFile
+    Nothing -> getDefaultConfigFile >>= readYamlConfigFile
     Just cf -> do
       afp <- resolveFile' cf
-      YamlParse.readConfigFile afp
+      readYamlConfigFile afp
 
 -- | What we find in the configuration variable.
 --
@@ -209,7 +221,7 @@ argParser =
         [ Env.helpDoc environmentParser,
           "",
           "Configuration file format:",
-          T.unpack (YamlParse.prettyColourisedSchemaDoc @Configuration)
+          T.unpack (TE.decodeUtf8 (renderColouredSchemaViaCodec @Configuration))
         ]
 
 parseArgs :: OptParse.Parser Arguments

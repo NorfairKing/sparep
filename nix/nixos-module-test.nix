@@ -1,13 +1,9 @@
-{ pkgs ? import ./pkgs.nix }:
+{ sources ? import ./sources.nix
+, pkgs ? import ./pkgs.nix { inherit sources; }
+}:
 let
   sparep-production = import (./nixos-module.nix) { envname = "production"; };
-  home-manager = import (
-    builtins.fetchTarball
-      {
-        url = "https://github.com/rycee/home-manager/archive/472ca211cac604efdf621337067a237be9df389e.tar.gz";
-        sha256 = "sha256:1gbfsnd7zsxwqryxd4r6jz9sgdz6ghlkapws1cdxshrbxlwhqad1";
-      } + "/nixos/default.nix"
-  );
+  home-manager = import (sources.home-manager + "/nixos/default.nix");
 
   api-port = 8001;
   web-port = 8002;
@@ -63,10 +59,8 @@ pkgs.nixosTest (
 
       machine.wait_for_unit("home-manager-testuser.service")
 
-
       def su(user, cmd):
           return f"su - {user} -c {quote(cmd)}"
-
 
       machine.succeed(su("testuser", "cat ~/.config/sparep/config.yaml"))
 

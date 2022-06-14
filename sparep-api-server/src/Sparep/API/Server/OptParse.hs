@@ -8,6 +8,7 @@
 module Sparep.API.Server.OptParse where
 
 import Autodocodec
+import Autodocodec.Yaml
 import Control.Applicative
 import Data.Maybe
 import qualified Data.Text as T
@@ -63,14 +64,14 @@ instance HasCodec Configuration where
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of
-    Nothing -> defaultConfigFile >>= readFirstConfigFile
+    Nothing -> defaultConfigFile >>= readYamlConfigFile
     Just cf -> do
       afp <- resolveFile' cf
-      readFirstConfigFile afp
+      readYamlConfigFile afp
 
 defaultConfigFile :: IO (Path Abs File)
 defaultConfigFile = do
-  xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|optparse-sparep|])
+  xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|sparep|])
   resolveFile xdgConfigDir "config.yaml"
 
 data Environment = Environment

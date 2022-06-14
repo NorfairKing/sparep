@@ -13,6 +13,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString as SB
 import Data.List.NonEmpty (NonEmpty (..), (<|))
+import qualified Data.List.NonEmpty as NE
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe
@@ -344,4 +345,9 @@ parseFillExerciseParts = goLit [] . T.unpack
     goFill acc (c : rest) = goFill (c : acc) rest
 
 renderFillExerciseParts :: NonEmpty FillExercisePart -> Text
-renderFillExerciseParts = undefined -- TODO
+renderFillExerciseParts = T.concat . map go . NE.toList
+  where
+    go :: FillExercisePart -> Text
+    go = \case
+      LitPart t -> t
+      FillPart t -> "_" <> t <> "_"

@@ -16,6 +16,7 @@ library:
     - appendful
     - appendful-persistent
     - autodocodec
+    - autodocodec-yaml
     - bytestring
     - envparse
     - jose

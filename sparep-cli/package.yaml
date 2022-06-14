@@ -14,6 +14,8 @@ library:
   dependencies:
   - appendful
   - appendful-persistent
+  - autodocodec
+  - autodocodec-yaml
   - cookie
   - envparse
   - filelock
