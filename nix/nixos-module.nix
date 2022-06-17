@@ -1,4 +1,8 @@
-{ envname }:
+{ sources ? import ./sources.nix
+, pkgs ? import ./pkgs.nix { inherit sources; }
+, sparepReleasePackages ? pkgs.sparepReleasePackages
+, envname
+}:
 { lib, pkgs, config, ... }:
 with lib;
 
@@ -111,7 +115,6 @@ in
     };
   config =
     let
-      sparepPkgs = (import ./pkgs.nix { }).sparepPackages;
       working-dir = "/www/sparep/${envname}/";
       # The docs server
       api-server-working-dir = working-dir + "api-server/";
@@ -135,7 +138,7 @@ in
               ''
                 mkdir -p "${api-server-working-dir}"
                 cd ${api-server-working-dir};
-                ${sparepPkgs.sparep-api-server}/bin/sparep-api-server
+                ${sparepReleasePackages.sparep-api-server}/bin/sparep-api-server
               '';
             serviceConfig =
               {
@@ -233,8 +236,7 @@ in
               ''
                 mkdir -p "${web-server-working-dir}"
                 cd ${web-server-working-dir}
-                ${sparepPkgs.sparep-web-server}/bin/sparep-web-server \
-                  serve
+                ${sparepReleasePackages.sparep-web-server}/bin/sparep-web-server serve
               '';
             serviceConfig =
               {

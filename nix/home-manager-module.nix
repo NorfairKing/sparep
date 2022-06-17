@@ -13,6 +13,10 @@ in
       programs.sparep =
         {
           enable = mkEnableOption "Sparep cli and syncing";
+          sparepReleasePackages = mkOption {
+            description = "The sparepReleasePackages attribute defined in the nix/overlay.nix file in the sparep repository.";
+            default = (import ./pkgs.nix { }).sparepReleasePackages;
+          };
           decks =
             mkOption {
               type = types.listOf types.str;
@@ -69,7 +73,6 @@ in
     };
   config =
     let
-      sparepPkgs = (import ./pkgs.nix { }).sparepPackages;
       configContents = with cfg;
         optionalAttrs (decks != [ ]) { inherit decks; } // optionalAttrs (!builtins.isNull cfg.completion-command) { inherit completion-command; } // syncConfigContents sync // extraConfig;
       syncConfigContents = syncCfg: with syncCfg;
@@ -88,11 +91,9 @@ in
             };
           Service =
             {
-              ExecStart =
-                "${pkgs.writeShellScript "sync-sparep-service-ExecStart"
-                  ''
-                    exec ${sparepPkgs.sparep-cli}/bin/sparep sync
-                  ''}";
+              ExecStart = "${pkgs.writeShellScript "sync-sparep" ''
+                exec ${cfg.sparepReleasePackages.sparep-cli}/bin/sparep sync
+              ''}";
               Type = "oneshot";
             };
         };
@@ -127,10 +128,10 @@ in
             "${syncSparepName}" = syncSparepTimer;
           }
         );
-      packages =
+      packages = with cfg.sparepReleasePackages;
         [
-          sparepPkgs.sparep-cli
-          sparepPkgs.sparep-tui
+          sparep-cli
+          sparep-tui
         ];
 
 
@@ -141,7 +142,6 @@ in
       };
       systemd.user =
         {
-          startServices = true;
           services = services;
           timers = timers;
         };

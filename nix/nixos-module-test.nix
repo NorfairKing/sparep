@@ -1,8 +1,14 @@
 { sources ? import ./sources.nix
 , pkgs ? import ./pkgs.nix { inherit sources; }
+, sparepReleasePackages ? pkgs.sparepReleasePackages
 }:
 let
-  sparep-production = import (./nixos-module.nix) { envname = "production"; };
+  sparep-production = import (./nixos-module.nix) {
+    inherit sources;
+    inherit pkgs;
+    inherit sparepReleasePackages;
+    envname = "production";
+  };
   home-manager = import (sources.home-manager + "/nixos/default.nix");
 
   api-port = 8001;
@@ -34,9 +40,9 @@ pkgs.nixosTest (
           ./home-manager-module.nix
         ];
         xdg.enable = true;
-        home.stateVersion = "20.09";
         programs.sparep = {
           enable = true;
+          inherit sparepReleasePackages;
           completion-command = "echo 'hi'";
           sync = {
             enable = true;
