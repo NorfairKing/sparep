@@ -4,7 +4,7 @@ with lib;
 
 let
   cfg = config.programs.sparep;
-
+  mergeListRecursively = pkgs.callPackage ./merge-lists-recursively.nix { };
 
 in
 {
@@ -74,7 +74,11 @@ in
   config =
     let
       configContents = with cfg;
-        optionalAttrs (decks != [ ]) { inherit decks; } // optionalAttrs (!builtins.isNull cfg.completion-command) { inherit completion-command; } // syncConfigContents sync // extraConfig;
+        mergeListRecursively [
+          (optionalAttrs (decks != [ ]) { inherit decks; })
+          (optionalAttrs (!builtins.isNull cfg.completion-command) { inherit completion-command; })
+          (syncConfigContents sync)
+        ];
       syncConfigContents = syncCfg: with syncCfg;
         optionalAttrs (syncCfg.enable) {
           inherit server-url;
@@ -82,57 +86,43 @@ in
           inherit password;
         };
       syncSparepName = "sync-sparep";
-      syncSparepService =
-        {
-          Unit =
-            {
-              Description = "Sync sparep";
-              Wants = [ "network-online.target" ];
-            };
-          Service =
-            {
-              ExecStart = "${pkgs.writeShellScript "sync-sparep" ''
-                exec ${cfg.sparepReleasePackages.sparep-cli}/bin/sparep sync
-              ''}";
-              Type = "oneshot";
-            };
+      syncSparepService = {
+        Unit = {
+          Description = "Sync sparep";
+          Wants = [ "network-online.target" ];
         };
-      syncSparepTimer =
-        {
-          Unit =
-            {
-              Description = "Sync sparep every day";
-            };
-          Install =
-            {
-              WantedBy = [ "timers.target" ];
-            };
-          Timer =
-            {
-              OnCalendar = "daily";
-              Persistent = true;
-              Unit = "${syncSparepName}.service";
-            };
+        Service = {
+          ExecStart = "${pkgs.writeShellScript "sync-sparep" ''
+            exec ${cfg.sparepReleasePackages.sparep-cli}/bin/sparep sync
+          ''}";
+          Type = "oneshot";
         };
+      };
+      syncSparepTimer = {
+        Unit = {
+          Description = "Sync sparep every day";
+        };
+        Install = {
+          WantedBy = [ "timers.target" ];
+        };
+        Timer = {
+          OnCalendar = "daily";
+          Persistent = true;
+          Unit = "${syncSparepName}.service";
+        };
+      };
 
       sparepConfigContents = builtins.toJSON configContents;
-      services =
-        (
-          optionalAttrs (cfg.sync.enable or false) {
-            "${syncSparepName}" = syncSparepService;
-          }
-        );
-      timers =
-        (
-          optionalAttrs (cfg.sync.enable or false) {
-            "${syncSparepName}" = syncSparepTimer;
-          }
-        );
-      packages = with cfg.sparepReleasePackages;
-        [
-          sparep-cli
-          sparep-tui
-        ];
+      services = optionalAttrs (cfg.sync.enable or false) {
+        "${syncSparepName}" = syncSparepService;
+      };
+      timers = optionalAttrs (cfg.sync.enable or false) {
+        "${syncSparepName}" = syncSparepTimer;
+      };
+      packages = with cfg.sparepReleasePackages;        [
+        sparep-cli
+        sparep-tui
+      ];
 
 
     in

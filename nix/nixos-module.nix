@@ -8,7 +8,8 @@ with lib;
 
 let
   cfg = config.services.sparep."${envname}";
-  concatAttrs = attrList: fold (x: y: x // y) { } attrList;
+
+  mergeListRecursively = pkgs.callPackage ./merge-lists-recursively.nix { };
 in
 {
   options.services.sparep."${envname}" =
@@ -272,13 +273,13 @@ in
     in
     mkIf cfg.enable {
       systemd.services =
-        concatAttrs [
+        mergeListRecursively [
           api-server-service
           web-server-service
           local-backup-service
         ];
       systemd.timers =
-        concatAttrs [
+        mergeListRecursively [
           local-backup-timer
         ];
       networking.firewall.allowedTCPPorts = builtins.concatLists [
