@@ -7,7 +7,11 @@ in
 {
   release = pkgs.sparepRelease;
   casts = pkgs.sparepCasts;
-  nixos-module-test = import ./nix/nixos-module-test.nix { inherit sources pkgs; };
+  nixos-module-test = import ./nix/nixos-module-test.nix {
+    inherit sources;
+    inherit pkgs;
+    sparepReleasePackages = pkgs.sparepReleasePackages;
+  };
   pre-commit-check = pre-commit.run;
   shell = pkgs.symlinkJoin {
     name = "shell";

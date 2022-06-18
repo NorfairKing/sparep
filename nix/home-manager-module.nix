@@ -113,10 +113,10 @@ in
       };
 
       sparepConfigContents = builtins.toJSON configContents;
-      services = optionalAttrs (cfg.sync.enable or false) {
+      services = optionalAttrs (cfg.sync != null && cfg.sync.enable or false) {
         "${syncSparepName}" = syncSparepService;
       };
-      timers = optionalAttrs (cfg.sync.enable or false) {
+      timers = optionalAttrs (cfg.sync != null && cfg.sync.enable or false) {
         "${syncSparepName}" = syncSparepTimer;
       };
       packages = with cfg.sparepReleasePackages;        [
