@@ -2,10 +2,13 @@ final: previous:
 with final.lib;
 with final.haskell.lib;
 
+let
+  sources = import ./sources.nix;
+in
 {
   sparepCasts =
     let
-      mkCastDerivation = import (souces.autorecorder + "/nix/cast.nix")
+      mkCastDerivation = import (sources.autorecorder + "/nix/cast.nix")
         { pkgs = final // final.sparepPackages; };
     in
     {

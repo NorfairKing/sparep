@@ -15,104 +15,87 @@ in
   options.services.sparep."${envname}" =
     {
       enable = mkEnableOption "Sparep Service";
-      api-server =
-        mkOption {
-          type =
-            types.submodule {
-              options =
-                {
-                  enable = mkEnableOption "Sparep API Server";
-                  log-level =
-                    mkOption {
-                      type = types.str;
-                      example = "Debug";
-                      default = "Warn";
-                      description = "The log level to use";
-                    };
-                  hosts =
-                    mkOption {
-                      type = types.listOf (types.str);
-                      default = [ ];
-                      example = [ "api.sparep.cs-syd.eu" ];
-                      description = "The host to serve api requests on";
-                    };
-                  port =
-                    mkOption {
-                      type = types.int;
-                      example = 8001;
-                      description = "The port to serve api requests on";
-                    };
-                  local-backup =
-                    mkOption {
-                      type = types.nullOr (
-                        types.submodule {
-                          options = {
-                            enable = mkEnableOption "Sparep API Server Local Backup Service";
-                            backup-dir = mkOption {
-                              type = types.str;
-                              example = "backup/api-server";
-                              default = "backup/api-server";
-                              description = "The directory to store backups in, relative to the /www/sparep/${envname} directory or absolute";
-                            };
-                          };
-                        }
-                      );
-                      default = null;
-                    };
-                };
+      api-server = mkOption {
+        default = { };
+        type = types.nullOr (types.submodule {
+          options = {
+            enable = mkEnableOption "Sparep API Server";
+            log-level = mkOption {
+              type = types.str;
+              example = "Debug";
+              default = "Warn";
+              description = "The log level to use";
             };
-          default = null;
-        };
-      web-server =
-        mkOption {
-          type =
-            types.submodule {
-              options =
-                {
-                  enable = mkEnableOption "Sparep Web Server";
-                  api-url =
-                    mkOption {
-                      type = types.str;
-                      example = "api.sparep.cs-syd.eu.eu";
-                      description = "The url for the api to use";
-                    };
-                  log-level =
-                    mkOption {
-                      type = types.str;
-                      example = "Debug";
-                      default = "Warn";
-                      description = "The log level to use";
-                    };
-                  hosts =
-                    mkOption {
-                      type = types.listOf (types.str);
-                      default = [ ];
-                      example = [ "sparep.cs-syd.eu" ];
-                      description = "The host to serve web requests on";
-                    };
-                  port =
-                    mkOption {
-                      type = types.int;
-                      example = 8002;
-                      description = "The port to serve web requests on";
-                    };
-                  google-analytics-tracking =
-                    mkOption {
-                      type = types.nullOr types.str;
-                      example = "XX-XXXXXXXX-XX";
-                      default = null;
-                      description = "The Google analytics tracking code";
-                    };
-                  google-search-console-verification =
-                    mkOption {
-                      type = types.nullOr types.str;
-                      example = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-                      default = null;
-                      description = "The Google search console verification code";
-                    };
-                };
+            hosts = mkOption {
+              type = types.listOf (types.str);
+              default = [ ];
+              example = [ "api.sparep.cs-syd.eu" ];
+              description = "The host to serve api requests on";
             };
-        };
+            port = mkOption {
+              type = types.int;
+              example = 8001;
+              description = "The port to serve api requests on";
+            };
+            local-backup = mkOption {
+              type = types.nullOr (types.submodule {
+                options = {
+                  enable = mkEnableOption "Sparep API Server Local Backup Service";
+                  backup-dir = mkOption {
+                    type = types.str;
+                    example = "backup/api-server";
+                    default = "backup/api-server";
+                    description = "The directory to store backups in, relative to the /www/sparep/${envname} directory or absolute";
+                  };
+                };
+              });
+              default = null;
+            };
+          };
+        });
+      };
+      web-server = mkOption {
+        default = { };
+        type = types.nullOr (types.submodule {
+          options = {
+            enable = mkEnableOption "Sparep Web Server";
+            api-url = mkOption {
+              type = types.str;
+              example = "api.sparep.cs-syd.eu.eu";
+              description = "The url for the api to use";
+            };
+            log-level = mkOption {
+              type = types.str;
+              example = "Debug";
+              default = "Warn";
+              description = "The log level to use";
+            };
+            hosts = mkOption {
+              type = types.listOf (types.str);
+              default = [ ];
+              example = [ "sparep.cs-syd.eu" ];
+              description = "The host to serve web requests on";
+            };
+            port = mkOption {
+              type = types.int;
+              example = 8002;
+              description = "The port to serve web requests on";
+            };
+            google-analytics-tracking = mkOption {
+              type = types.nullOr types.str;
+              example = "XX-XXXXXXXX-XX";
+              default = null;
+              description = "The Google analytics tracking code";
+            };
+            google-search-console-verification = mkOption {
+              type = types.nullOr types.str;
+              example = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+              default = null;
+              description = "The Google search console verification code";
+            };
+          };
+        });
+      };
     };
   config =
     let
@@ -216,60 +199,55 @@ in
       # The web server
       web-server-working-dir = working-dir + "web-server/";
       web-server-data-dir = web-server-working-dir + "web-server/";
-      web-server-service =
-        with cfg.web-server;
-        optionalAttrs enable {
-          "sparep-web-server-${envname}" = {
-            description = "Sparep web server ${envname} Service";
-            wantedBy = [ "multi-user.target" ];
-            environment =
-              {
-                "SPAREP_WEB_SERVER_API_URL" = "${api-url}";
-                "SPAREP_WEB_SERVER_LOG_LEVEL" = "${builtins.toString log-level}";
-                "SPAREP_WEB_SERVER_PORT" = "${builtins.toString port}";
-                "SPAREP_WEB_SERVER_DATA_DIR" = web-server-data-dir;
-              } // optionalAttrs (!builtins.isNull google-analytics-tracking) {
-                "SPAREP_WEB_SERVER_GOOGLE_ANALYTICS_TRACKING" = "${google-analytics-tracking}";
-              } // optionalAttrs (!builtins.isNull google-search-console-verification) {
-                "SPAREP_WEB_SERVER_GOOGLE_SEARCH_CONSOLE_VERIFICATION" = "${google-search-console-verification}";
-              };
-            script =
-              ''
-                mkdir -p "${web-server-working-dir}"
-                cd ${web-server-working-dir}
-                ${sparepReleasePackages.sparep-web-server}/bin/sparep-web-server serve
-              '';
-            serviceConfig =
-              {
-                Restart = "always";
-                RestartSec = 1;
-                Nice = 15;
-              };
-            unitConfig =
-              {
-                StartLimitIntervalSec = 0;
-                # ensure Restart=always is always honoured
-              };
-          };
-        };
-      web-server-host =
-        with cfg.web-server;
-
-        optionalAttrs (enable && hosts != [ ]) {
-          "${head hosts}" =
+      web-server-service = optionalAttrs (cfg.web-server.enable or false) (with cfg.web-server; {
+        "sparep-web-server-${envname}" = {
+          description = "Sparep web server ${envname} Service";
+          wantedBy = [ "multi-user.target" ];
+          environment =
             {
-              enableACME = true;
-              forceSSL = true;
-              locations."/" = {
-                proxyPass = "http://localhost:${builtins.toString port}";
-                # Just to make sure we don't run into 413 errors on big syncs
-                extraConfig = ''
-                  client_max_body_size 0;
-                '';
-              };
-              serverAliases = tail hosts;
+              "SPAREP_WEB_SERVER_API_URL" = "${api-url}";
+              "SPAREP_WEB_SERVER_LOG_LEVEL" = "${builtins.toString log-level}";
+              "SPAREP_WEB_SERVER_PORT" = "${builtins.toString port}";
+              "SPAREP_WEB_SERVER_DATA_DIR" = web-server-data-dir;
+            } // optionalAttrs (!builtins.isNull google-analytics-tracking) {
+              "SPAREP_WEB_SERVER_GOOGLE_ANALYTICS_TRACKING" = "${google-analytics-tracking}";
+            } // optionalAttrs (!builtins.isNull google-search-console-verification) {
+              "SPAREP_WEB_SERVER_GOOGLE_SEARCH_CONSOLE_VERIFICATION" = "${google-search-console-verification}";
+            };
+          script =
+            ''
+              mkdir -p "${web-server-working-dir}"
+              cd ${web-server-working-dir}
+              ${sparepReleasePackages.sparep-web-server}/bin/sparep-web-server serve
+            '';
+          serviceConfig =
+            {
+              Restart = "always";
+              RestartSec = 1;
+              Nice = 15;
+            };
+          unitConfig =
+            {
+              StartLimitIntervalSec = 0;
+              # ensure Restart=always is always honoured
             };
         };
+      });
+      web-server-host = optionalAttrs ((cfg.web-server.enable or false) && cfg.web-server.hosts != [ ]) (with cfg.web-server; {
+        "${head cfg.web-server.hosts}" =
+          {
+            enableACME = true;
+            forceSSL = true;
+            locations."/" = {
+              proxyPass = "http://localhost:${builtins.toString port}";
+              # Just to make sure we don't run into 413 errors on big syncs
+              extraConfig = ''
+                client_max_body_size 0;
+              '';
+            };
+            serverAliases = tail hosts;
+          };
+      });
     in
     mkIf cfg.enable {
       systemd.services =

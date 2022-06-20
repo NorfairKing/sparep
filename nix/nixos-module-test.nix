@@ -17,38 +17,53 @@ in
 pkgs.nixosTest (
   { lib, pkgs, ... }: {
     name = "sparep-module-test";
-    machine = {
-      imports = [
-        sparep-production
-        home-manager
-      ];
-      services.sparep.production = {
-        enable = true;
-        api-server = {
+    nodes = {
+      apiserver = {
+        imports = [
+          sparep-production
+        ];
+        services.sparep.production = {
           enable = true;
-          port = api-port;
-        };
-        web-server = {
-          enable = true;
-          port = web-port;
-          api-url = "localhost:${builtins.toString api-port}";
+          api-server = {
+            enable = true;
+            port = api-port;
+          };
         };
       };
-      users.users.testuser.isNormalUser = true;
-      home-manager.users.testuser = { pkgs, ... }: {
+      webserver = {
         imports = [
-          ./home-manager-module.nix
+          sparep-production
         ];
-        xdg.enable = true;
-        programs.sparep = {
+        services.sparep.production = {
           enable = true;
-          inherit sparepReleasePackages;
-          completion-command = "echo 'hi'";
-          sync = {
+          web-server = {
             enable = true;
-            server-url = "localhost:${builtins.toString api-port}";
-            username = "testuser";
-            password = "testpassword";
+            port = web-port;
+            api-url = "apiserver:${builtins.toString api-port}";
+          };
+        };
+      };
+      client = {
+        imports = [
+          home-manager
+        ];
+        users.users.testuser.isNormalUser = true;
+        home-manager.users.testuser = { pkgs, ... }: {
+          imports = [
+            ./home-manager-module.nix
+          ];
+          xdg.enable = true;
+          systemd.user.startServices = true;
+          programs.sparep = {
+            enable = true;
+            inherit sparepReleasePackages;
+            completion-command = "echo 'hi'";
+            sync = {
+              enable = true;
+              server-url = "apiserver:${builtins.toString api-port}";
+              username = "testuser";
+              password = "testpassword";
+            };
           };
         };
       };
@@ -56,23 +71,30 @@ pkgs.nixosTest (
     testScript = ''
       from shlex import quote
 
-      machine.wait_for_unit("multi-user.target")
+      apiserver.start()
+      webserver.start()
+      client.start()
 
-      machine.wait_for_open_port(${builtins.toString api-port})
-      machine.succeed("curl localhost:${builtins.toString api-port}")
-      machine.wait_for_open_port(${builtins.toString web-port})
-      machine.succeed("curl localhost:${builtins.toString web-port}")
+      apiserver.wait_for_unit("multi-user.target")
+      webserver.wait_for_unit("multi-user.target")
+      client.wait_for_unit("multi-user.target")
 
-      machine.wait_for_unit("home-manager-testuser.service")
+      apiserver.wait_for_open_port(${builtins.toString api-port})
+      client.succeed("curl apiserver:${builtins.toString api-port}")
+
+      webserver.wait_for_open_port(${builtins.toString web-port})
+      client.succeed("curl webserver:${builtins.toString web-port}")
+
+      client.wait_for_unit("home-manager-testuser.service")
 
       def su(user, cmd):
           return f"su - {user} -c {quote(cmd)}"
 
-      machine.succeed(su("testuser", "cat ~/.config/sparep/config.yaml"))
+      client.succeed(su("testuser", "cat ~/.config/sparep/config.yaml"))
 
-      machine.succeed(su("testuser", "sparep register"))
-      machine.succeed(su("testuser", "sparep login"))
-      machine.succeed(su("testuser", "sparep sync"))
+      client.succeed(su("testuser", "sparep register"))
+      client.succeed(su("testuser", "sparep login"))
+      client.succeed(su("testuser", "sparep sync"))
     '';
   }
 )
