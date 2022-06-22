@@ -9,7 +9,7 @@ let
     inherit sparepReleasePackages;
     envname = "production";
   };
-  home-manager = import (sources.home-manager + "/nixos/default.nix");
+  home-manager = import (pkgs.home-manager.src + "/nixos/default.nix");
 
   api-port = 8001;
   web-port = 8002;
