@@ -265,7 +265,7 @@ in
         (optional cfg.web-server.enable cfg.web-server.port)
       ];
       services.nginx.virtualHosts =
-        concatAttrs [
+        mergeListRecursively [
           api-server-host
           web-server-host
         ];
