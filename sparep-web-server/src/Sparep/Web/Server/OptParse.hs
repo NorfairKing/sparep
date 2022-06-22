@@ -7,6 +7,7 @@ module Sparep.Web.Server.OptParse
   )
 where
 
+import Autodocodec.Yaml (readYamlConfigFile)
 import Control.Monad.Logger
 import Data.Maybe
 import qualified Data.Text as T
@@ -17,7 +18,6 @@ import Path.IO
 import Paths_sparep_web_server
 import Sparep.Web.Server.OptParse.Types
 import qualified System.Environment as System
-import YamlParse.Applicative (readConfigFile)
 
 getInstructions :: IO Instructions
 getInstructions = do
@@ -27,7 +27,7 @@ getInstructions = do
   combineToInstructions args env config
 
 combineToInstructions :: Arguments -> Environment -> Maybe Configuration -> IO Instructions
-combineToInstructions (Arguments (CommandServe ServeFlags {..}) Flags {..}) Environment {..} mConf = do
+combineToInstructions (Arguments (CommandServe ServeFlags {..}) Flags {}) Environment {..} mConf = do
   let mc :: (Configuration -> Maybe a) -> Maybe a
       mc func = mConf >>= func
   let serveSetLogLevel = fromMaybe LevelInfo $ serveFlagLogLevel <|> envLogLevel <|> mc confLogLevel
@@ -60,7 +60,7 @@ getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of
     Nothing -> pure Nothing
-    Just cf -> resolveFile' cf >>= readConfigFile
+    Just cf -> resolveFile' cf >>= readYamlConfigFile
 
 getArguments :: IO Arguments
 getArguments = do

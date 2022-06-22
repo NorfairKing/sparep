@@ -1,22 +1,12 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
 
 name:           sparep-data
 version:        0.0.0.0
-homepage:       https://github.com/NorfairKing/sparep#readme
-bug-reports:    https://github.com/NorfairKing/sparep/issues
-author:         Tom Sydney Kerckhove
-maintainer:     syd@cs-syd.eu
-copyright:      Copyright (c) 2020 Tom Sydney Kerckhove
-license:        AllRightsReserved
 build-type:     Simple
-
-source-repository head
-  type: git
-  location: https://github.com/NorfairKing/sparep
 
 library
   exposed-modules:
@@ -38,6 +28,8 @@ library
       src
   build-depends:
       aeson
+    , autodocodec
+    , autodocodec-yaml
     , base >=4.7 && <5
     , base16
     , bytestring
@@ -59,5 +51,4 @@ library
     , validity-text
     , validity-time
     , yaml
-    , yamlparse-applicative
   default-language: Haskell2010

@@ -15,7 +15,7 @@ import Test.Validity.Persist
 spec :: Spec
 spec = do
   genValidSpec @StudyUnitId
-  persistSpecOnValid @StudyUnitId
-  describe "hashStudyUnit"
-    $ it "produces valid card ids"
-    $ producesValidsOnValids hashStudyUnit
+  persistSpec @StudyUnitId
+  describe "hashStudyUnit" $
+    it "produces valid card ids" $
+      producesValid hashStudyUnit

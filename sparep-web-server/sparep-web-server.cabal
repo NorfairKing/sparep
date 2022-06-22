@@ -1,0 +1,68 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           sparep-web-server
+version:        0.0.0.0
+build-type:     Simple
+
+library
+  exposed-modules:
+      Sparep.Web.Server
+      Sparep.Web.Server.Constants
+      Sparep.Web.Server.OptParse
+      Sparep.Web.Server.OptParse.Types
+      Sparep.Web.Server.Widget
+  other-modules:
+      Paths_sparep_web_server
+  hs-source-dirs:
+      src
+  build-depends:
+      autodocodec
+    , autodocodec-yaml
+    , base >=4.7 && <5
+    , data-default
+    , envparse
+    , monad-logger
+    , optparse-applicative
+    , path
+    , path-io
+    , shakespeare
+    , sparep-api
+    , sparep-client
+    , template-haskell
+    , text
+    , yaml
+    , yesod
+  default-language: Haskell2010
+
+executable sparep-web-server
+  main-is: Main.hs
+  other-modules:
+      Paths_sparep_web_server
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , sparep-web-server
+  default-language: Haskell2010
+
+test-suite sparep-web-server-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Sparep.Web.ServerSpec
+      Paths_sparep_web_server
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , hspec
+    , monad-logger
+    , sparep-web-server
+    , yesod-test
+  default-language: Haskell2010

@@ -1,10 +1,5 @@
 name:                sparep-api-server
 version:             0.0.0.0
-github:              "NorfairKing/sparep"
-license:             AllRightsReserved
-author:              "Tom Sydney Kerckhove"
-maintainer:          "syd@cs-syd.eu"
-copyright:           "Copyright (c) 2020 Tom Sydney Kerckhove"
 
 dependencies:
 - base >= 4.7 && < 5
@@ -15,6 +10,8 @@ library:
     - aeson
     - appendful
     - appendful-persistent
+    - autodocodec
+    - autodocodec-yaml
     - bytestring
     - envparse
     - jose
@@ -38,7 +35,6 @@ library:
     - wai
     - warp
     - yaml
-    - yamlparse-applicative
 
 executables:
   sparep-api-server:

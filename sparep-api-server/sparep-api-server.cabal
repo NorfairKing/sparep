@@ -1,22 +1,12 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
 
 name:           sparep-api-server
 version:        0.0.0.0
-homepage:       https://github.com/NorfairKing/sparep#readme
-bug-reports:    https://github.com/NorfairKing/sparep/issues
-author:         Tom Sydney Kerckhove
-maintainer:     syd@cs-syd.eu
-copyright:      Copyright (c) 2020 Tom Sydney Kerckhove
-license:        AllRightsReserved
 build-type:     Simple
-
-source-repository head
-  type: git
-  location: https://github.com/NorfairKing/sparep
 
 library
   exposed-modules:
@@ -36,6 +26,8 @@ library
       aeson
     , appendful
     , appendful-persistent
+    , autodocodec
+    , autodocodec-yaml
     , base >=4.7 && <5
     , bytestring
     , envparse
@@ -60,7 +52,6 @@ library
     , wai
     , warp
     , yaml
-    , yamlparse-applicative
   default-language: Haskell2010
 
 executable sparep-api-server

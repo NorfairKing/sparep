@@ -1,8 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Sparep.CLI.OptParse
   ( getInstructions,
@@ -16,13 +19,16 @@ module Sparep.CLI.OptParse
   )
 where
 
+import Autodocodec
+import Autodocodec.Yaml
 import Control.Applicative
 import Control.Arrow
 import Control.Monad.Logger
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Yaml
+import qualified Data.Text.Encoding as TE
+import Data.Yaml (FromJSON, ToJSON)
 import qualified Env
 import GHC.Generics (Generic)
 import Options.Applicative as OptParse
@@ -32,7 +38,6 @@ import Path.IO
 import Servant.Client
 import Sparep.API.Server.Data
 import Sparep.Data (RootedDeck (..), parseDecks)
-import YamlParse.Applicative as YamlParse
 
 data Instructions
   = Instructions Dispatch Settings
@@ -46,14 +51,13 @@ getInstructions = do
   combineToInstructions args env config
 
 -- | A product type for the settings that are common across commands
-data Settings
-  = Settings
-      { settingBaseUrl :: Maybe BaseUrl,
-        settingUsername :: Maybe Username,
-        settingPassword :: Maybe Text,
-        settingDbFile :: Path Abs File,
-        settingLogLevel :: LogLevel
-      }
+data Settings = Settings
+  { settingBaseUrl :: Maybe BaseUrl,
+    settingUsername :: Maybe Username,
+    settingPassword :: Maybe Text,
+    settingDbFile :: Path Abs File,
+    settingLogLevel :: LogLevel
+  }
   deriving (Show, Eq, Generic)
 
 -- | A sum type for the commands and their specific settings
@@ -64,10 +68,9 @@ data Dispatch
   | DispatchCount !CountSettings
   deriving (Show, Eq, Generic)
 
-data CountSettings
-  = CountSettings
-      { countSettingDecks :: ![RootedDeck]
-      }
+data CountSettings = CountSettings
+  { countSettingDecks :: ![RootedDeck]
+  }
   deriving (Show, Eq, Generic)
 
 combineToInstructions :: Arguments -> Environment -> Maybe Configuration -> IO Instructions
@@ -113,30 +116,36 @@ getDefaultConfigFile = do
   xdgConfigDir <- getXdgDir XdgConfig (Just [reldir|sparep|])
   resolveFile xdgConfigDir "config.yaml"
 
-data Configuration
-  = Configuration
-      { configBaseUrl :: Maybe BaseUrl,
-        configUsername :: Maybe Username,
-        configPassword :: Maybe Text,
-        configDbFile :: Maybe FilePath,
-        configLogLevel :: Maybe LogLevel,
-        configSpecifications :: [FilePath]
-      }
-  deriving (Show, Eq, Generic)
+data Configuration = Configuration
+  { configBaseUrl :: Maybe BaseUrl,
+    configUsername :: Maybe Username,
+    configPassword :: Maybe Text,
+    configDbFile :: Maybe FilePath,
+    configLogLevel :: Maybe LogLevel,
+    configSpecifications :: [FilePath]
+  }
+  deriving stock (Show, Eq, Generic)
+  deriving (FromJSON, ToJSON) via (Autodocodec Configuration)
 
-instance FromJSON Configuration where
-  parseJSON = viaYamlSchema
-
-instance YamlSchema Configuration where
-  yamlSchema =
-    objectParser "Configuration" $
+instance HasCodec Configuration where
+  codec =
+    object "Configuration" $
       Configuration
-        <$> optionalFieldWith "server-url" "Server base url" (maybeParser parseBaseUrl yamlSchema)
-        <*> optionalField "username" "Server account username"
-        <*> optionalField "password" "Server account password"
-        <*> optionalField "database" "The path to the database"
-        <*> optionalFieldWith "log-level" "The minimal severity for log messages" viaRead
-        <*> optionalFieldWithDefault "decks" [] "The files and directories containing card definitions"
+        <$> optionalFieldWith "server-url" (bimapCodec (left show . parseBaseUrl) showBaseUrl codec) "Server base url" .= configBaseUrl
+        <*> optionalField "username" "Server account username" .= configUsername
+        <*> optionalField "password" "Server account password" .= configPassword
+        <*> optionalField "database" "The path to the database" .= configDbFile
+        <*> optionalField "log-level" "The minimal severity for log messages" .= configLogLevel
+        <*> optionalFieldWithDefault "decks" [] "The files and directories containing card definitions" .= configSpecifications
+
+instance HasCodec LogLevel where
+  codec =
+    stringConstCodec
+      [ (LevelDebug, "Debug"),
+        (LevelInfo, "Info"),
+        (LevelWarn, "Warn"),
+        (LevelError, "Error")
+      ]
 
 -- | Get the configuration
 --
@@ -145,24 +154,23 @@ instance YamlSchema Configuration where
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of
-    Nothing -> getDefaultConfigFile >>= YamlParse.readConfigFile
+    Nothing -> getDefaultConfigFile >>= readYamlConfigFile
     Just cf -> do
       afp <- resolveFile' cf
-      YamlParse.readConfigFile afp
+      readYamlConfigFile afp
 
 -- | What we find in the configuration variable.
 --
 -- Do nothing clever here, just represent the relevant parts of the environment.
 -- For example, use 'Text', not 'SqliteConfig'.
-data Environment
-  = Environment
-      { envConfigFile :: Maybe FilePath,
-        envBaseUrl :: Maybe BaseUrl,
-        envUsername :: Maybe Username,
-        envPassword :: Maybe Text,
-        envDbFile :: Maybe FilePath,
-        envLogLevel :: Maybe LogLevel
-      }
+data Environment = Environment
+  { envConfigFile :: Maybe FilePath,
+    envBaseUrl :: Maybe BaseUrl,
+    envUsername :: Maybe Username,
+    envPassword :: Maybe Text,
+    envDbFile :: Maybe FilePath,
+    envLogLevel :: Maybe LogLevel
+  }
   deriving (Show, Eq, Generic)
 
 getEnvironment :: IO Environment
@@ -213,7 +221,7 @@ argParser =
         [ Env.helpDoc environmentParser,
           "",
           "Configuration file format:",
-          T.unpack (YamlParse.prettyColourisedSchemaDoc @Configuration)
+          T.unpack (TE.decodeUtf8 (renderColouredSchemaViaCodec @Configuration))
         ]
 
 parseArgs :: OptParse.Parser Arguments
@@ -262,15 +270,14 @@ parseCommandCount = OptParse.info parser modifier
     parser = pure CommandCount
 
 -- | The flags that are common across commands.
-data Flags
-  = Flags
-      { flagConfigFile :: Maybe FilePath,
-        flagBaseUrl :: Maybe BaseUrl,
-        flagUsername :: Maybe Username,
-        flagPassword :: Maybe Text,
-        flagDbFile :: Maybe FilePath,
-        flagLogLevel :: Maybe LogLevel
-      }
+data Flags = Flags
+  { flagConfigFile :: Maybe FilePath,
+    flagBaseUrl :: Maybe BaseUrl,
+    flagUsername :: Maybe Username,
+    flagPassword :: Maybe Text,
+    flagDbFile :: Maybe FilePath,
+    flagLogLevel :: Maybe LogLevel
+  }
   deriving (Show, Eq, Generic)
 
 -- | The 'optparse-applicative' parser for the 'Flags'.

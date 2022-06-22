@@ -1,10 +1,5 @@
 name:                sparep-cli
 version:             0.0.0.0
-github:              "NorfairKing/sparep"
-license:             AllRightsReserved
-author:              "Tom Sydney Kerckhove"
-maintainer:          "syd@cs-syd.eu"
-copyright:           "Copyright (c) 2020 Tom Sydney Kerckhove"
 
 dependencies:
 - base >= 4.7 && < 5
@@ -14,6 +9,8 @@ library:
   dependencies:
   - appendful
   - appendful-persistent
+  - autodocodec
+  - autodocodec-yaml
   - cookie
   - envparse
   - filelock
@@ -36,7 +33,6 @@ library:
   - sparep-data
   - text
   - yaml
-  - yamlparse-applicative
 
 executables:
   sparep:

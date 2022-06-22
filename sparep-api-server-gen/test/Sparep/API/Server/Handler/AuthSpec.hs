@@ -12,12 +12,12 @@ import Test.Validity
 
 spec :: Spec
 spec = serverSpec $ do
-  describe "PostRegister"
-    $ it "does not crash"
-    $ \cenv ->
-      forAllValid $ \rf -> do
-        NoContent <- testClientOrErr cenv $ postRegister sparepClient rf
-        pure ()
+  describe "PostRegister" $
+    it "does not crash" $
+      \cenv ->
+        forAllValid $ \rf -> do
+          NoContent <- testClientOrErr cenv $ postRegister sparepClient rf
+          pure ()
   describe "PostRegister" $ do
     it "fails before registration" $ \cenv ->
       forAllValid $ \lf -> do

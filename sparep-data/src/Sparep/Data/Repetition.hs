@@ -18,12 +18,11 @@ import Sparep.Data.StudyContext
 import Sparep.Data.StudyUnitId
 import System.Random.Shuffle
 
-data Repetition
-  = Repetition
-      { repetitionUnitId :: !StudyUnitId,
-        repetitionDifficulty :: !Difficulty,
-        repetitionTimestamp :: !UTCTime
-      }
+data Repetition = Repetition
+  { repetitionUnitId :: !StudyUnitId,
+    repetitionDifficulty :: !Difficulty,
+    repetitionTimestamp :: !UTCTime
+  }
   deriving (Show, Eq, Ord, Generic)
 
 instance Validity Repetition
@@ -82,12 +81,11 @@ nextRepititionSM2 reps = do
       Good -> 4
       Easy -> 5
 
-data Selection a
-  = Selection
-      { selectionTooSoon :: [a],
-        selectionReady :: [a],
-        selectionNew :: [a]
-      }
+data Selection a = Selection
+  { selectionTooSoon :: [a],
+    selectionReady :: [a],
+    selectionNew :: [a]
+  }
   deriving (Show, Eq, Functor)
 
 studyFromSelection :: Word -> Selection a -> IO [StudyContext a]

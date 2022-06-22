@@ -13,11 +13,10 @@ import Path
 
 -- | A card is a thing with a front side and a back side.
 -- You see the front side and try to remember the back side.
-data Card
-  = Card
-      { cardFront :: !CardSide,
-        cardBack :: !CardSide
-      }
+data Card = Card
+  { cardFront :: !CardSide,
+    cardBack :: !CardSide
+  }
   deriving (Show, Eq, Generic)
 
 instance Validity Card

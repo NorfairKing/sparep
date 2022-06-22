@@ -6,9 +6,11 @@
 
 module Sparep.TUI.OptParse where
 
+import Autodocodec.Yaml
 import Control.Monad
 import Data.Maybe
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Env
 import Options.Applicative
 import qualified Options.Applicative.Help as OptParse
@@ -17,7 +19,6 @@ import Sparep.CLI.OptParse (getDefaultClientDatabase, getDefaultConfigFile)
 import Sparep.Data
 import Sparep.TUI.OptParse.Types
 import qualified System.Environment as System
-import qualified YamlParse.Applicative as YamlParse
 
 getSettings :: IO Settings
 getSettings = do
@@ -46,10 +47,10 @@ combineToInstructions Flags {..} Environment {..} mConf = do
 getConfiguration :: Flags -> Environment -> IO (Maybe Configuration)
 getConfiguration Flags {..} Environment {..} =
   case flagConfigFile <|> envConfigFile of
-    Nothing -> getDefaultConfigFile >>= YamlParse.readConfigFile
+    Nothing -> getDefaultConfigFile >>= readYamlConfigFile
     Just cf -> do
       afp <- resolveFile' cf
-      YamlParse.readConfigFile afp
+      readYamlConfigFile afp
 
 getEnvironment :: IO Environment
 getEnvironment = Env.parse (Env.header "Environment") environmentParser
@@ -88,10 +89,10 @@ argParser =
         [ Env.helpDoc environmentParser,
           "",
           "Configuration file format:",
-          T.unpack (YamlParse.prettyColourisedSchemaDoc @Configuration),
+          T.unpack (TE.decodeUtf8 (renderColouredSchemaViaCodec @Configuration)),
           "",
           "Deck file format:",
-          T.unpack (YamlParse.prettyColourisedSchemaDoc @Deck)
+          T.unpack (TE.decodeUtf8 (renderColouredSchemaViaCodec @Deck))
         ]
 
 parseArgs :: Parser Flags

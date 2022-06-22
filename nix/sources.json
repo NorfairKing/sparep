@@ -1,0 +1,122 @@
+{
+    "appendful": {
+        "branch": "master",
+        "description": "Merge-less syncing of arbitrary immutable items without deletions",
+        "homepage": null,
+        "owner": "NorfairKing",
+        "repo": "appendful",
+        "rev": "2227532f27b8f7d9f53341aca643f1df8381f033",
+        "sha256": "0b8njan3jpkn58im0pnvm671d7jsy1zfz93fy4dimhxwg8x1xmh3",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/appendful/archive/2227532f27b8f7d9f53341aca643f1df8381f033.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "autodocodec": {
+        "branch": "master",
+        "description": "self(auto)- documenting encoders and decoders",
+        "homepage": "",
+        "owner": "NorfairKing",
+        "repo": "autodocodec",
+        "rev": "00649ce4174bc693de36077ffdfc3e0d7151ef08",
+        "sha256": "02ld72axdadbbxmkpy06r93w29zbarrpffnkck92754q745wnlkd",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/autodocodec/archive/00649ce4174bc693de36077ffdfc3e0d7151ef08.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "autorecorder": {
+        "branch": "master",
+        "description": "An automatic declarative ASCIInema recorder",
+        "homepage": null,
+        "owner": "NorfairKing",
+        "repo": "autorecorder",
+        "rev": "557cc2b6c8e9daa2dc5468a9bae6309216712e5d",
+        "sha256": "1nbj03b126l1dcy1djqi6sw3c61hsvxswz8lw3337xsgknhaikkk",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/autorecorder/archive/557cc2b6c8e9daa2dc5468a9bae6309216712e5d.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "cursor": {
+        "branch": "master",
+        "description": "Cursor data and manipulation",
+        "homepage": "",
+        "owner": "NorfairKing",
+        "repo": "cursor",
+        "rev": "5f18d58d1b34a752d24a94590c2cd35e8b6d557b",
+        "sha256": "1b0lffpzxzdhiz3532hz1yvwnm43xqik2cf165bmckicgqxaylpj",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/cursor/archive/5f18d58d1b34a752d24a94590c2cd35e8b6d557b.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "cursor-brick": {
+        "branch": "master",
+        "description": "Brick widgets for cursors",
+        "homepage": null,
+        "owner": "NorfairKing",
+        "repo": "cursor-brick",
+        "rev": "5c1d1306632403a3dc11ddeda10deee932c0b307",
+        "sha256": "1kinwggmc9zdw4d3aszrvmf0baw4pf0hm040jgwv1j7731xwil3j",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/cursor-brick/archive/5c1d1306632403a3dc11ddeda10deee932c0b307.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "gitignore": {
+        "branch": "master",
+        "description": "Nix functions for filtering local git sources",
+        "homepage": "",
+        "owner": "hercules-ci",
+        "repo": "gitignore.nix",
+        "rev": "bff2832ec341cf30acb3a4d3e2e7f1f7b590116a",
+        "sha256": "0va0janxvmilm67nbl81gdbpppal4aprxzb25gp9pqvf76ahxsci",
+        "type": "tarball",
+        "url": "https://github.com/hercules-ci/gitignore.nix/archive/bff2832ec341cf30acb3a4d3e2e7f1f7b590116a.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "niv": {
+        "branch": "master",
+        "description": "Easy dependency management for Nix projects",
+        "homepage": "https://github.com/nmattia/niv",
+        "owner": "nmattia",
+        "repo": "niv",
+        "rev": "82e5cd1ad3c387863f0545d7591512e76ab0fc41",
+        "sha256": "090l219mzc0gi33i3psgph6s2pwsc8qy4lyrqjdj4qzkvmaj65a7",
+        "type": "tarball",
+        "url": "https://github.com/nmattia/niv/archive/82e5cd1ad3c387863f0545d7591512e76ab0fc41.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs": {
+        "branch": "nixos-21.11",
+        "description": "Nix Packages collection",
+        "homepage": "",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2a9a64710a34334c1a3c82b7d73a3df634dcad7d",
+        "sha256": "1plfk1s6jmifgspszf443f1hj053vpvkqz361j7lhvzil7v8i7jf",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/2a9a64710a34334c1a3c82b7d73a3df634dcad7d.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "pre-commit-hooks": {
+        "branch": "master",
+        "description": "Seamless integration of https://pre-commit.com git hooks with Nix.",
+        "homepage": "",
+        "owner": "cachix",
+        "repo": "pre-commit-hooks.nix",
+        "rev": "521a524771a8e93caddaa0ac1d67d03766a8b0b3",
+        "sha256": "16qfrylk41r7gc7g4352hxz7b3vk9w7bc6893apmmr6yy08ra0m9",
+        "type": "tarball",
+        "url": "https://github.com/cachix/pre-commit-hooks.nix/archive/521a524771a8e93caddaa0ac1d67d03766a8b0b3.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "validity": {
+        "branch": "master",
+        "description": "Validity and validity-based testing",
+        "homepage": "https://www.youtube.com/watch?v=eIs9qNh17SM",
+        "owner": "NorfairKing",
+        "repo": "validity",
+        "rev": "160e846cc5de8e92e6758172da341f5d81fe0374",
+        "sha256": "03a4s2gq1mjjd452xbhs0h1iycjpdidxprpvjiwy55hx0lzqfpli",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/validity/archive/160e846cc5de8e92e6758172da341f5d81fe0374.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}

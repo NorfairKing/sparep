@@ -1,4 +1,4 @@
-resolver: lts-15.15
+resolver: lts-18.16
 packages:
 - sparep-api
 - sparep-api-gen
@@ -14,32 +14,32 @@ packages:
 - sparep-tui
 - sparep-web-server
 extra-deps:
-- github: NorfairKing/yamlparse-applicative
-  commit: 1d381a4cbc9736a2defc916a93cfcf8000ee7e37
+- github: NorfairKing/autodocodec
+  commit: 00649ce4174bc693de36077ffdfc3e0d7151ef08
   subdirs:
-  - yamlparse-applicative
+  - autodocodec
+  - autodocodec-schema
+  - autodocodec-yaml
 - github: supki/envparse
   commit: de5944fb09e9d941fafa35c0f05446af348e7b4d
 - github: NorfairKing/cursor
-  commit: 14e7a87c8f47ea35eb92ac39ce7853ce54a47519
+  commit: 5f18d58d1b34a752d24a94590c2cd35e8b6d557b
   subdirs:
   - cursor
   - cursor-gen
 - github: NorfairKing/cursor-brick
-  commit: a7b47b03c8c5525234aaccc0c372e49a80134b9d
+  commit: 5c1d1306632403a3dc11ddeda10deee932c0b307
   subdirs:
   - cursor-brick
 - github: NorfairKing/appendful
-  commit: 98d1a191941f94fa0379d5c08371ba0963d3462e
+  commit: 2227532f27b8f7d9f53341aca643f1df8381f033
   subdirs:
   - appendful
   - appendful-persistent
   - genvalidity-appendful
-- servant-auth-client-0.4.1.0@sha256:a93f041c3c293eca6e2e2e1a2ed97e58fbbd0e123caeff9e484a68d56272632f,3342
-- base16-0.3.0.1@sha256:9ceab7e77e998c4324c11e4fae884fe11dceaba354bd291dab6913898420cce7,2422
 
 - github: NorfairKing/validity
-  commit: 2ef8be2fba631460d770d8cbc7dd67709400fe3d
+  commit: 160e846cc5de8e92e6758172da341f5d81fe0374
   subdirs:
   - validity
   - validity-aeson
@@ -78,7 +78,4 @@ extra-deps:
 
 
 nix:
-  packages:
-    - zlib
-    - haskellPackages.autoexporter
-    - killall
+  shell-file: shell.nix

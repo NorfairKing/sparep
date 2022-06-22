@@ -37,20 +37,21 @@ serverSpec =
 
 withTestServer :: (ClientEnv -> IO a) -> (HTTP.Manager -> IO a)
 withTestServer func man =
-  runNoLoggingT $ withSqlitePool ":memory:" 1 $ \pool -> do
-    void $ runSqlPool (runMigrationQuiet serverMigration) pool
-    liftIO $ do
-      jwk <- generateKey
-      let serverEnv =
-            Env
-              { envConnectionPool = pool,
-                envCookieSettings = defaultCookieSettings,
-                envJWTSettings = defaultJWTSettings jwk
-              }
-      let serverApp = sparepAPIServerApp serverEnv
-      testWithApplication (pure serverApp) $ \p -> do
-        let env = mkClientEnv man $ BaseUrl Http "127.0.0.1" p ""
-        func env
+  runNoLoggingT $
+    withSqlitePool ":memory:" 1 $ \pool -> do
+      void $ runSqlPool (runMigrationQuiet serverMigration) pool
+      liftIO $ do
+        jwk <- generateKey
+        let serverEnv =
+              Env
+                { envConnectionPool = pool,
+                  envCookieSettings = defaultCookieSettings,
+                  envJWTSettings = defaultJWTSettings jwk
+                }
+        let serverApp = sparepAPIServerApp serverEnv
+        testWithApplication (pure serverApp) $ \p -> do
+          let env = mkClientEnv man $ BaseUrl Http "127.0.0.1" p ""
+          func env
 
 testClientOrErr :: ClientEnv -> ClientM a -> IO a
 testClientOrErr cenv func = do

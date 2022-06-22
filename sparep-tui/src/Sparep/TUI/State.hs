@@ -23,74 +23,70 @@ data State
   | StateStudy StudyState
   deriving (Show, Eq)
 
-data MenuState
-  = MenuState
-      { menuStateDecks :: [RootedDeck],
-        menuStateSelection ::
-          Loading
-            ( Selection
-                ( DefinitionContext StudyUnit
-                )
+data MenuState = MenuState
+  { menuStateDecks :: [RootedDeck],
+    menuStateSelection ::
+      Loading
+        ( Selection
+            ( DefinitionContext StudyUnit
             )
-      }
+        )
+  }
   deriving (Show, Eq)
 
-data DecksState
-  = DecksState
-      { decksStateCursor ::
-          !( Maybe
-               ( Simple.NonEmptyCursor
-                   ( RootedDeck,
-                     Loading
-                       ( Selection
-                           ( DefinitionContext StudyUnit
-                           )
+data DecksState = DecksState
+  { decksStateCursor ::
+      !( Maybe
+           ( Simple.NonEmptyCursor
+               ( RootedDeck,
+                 Loading
+                   ( Selection
+                       ( DefinitionContext StudyUnit
                        )
                    )
                )
            )
-      }
+       )
+  }
   deriving (Show, Eq)
 
-data StudyUnitsState
-  = StudyUnitsState
-      { studyUnitsStateDeck :: !RootedDeck,
-        studyUnitsStateCursor ::
-          !( Maybe
-               ( Simple.NonEmptyCursor
-                   ( DefinitionContext StudyUnit,
-                     Loading
-                       ( Maybe
-                           ( UTCTime,
-                             UTCTime
-                           )
+data StudyUnitsState = StudyUnitsState
+  { studyUnitsStateDeck :: !RootedDeck,
+    studyUnitsStateCursor ::
+      !( Maybe
+           ( Simple.NonEmptyCursor
+               ( DefinitionContext StudyUnit,
+                 Loading
+                   ( Maybe
+                       ( UTCTime,
+                         UTCTime
                        )
                    )
                )
            )
-      }
+       )
+  }
   deriving (Show, Eq)
 
 -- TODO see if this ungodly mess can be refactored.
-data StudyState
-  = StudyState
-      { studyStateCursor ::
-          !( Loading
-               ( Maybe
-                   ( NonEmptyCursor
-                       ( StudyContext
-                           ( DefinitionContext StudyUnitCursor
-                           )
+data StudyState = StudyState
+  { studyStateCursor ::
+      !( Loading
+           ( Maybe
+               ( NonEmptyCursor
+                   ( StudyContext
+                       ( DefinitionContext StudyUnitCursor
                        )
-                       ( StudyContext
-                           ( DefinitionContext StudyUnit
-                           )
+                   )
+                   ( StudyContext
+                       ( DefinitionContext StudyUnit
                        )
                    )
                )
-           ),
-        studyStateRepetitions :: ![ClientRepetition]
-      }
+           )
+       ),
+    studyStateRepetitions :: ![ClientRepetition]
+  }
   deriving (Show, Eq)
 
 data StudyUnitCursor
@@ -108,11 +104,10 @@ rebuildStudyUnitCursor = \case
   CardUnitCursor cc -> CardUnit $ rebuildCardCursor cc
   FillExerciseUnitCursor fec -> FillExerciseUnit $ rebuildFillExerciseCursor fec
 
-data CardCursor
-  = CardCursor
-      { cardCursorCard :: !Card,
-        cardCursorFrontBack :: !FrontBack
-      }
+data CardCursor = CardCursor
+  { cardCursorCard :: !Card,
+    cardCursorFrontBack :: !FrontBack
+  }
   deriving (Show, Eq)
 
 makeCardCursor :: Card -> CardCursor
@@ -124,11 +119,10 @@ cardCursorShowBack cc = cc {cardCursorFrontBack = Back}
 rebuildCardCursor :: CardCursor -> Card
 rebuildCardCursor = cardCursorCard
 
-data FillExerciseCursor
-  = FillExerciseCursor
-      { fillExerciseCursorList :: Simple.NonEmptyCursor FillExercisePartCursor,
-        fillExerciseCursorShow :: Bool -- True means shown
-      }
+data FillExerciseCursor = FillExerciseCursor
+  { fillExerciseCursorList :: Simple.NonEmptyCursor FillExercisePartCursor,
+    fillExerciseCursorShow :: Bool -- True means shown
+  }
   deriving (Show, Eq)
 
 makeFillExerciseCursor :: FillExercise -> FillExerciseCursor

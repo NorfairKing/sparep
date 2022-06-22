@@ -24,17 +24,18 @@ import Sparep.API.Server.SigningKey
 sparepAPIServer :: IO ()
 sparepAPIServer = do
   Settings {..} <- getSettings
-  runStderrLoggingT $ withSqlitePool (T.pack (fromAbsFile settingDbFile)) 1 $ \pool -> do
-    runSqlPool (runMigration serverMigration) pool
-    liftIO $ do
-      jwk <- loadSigningKey settingSigningKeyFile
-      let serverEnv =
-            Env
-              { envConnectionPool = pool,
-                envCookieSettings = defaultCookieSettings,
-                envJWTSettings = defaultJWTSettings jwk
-              }
-      Warp.run settingPort $ sparepAPIServerApp serverEnv
+  runStderrLoggingT $
+    withSqlitePool (T.pack (fromAbsFile settingDbFile)) 1 $ \pool -> do
+      runSqlPool (runMigration serverMigration) pool
+      liftIO $ do
+        jwk <- loadSigningKey settingSigningKeyFile
+        let serverEnv =
+              Env
+                { envConnectionPool = pool,
+                  envCookieSettings = defaultCookieSettings,
+                  envJWTSettings = defaultJWTSettings jwk
+                }
+        Warp.run settingPort $ sparepAPIServerApp serverEnv
 
 sparepAPIServerApp :: Env -> Wai.Application
 sparepAPIServerApp env =

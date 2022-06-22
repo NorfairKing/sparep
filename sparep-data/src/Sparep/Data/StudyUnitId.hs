@@ -54,10 +54,9 @@ fillExercisePartContents = \case
   LitPart t -> SB.cons 0 $ TE.encodeUtf8 t
   FillPart t -> SB.cons 1 $ TE.encodeUtf8 t
 
-newtype StudyUnitId
-  = StudyUnitId
-      { cardIdSha256 :: ByteString
-      }
+newtype StudyUnitId = StudyUnitId
+  { cardIdSha256 :: ByteString
+  }
   deriving (Show, Eq, Ord, Generic)
 
 instance Validity StudyUnitId where
@@ -92,7 +91,7 @@ parseStudyUnitId sb =
       pure StudyUnitId {cardIdSha256 = sb}
     l
       | l > 32 ->
-        pure StudyUnitId {cardIdSha256 = SB.take 32 sb}
+          pure StudyUnitId {cardIdSha256 = SB.take 32 sb}
       | otherwise -> Left $ "Invalid card id length: " <> T.pack (show l)
 
 instance PersistField StudyUnitId where

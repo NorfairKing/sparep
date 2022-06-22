@@ -15,12 +15,11 @@ import Sparep.Web.Server.Widget
 import Text.Hamlet
 import Yesod
 
-data App
-  = App
-      { appLogLevel :: LogLevel,
-        appGoogleAnalyticsTracking :: Maybe Text,
-        appGoogleSearchConsoleVerification :: Maybe Text
-      }
+data App = App
+  { appLogLevel :: LogLevel,
+    appGoogleAnalyticsTracking :: Maybe Text,
+    appGoogleSearchConsoleVerification :: Maybe Text
+  }
 
 mkYesod
   "App"

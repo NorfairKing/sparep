@@ -11,10 +11,9 @@ import Data.Validity.Text ()
 import GHC.Generics (Generic)
 
 -- | A fillExercise is a piece of text with holes for the user to type text.
-newtype FillExercise
-  = FillExercise
-      { fillExerciseSequence :: FillExerciseSequence
-      }
+newtype FillExercise = FillExercise
+  { fillExerciseSequence :: FillExerciseSequence
+  }
   deriving (Show, Eq, Generic)
 
 instance Validity FillExercise

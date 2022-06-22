@@ -1,12 +1,15 @@
-{ pkgs ? import ./pkgs.nix }:
+{ sources ? import ./sources.nix
+, pkgs ? import ./pkgs.nix { inherit sources; }
+, sparepReleasePackages ? pkgs.sparepReleasePackages
+}:
 let
-  sparep-production = import (./nixos-module.nix) { envname = "production"; };
-  home-manager = import (
-    builtins.fetchTarball {
-      url = "https://github.com/rycee/home-manager/archive/472ca211cac604efdf621337067a237be9df389e.tar.gz";
-      sha256 = "sha256:1gbfsnd7zsxwqryxd4r6jz9sgdz6ghlkapws1cdxshrbxlwhqad1";
-    } + "/nixos/default.nix"
-  );
+  sparep-production = import (./nixos-module.nix) {
+    inherit sources;
+    inherit pkgs;
+    inherit sparepReleasePackages;
+    envname = "production";
+  };
+  home-manager = import (pkgs.home-manager.src + "/nixos/default.nix");
 
   api-port = 8001;
   web-port = 8002;
@@ -14,37 +17,53 @@ in
 pkgs.nixosTest (
   { lib, pkgs, ... }: {
     name = "sparep-module-test";
-    machine = {
-      imports = [
-        sparep-production
-        home-manager
-      ];
-      services.sparep.production = {
-        enable = true;
-        api-server = {
+    nodes = {
+      apiserver = {
+        imports = [
+          sparep-production
+        ];
+        services.sparep.production = {
           enable = true;
-          port = api-port;
-        };
-        web-server = {
-          enable = true;
-          port = web-port;
-          api-url = "localhost:${builtins.toString api-port}";
+          api-server = {
+            enable = true;
+            port = api-port;
+          };
         };
       };
-      users.users.testuser.isNormalUser = true;
-      home-manager.users.testuser = { pkgs, ... }: {
+      webserver = {
         imports = [
-          ./home-manager-module.nix
+          sparep-production
         ];
-        xdg.enable = true;
-        home.stateVersion = "20.09";
-        programs.sparep = {
+        services.sparep.production = {
           enable = true;
-          sync = {
+          web-server = {
             enable = true;
-            server-url = "localhost:${builtins.toString api-port}";
-            username = "testuser";
-            password = "testpassword";
+            port = web-port;
+            api-url = "apiserver:${builtins.toString api-port}";
+          };
+        };
+      };
+      client = {
+        imports = [
+          home-manager
+        ];
+        users.users.testuser.isNormalUser = true;
+        home-manager.users.testuser = { pkgs, ... }: {
+          imports = [
+            ./home-manager-module.nix
+          ];
+          xdg.enable = true;
+          systemd.user.startServices = true;
+          programs.sparep = {
+            enable = true;
+            inherit sparepReleasePackages;
+            completion-command = "echo 'hi'";
+            sync = {
+              enable = true;
+              server-url = "apiserver:${builtins.toString api-port}";
+              username = "testuser";
+              password = "testpassword";
+            };
           };
         };
       };
@@ -52,25 +71,30 @@ pkgs.nixosTest (
     testScript = ''
       from shlex import quote
 
-      machine.wait_for_unit("multi-user.target")
+      apiserver.start()
+      webserver.start()
+      client.start()
 
-      machine.wait_for_open_port(${builtins.toString api-port})
-      machine.succeed("curl localhost:${builtins.toString api-port}")
-      machine.wait_for_open_port(${builtins.toString web-port})
-      machine.succeed("curl localhost:${builtins.toString web-port}")
+      apiserver.wait_for_unit("multi-user.target")
+      webserver.wait_for_unit("multi-user.target")
+      client.wait_for_unit("multi-user.target")
 
-      machine.wait_for_unit("home-manager-testuser.service")
+      apiserver.wait_for_open_port(${builtins.toString api-port})
+      client.succeed("curl apiserver:${builtins.toString api-port}")
 
+      webserver.wait_for_open_port(${builtins.toString web-port})
+      client.succeed("curl webserver:${builtins.toString web-port}")
+
+      client.wait_for_unit("home-manager-testuser.service")
 
       def su(user, cmd):
           return f"su - {user} -c {quote(cmd)}"
 
+      client.succeed(su("testuser", "cat ~/.config/sparep/config.yaml"))
 
-      machine.succeed(su("testuser", "cat ~/.config/sparep/config.yaml"))
-
-      machine.succeed(su("testuser", "sparep register"))
-      machine.succeed(su("testuser", "sparep login"))
-      machine.succeed(su("testuser", "sparep sync"))
+      client.succeed(su("testuser", "sparep register"))
+      client.succeed(su("testuser", "sparep login"))
+      client.succeed(su("testuser", "sparep sync"))
     '';
   }
 )

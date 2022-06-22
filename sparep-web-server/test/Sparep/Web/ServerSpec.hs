@@ -7,12 +7,12 @@ import Yesod.Test
 
 spec :: Spec
 spec =
-  withSparepWebServer
-    $ describe "HomeR"
-    $ it "Shows a 200"
-    $ do
-      get HomeR
-      statusIs 200
+  withSparepWebServer $
+    describe "HomeR" $
+      it "Shows a 200" $
+        do
+          get HomeR
+          statusIs 200
 
 withSparepWebServer :: SpecWith (TestApp App) -> Spec
 withSparepWebServer = around $ \func -> do
