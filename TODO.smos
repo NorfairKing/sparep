@@ -1,4 +1,4 @@
-version: 1.0.0
+version: 2.0.0
 value:
 - entry: Sparep
   forest:
@@ -15,3 +15,4 @@ value:
   - Make it possible to select how many cards to study, how many new cards etc
   - header: there is a bug on the very last card
     contents: Try to reproduce it
+  - Show a timer
