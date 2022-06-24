@@ -1,13 +1,16 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Sparep.Data.StudyUnitId where
 
+import Autodocodec
+import Control.Arrow (left)
 import Control.Monad
 import Crypto.Hash.SHA256 as SHA256
-import Data.Aeson
+import Data.Aeson (FromJSON, ToJSON)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as SB
 import Data.ByteString.Base16
@@ -57,7 +60,8 @@ fillExercisePartContents = \case
 newtype StudyUnitId = StudyUnitId
   { cardIdSha256 :: ByteString
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (FromJSON, ToJSON) via (Autodocodec StudyUnitId)
 
 instance Validity StudyUnitId where
   validate cid@StudyUnitId {..} =
@@ -67,19 +71,14 @@ instance Validity StudyUnitId where
           SB.length cardIdSha256 == 32
       ]
 
+instance HasCodec StudyUnitId where
+  codec = bimapCodec (left T.unpack . parseStudyUnitIdHex) renderStudyUnitIdHex codec
+
 renderStudyUnitIdHex :: StudyUnitId -> Text
 renderStudyUnitIdHex = encodeBase16 . cardIdSha256
 
 parseStudyUnitIdHex :: Text -> Either Text StudyUnitId
 parseStudyUnitIdHex = fmap StudyUnitId . decodeBase16 . TE.encodeUtf8
-
-instance FromJSON StudyUnitId where
-  parseJSON = withText "StudyUnitId" $ \t -> case parseStudyUnitIdHex t of
-    Left err -> fail $ T.unpack err
-    Right cid -> pure cid
-
-instance ToJSON StudyUnitId where
-  toJSON = toJSON . renderStudyUnitIdHex
 
 renderStudyUnitId :: StudyUnitId -> ByteString
 renderStudyUnitId StudyUnitId {..} = cardIdSha256

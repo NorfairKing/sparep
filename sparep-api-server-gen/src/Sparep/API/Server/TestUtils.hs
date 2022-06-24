@@ -23,17 +23,15 @@ import Sparep.API.Server
 import Sparep.API.Server.Data
 import Sparep.API.Server.Env
 import Sparep.Client
-import Test.Hspec
-import Test.Hspec.QuickCheck
 import Test.QuickCheck
-import Test.Validity
+import Test.Syd hiding (HList (..))
+import Test.Syd.Validity
 import Web.Cookie
 
 serverSpec :: SpecWith ClientEnv -> Spec
 serverSpec =
   before (HTTP.newManager defaultManagerSettings) . aroundWith withTestServer
     . modifyMaxSuccess (`div` 20)
-    . modifyMaxShrinks (const 0) -- Shrinks are broken when using 'around'
 
 withTestServer :: (ClientEnv -> IO a) -> (HTTP.Manager -> IO a)
 withTestServer func man =
@@ -95,6 +93,4 @@ testLogin cenv lf = do
         Just setCookie -> pure $ Token $ setCookieValue setCookie
 
 failure :: String -> IO a
-failure err = do
-  expectationFailure $ show err
-  error "Won't get here anyway"
+failure = expectationFailure

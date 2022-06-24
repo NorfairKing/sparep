@@ -1,12 +1,14 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Sparep.Data.Repetition where
 
-import Data.Aeson
+import Autodocodec
+import Data.Aeson (FromJSON, ToJSON)
 import Data.List
 import Data.Time
 import Data.Validity
@@ -23,24 +25,18 @@ data Repetition = Repetition
     repetitionDifficulty :: !Difficulty,
     repetitionTimestamp :: !UTCTime
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (FromJSON, ToJSON) via (Autodocodec Repetition)
 
 instance Validity Repetition
 
-instance FromJSON Repetition where
-  parseJSON = withObject "Repetition" $ \o ->
-    Repetition
-      <$> o .: "unit"
-      <*> o .: "difficulty"
-      <*> o .: "time"
-
-instance ToJSON Repetition where
-  toJSON Repetition {..} =
-    object
-      [ "unit" .= repetitionUnitId,
-        "difficulty" .= repetitionDifficulty,
-        "time" .= repetitionTimestamp
-      ]
+instance HasCodec Repetition where
+  codec =
+    object "Repetition" $
+      Repetition
+        <$> requiredField "unit" "study unit identifier" .= repetitionUnitId
+        <*> requiredField "difficulty" "difficulty" .= repetitionDifficulty
+        <*> requiredField "time" "timestamp" .= repetitionTimestamp
 
 -- SM-2, from https://www.supermemo.com/en/archives1990-2015/english/ol/sm2
 decideStudyDeckSM2 :: UTCTime -> [(a, [Repetition])] -> Selection a

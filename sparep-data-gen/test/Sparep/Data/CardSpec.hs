@@ -7,8 +7,8 @@ where
 
 import Sparep.Data.Card
 import Sparep.Data.Card.Gen ()
-import Test.Hspec
-import Test.Validity
+import Test.Syd
+import Test.Syd.Validity
 
 spec :: Spec
 spec =

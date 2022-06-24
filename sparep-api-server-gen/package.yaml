@@ -1,5 +1,5 @@
-name:                sparep-api-server-gen
-version:             0.0.0.0
+name: sparep-api-server-gen
+version: 0.0.0.0
 
 dependencies:
 - base >= 4.7 && < 5
@@ -10,8 +10,8 @@ library:
   - QuickCheck
   - bytestring
   - cookie
-  - genvalidity-hspec
-  - hspec
+  - genvalidity-sydtest
+  - sydtest
   - http-client
   - http-types
   - monad-logger
@@ -35,8 +35,9 @@ library:
 
 tests:
   sparep-api-server-tests:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
+    build-tools: sydtest-discover
     ghc-options:
     - -threaded
     - -rtsopts
@@ -45,8 +46,8 @@ tests:
     - QuickCheck
     - bytestring
     - cookie
-    - genvalidity-hspec
-    - hspec
+    - genvalidity-sydtest
+    - sydtest
     - http-client
     - http-types
     - monad-logger

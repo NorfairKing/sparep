@@ -9,8 +9,8 @@ import Sparep.API.Server.Data
 import Sparep.API.Server.TestUtils
 import Sparep.CLI
 import System.Environment
-import Test.Hspec
-import Test.Validity
+import Test.Syd
+import Test.Syd.Validity
 
 spec :: Spec
 spec = serverSpec $

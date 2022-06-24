@@ -7,8 +7,8 @@ where
 
 import Sparep.Data.Repetition
 import Sparep.Data.Repetition.Gen ()
-import Test.Hspec
-import Test.Validity
+import Test.Syd
+import Test.Syd.Validity
 
 spec :: Spec
 spec =

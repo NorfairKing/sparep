@@ -7,8 +7,8 @@ where
 
 import Sparep.Data.StudyUnit
 import Sparep.Data.StudyUnit.Gen ()
-import Test.Hspec
-import Test.Validity
+import Test.Syd
+import Test.Syd.Validity
 
 spec :: Spec
 spec =

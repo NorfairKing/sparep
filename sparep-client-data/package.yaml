@@ -17,13 +17,14 @@ library:
 
 tests:
   sparep-client-data-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
+    build-tools: sydtest-discover
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - genvalidity-hspec
-    - genvalidity-hspec-persistent
-    - hspec
+    - genvalidity-sydtest
+    - genvalidity-sydtest-persistent
+    - sydtest

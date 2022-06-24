@@ -5,8 +5,8 @@ import Sparep.API.Data.Gen ()
 import Sparep.API.Server.TestUtils
 import Sparep.Client
 import Sparep.Data.Gen ()
-import Test.Hspec
-import Test.Validity
+import Test.Syd
+import Test.Syd.Validity
 
 spec :: Spec
 spec = serverSpec $

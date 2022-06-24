@@ -8,9 +8,9 @@ where
 import Sparep.Data.StudyUnit.Gen ()
 import Sparep.Data.StudyUnitId
 import Sparep.Data.StudyUnitId.Gen ()
-import Test.Hspec
-import Test.Validity
-import Test.Validity.Persist
+import Test.Syd
+import Test.Syd.Validity
+import Test.Syd.Validity.Persist
 
 spec :: Spec
 spec = do

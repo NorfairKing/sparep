@@ -8,6 +8,7 @@ import sources.nixpkgs {
       (import (sources.autodocodec + "/nix/overlay.nix"))
       (import (sources.cursor + "/nix/overlay.nix"))
       (import (sources.cursor-brick + "/nix/overlay.nix"))
+      (import (sources.sydtest + "/nix/overlay.nix"))
       (import (sources.validity + "/nix/overlay.nix"))
       (import ./overlay.nix)
     ];

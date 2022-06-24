@@ -4,8 +4,8 @@ import Control.Monad
 import Path
 import Path.IO
 import Sparep.Data
-import Test.Hspec
-import Test.Validity
+import Test.Syd
+import Test.Syd.Validity
 
 spec :: Spec
 spec = do

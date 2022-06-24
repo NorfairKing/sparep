@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -9,7 +10,8 @@
 
 module Sparep.API.Data where
 
-import Data.Aeson
+import Autodocodec
+import Data.Aeson (FromJSON, FromJSONKey (..), ToJSON, ToJSONKey (..))
 import qualified Data.Appendful as Appendful
 import Data.Functor.Contravariant
 import Data.Text (Text)
@@ -28,7 +30,8 @@ data RegistrationForm = RegistrationForm
   { registrationFormUsername :: Username,
     registrationFormPassword :: Text
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (FromJSON, ToJSON) via (Autodocodec RegistrationForm)
 
 instance Validity RegistrationForm where
   validate rf@RegistrationForm {..} =
@@ -37,36 +40,28 @@ instance Validity RegistrationForm where
         declare "The password is nonempty" $ not $ T.null registrationFormPassword
       ]
 
-instance ToJSON RegistrationForm where
-  toJSON RegistrationForm {..} =
-    object
-      [ "name" .= registrationFormUsername,
-        "password" .= registrationFormPassword
-      ]
-
-instance FromJSON RegistrationForm where
-  parseJSON =
-    withObject "RegistrationForm" $ \o ->
-      RegistrationForm <$> o .: "name" <*> o .: "password"
+instance HasCodec RegistrationForm where
+  codec =
+    object "RegistrationForm" $
+      RegistrationForm
+        <$> requiredField "username" "user name" .= registrationFormUsername
+        <*> requiredField "password" "password" .= registrationFormPassword
 
 data LoginForm = LoginForm
   { loginFormUsername :: Username,
     loginFormPassword :: Text
   }
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (FromJSON, ToJSON) via (Autodocodec LoginForm)
 
 instance Validity LoginForm
 
-instance FromJSON LoginForm where
-  parseJSON = withObject "LoginForm" $ \o ->
-    LoginForm <$> o .: "username" <*> o .: "password"
-
-instance ToJSON LoginForm where
-  toJSON LoginForm {..} =
-    object
-      [ "username" .= loginFormUsername,
-        "password" .= loginFormPassword
-      ]
+instance HasCodec LoginForm where
+  codec =
+    object "LoginForm" $
+      LoginForm
+        <$> requiredField "username" "user name" .= loginFormUsername
+        <*> requiredField "password" "password" .= loginFormPassword
 
 data AuthCookie = AuthCookie
   { authCookieUsername :: Username
@@ -84,6 +79,9 @@ instance ToJWT AuthCookie
 type SyncRequest = Appendful.SyncRequest ClientRepetitionId ServerRepetitionId Repetition
 
 type SyncResponse = Appendful.SyncResponse ClientRepetitionId ServerRepetitionId Repetition
+
+instance ToBackendKey SqlBackend a => HasCodec (Key a) where
+  codec = dimapCodec toSqlKey fromSqlKey codec
 
 instance (PersistEntity a, ToBackendKey SqlBackend a) => ToJSONKey (Key a) where
   toJSONKey = contramap fromSqlKey toJSONKey

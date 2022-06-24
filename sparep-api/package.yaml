@@ -9,14 +9,15 @@ library:
   dependencies:
     - aeson
     - appendful
+    - autodocodec
     - jose
     - persistent
     - servant
     - servant-auth
     - servant-auth-server
+    - sparep-api-server-data
     - sparep-client-data
     - sparep-data
-    - sparep-api-server-data
     - text
     - validity
     - validity-text

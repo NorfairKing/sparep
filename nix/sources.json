@@ -5,10 +5,10 @@
         "homepage": null,
         "owner": "NorfairKing",
         "repo": "appendful",
-        "rev": "2227532f27b8f7d9f53341aca643f1df8381f033",
-        "sha256": "0b8njan3jpkn58im0pnvm671d7jsy1zfz93fy4dimhxwg8x1xmh3",
+        "rev": "fcaea3b910bdab241a8c47d2c56b3681df1e32f7",
+        "sha256": "171f0hys5czabfnvw67zgm47sdn3ddsww1mzx4hlh84nb9kc5j9k",
         "type": "tarball",
-        "url": "https://github.com/NorfairKing/appendful/archive/2227532f27b8f7d9f53341aca643f1df8381f033.tar.gz",
+        "url": "https://github.com/NorfairKing/appendful/archive/fcaea3b910bdab241a8c47d2c56b3681df1e32f7.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "autodocodec": {
@@ -17,10 +17,10 @@
         "homepage": "",
         "owner": "NorfairKing",
         "repo": "autodocodec",
-        "rev": "00649ce4174bc693de36077ffdfc3e0d7151ef08",
-        "sha256": "02ld72axdadbbxmkpy06r93w29zbarrpffnkck92754q745wnlkd",
+        "rev": "2b05f3a567511ba35d3c815436b267e4bfa2711d",
+        "sha256": "16fsw6g232038b8p536sp33vi32z2pzkrwrznv6arhhf0swdwnjg",
         "type": "tarball",
-        "url": "https://github.com/NorfairKing/autodocodec/archive/00649ce4174bc693de36077ffdfc3e0d7151ef08.tar.gz",
+        "url": "https://github.com/NorfairKing/autodocodec/archive/2b05f3a567511ba35d3c815436b267e4bfa2711d.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "autorecorder": {
@@ -89,10 +89,10 @@
         "homepage": "",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "2a9a64710a34334c1a3c82b7d73a3df634dcad7d",
-        "sha256": "1plfk1s6jmifgspszf443f1hj053vpvkqz361j7lhvzil7v8i7jf",
+        "rev": "3aad50c30c826430b0270fcf8264c8c41b005403",
+        "sha256": "0xwqsf08sywd23x0xvw4c4ghq0l28w2ki22h0bdn766i16z9q2gr",
         "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/2a9a64710a34334c1a3c82b7d73a3df634dcad7d.tar.gz",
+        "url": "https://github.com/NixOS/nixpkgs/archive/3aad50c30c826430b0270fcf8264c8c41b005403.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "pre-commit-hooks": {
@@ -101,10 +101,22 @@
         "homepage": "",
         "owner": "cachix",
         "repo": "pre-commit-hooks.nix",
-        "rev": "521a524771a8e93caddaa0ac1d67d03766a8b0b3",
-        "sha256": "16qfrylk41r7gc7g4352hxz7b3vk9w7bc6893apmmr6yy08ra0m9",
+        "rev": "a2ce896cf922091e2588ca016805f50f12c82f48",
+        "sha256": "1xza3iyh4dx57vk84ylprpzzn3caq4b7y32f0dzmbv1ff1nr9dv8",
         "type": "tarball",
-        "url": "https://github.com/cachix/pre-commit-hooks.nix/archive/521a524771a8e93caddaa0ac1d67d03766a8b0b3.tar.gz",
+        "url": "https://github.com/cachix/pre-commit-hooks.nix/archive/a2ce896cf922091e2588ca016805f50f12c82f48.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "sydtest": {
+        "branch": "master",
+        "description": "A modern testing framework for Haskell with good defaults and advanced testing features.",
+        "homepage": "",
+        "owner": "NorfairKing",
+        "repo": "sydtest",
+        "rev": "cf1bb414f0c0ce7bbf64659da94b8cd890c9e536",
+        "sha256": "0z6araz20lkgc7q2r5z423hbis4jzvkkqgiawh69wslakqlznxzc",
+        "type": "tarball",
+        "url": "https://github.com/NorfairKing/sydtest/archive/cf1bb414f0c0ce7bbf64659da94b8cd890c9e536.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "validity": {
@@ -113,10 +125,10 @@
         "homepage": "https://www.youtube.com/watch?v=eIs9qNh17SM",
         "owner": "NorfairKing",
         "repo": "validity",
-        "rev": "160e846cc5de8e92e6758172da341f5d81fe0374",
-        "sha256": "03a4s2gq1mjjd452xbhs0h1iycjpdidxprpvjiwy55hx0lzqfpli",
+        "rev": "d88be911a7e2a84f6c089e9269aaed8d10a74acd",
+        "sha256": "088zl9vp7579qj1gqh1j8kb0035zjjp41k1yiww58x57pym200g7",
         "type": "tarball",
-        "url": "https://github.com/NorfairKing/validity/archive/160e846cc5de8e92e6758172da341f5d81fe0374.tar.gz",
+        "url": "https://github.com/NorfairKing/validity/archive/d88be911a7e2a84f6c089e9269aaed8d10a74acd.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

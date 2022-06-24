@@ -1,5 +1,5 @@
-name:                sparep-tui
-version:             0.0.0.0
+name: sparep-tui
+version: 0.0.0.0
 
 dependencies:
 - base >= 4.7 && < 5
@@ -48,8 +48,8 @@ library:
 
 executables:
   sparep-tui:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
     ghc-options:
     - -threaded
     - -rtsopts
@@ -59,8 +59,9 @@ executables:
 
 tests:
   sparep-tui-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
+    build-tools: sydtest-discover
     ghc-options:
     - -threaded
     - -rtsopts
@@ -69,9 +70,9 @@ tests:
     - genvalidity
     - genvalidity-bytestring
     - genvalidity-containers
-    - genvalidity-hspec
-    - genvalidity-hspec-persistent
+    - genvalidity-sydtest
+    - genvalidity-sydtest-persistent
     - genvalidity-path
     - genvalidity-text
-    - hspec
+    - sydtest
     - sparep-tui

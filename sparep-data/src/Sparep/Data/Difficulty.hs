@@ -1,11 +1,14 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Sparep.Data.Difficulty where
 
+import Autodocodec
+import Control.Arrow (left)
 import Control.Monad
-import Data.Aeson
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Proxy
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -19,9 +22,13 @@ data Difficulty
   | Hard
   | Good
   | Easy
-  deriving (Show, Eq, Ord, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving (FromJSON, ToJSON) via (Autodocodec Difficulty)
 
 instance Validity Difficulty
+
+instance HasCodec Difficulty where
+  codec = bimapCodec (left T.unpack . parseDifficulty) renderDifficulty codec
 
 renderDifficulty :: Difficulty -> Text
 renderDifficulty =
@@ -40,15 +47,6 @@ parseDifficulty =
     "Correct" -> Right Good
     "Easy" -> Right Easy
     _ -> Left "Unknown Difficulty"
-
-instance FromJSON Difficulty where
-  parseJSON = withText "Difficulty" $ \t ->
-    case parseDifficulty t of
-      Left err -> fail $ T.unpack err
-      Right d -> pure d
-
-instance ToJSON Difficulty where
-  toJSON = toJSON . renderDifficulty
 
 instance PersistField Difficulty where
   toPersistValue = toPersistValue . renderDifficulty

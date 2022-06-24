@@ -1,5 +1,5 @@
-name:                sparep-web-server
-version:             0.0.0.0
+name: sparep-web-server
+version: 0.0.0.0
 
 dependencies:
 - base >= 4.7 && < 5
@@ -25,8 +25,8 @@ library:
 
 executables:
   sparep-web-server:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
     ghc-options:
     - -threaded
     - -rtsopts
@@ -36,14 +36,15 @@ executables:
 
 tests:
   sparep-web-server-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
+    build-tools: sydtest-discover
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - hspec
+    - sydtest
     - monad-logger
     - sparep-web-server
-    - yesod-test
+    - sydtest-yesod
