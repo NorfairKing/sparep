@@ -1,6 +1,9 @@
 name: sparep-web-server
 version: 0.0.0.0
 
+extra-source-files:
+- templates/**/*
+
 dependencies:
 - base >= 4.7 && < 5
 

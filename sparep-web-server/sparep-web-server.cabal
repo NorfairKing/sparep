@@ -7,6 +7,10 @@ cabal-version: 1.12
 name:           sparep-web-server
 version:        0.0.0.0
 build-type:     Simple
+extra-source-files:
+    templates/default-body.hamlet
+    templates/default-page.hamlet
+    templates/home.hamlet
 
 library
   exposed-modules:

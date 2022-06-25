@@ -21,12 +21,7 @@ in
     let
       sparepPkg = name:
         overrideCabal
-          (
-            final.haskellPackages.callCabal2nixWithOptions name
-              (final.gitignoreSource (../. + "/${name}"))
-              "--no-hpack"
-              { }
-          )
+          (buildStrictly (final.haskellPackages.callCabal2nixWithOptions name (final.gitignoreSource (../. + "/${name}")) "--no-hpack" { }))
           (old: {
             doBenchmark = true;
             doHaddock = false;

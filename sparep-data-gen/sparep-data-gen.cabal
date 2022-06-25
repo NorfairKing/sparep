@@ -7,6 +7,9 @@ cabal-version: 1.12
 name:           sparep-data-gen
 version:        0.0.0.0
 build-type:     Simple
+extra-source-files:
+    test_resources/french-definite-articles.yaml
+    test_resources/german-articles.yaml
 
 library
   exposed-modules:
