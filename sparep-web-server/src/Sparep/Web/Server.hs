@@ -42,11 +42,11 @@ getHomeR = defaultLayout $(widgetFile "home")
 
 sparepWebServer :: IO ()
 sparepWebServer = do
-  Instructions (DispatchServe ss@ServeSettings {..}) Settings <- getInstructions
+  ss@Settings {..} <- getInstructions
   when development $ print ss
-  warp serveSetPort $
+  warp setPort $
     App
-      { appLogLevel = serveSetLogLevel,
-        appGoogleAnalyticsTracking = serveSetGoogleAnalyticsTracking,
-        appGoogleSearchConsoleVerification = serveSetGoogleSearchConsoleVerification
+      { appLogLevel = setLogLevel,
+        appGoogleAnalyticsTracking = setGoogleAnalyticsTracking,
+        appGoogleSearchConsoleVerification = setGoogleSearchConsoleVerification
       }

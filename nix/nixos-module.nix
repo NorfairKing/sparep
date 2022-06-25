@@ -218,7 +218,7 @@ in
             ''
               mkdir -p "${web-server-working-dir}"
               cd ${web-server-working-dir}
-              ${sparepReleasePackages.sparep-web-server}/bin/sparep-web-server serve
+              ${sparepReleasePackages.sparep-web-server}/bin/sparep-web-server
             '';
           serviceConfig =
             {

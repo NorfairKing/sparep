@@ -19,22 +19,22 @@ import Paths_sparep_web_server
 import Sparep.Web.Server.OptParse.Types
 import qualified System.Environment as System
 
-getInstructions :: IO Instructions
+getInstructions :: IO Settings
 getInstructions = do
-  args@(Arguments _ flags) <- getArguments
+  flags <- getFlags
   env <- getEnvironment
   config <- getConfiguration flags env
-  combineToInstructions args env config
+  combineToInstructions flags env config
 
-combineToInstructions :: Arguments -> Environment -> Maybe Configuration -> IO Instructions
-combineToInstructions (Arguments (CommandServe ServeFlags {..}) Flags {}) Environment {..} mConf = do
+combineToInstructions :: Flags -> Environment -> Maybe Configuration -> IO Settings
+combineToInstructions Flags {..} Environment {..} mConf = do
   let mc :: (Configuration -> Maybe a) -> Maybe a
       mc func = mConf >>= func
-  let serveSetLogLevel = fromMaybe LevelInfo $ serveFlagLogLevel <|> envLogLevel <|> mc confLogLevel
-  let serveSetPort = fromMaybe 8080 $ serveFlagPort <|> envPort <|> mc confPort
-  let serveSetGoogleAnalyticsTracking = T.pack <$> (serveFlagGoogleAnalyticsTracking <|> envGoogleAnalyticsTracking <|> mc confGoogleAnalyticsTracking)
-  let serveSetGoogleSearchConsoleVerification = T.pack <$> (serveFlagGoogleSearchConsoleVerification <|> envGoogleSearchConsoleVerification <|> mc confGoogleSearchConsoleVerification)
-  pure (Instructions (DispatchServe ServeSettings {..}) Settings)
+  let setLogLevel = fromMaybe LevelInfo $ flagLogLevel <|> envLogLevel <|> mc confLogLevel
+  let setPort = fromMaybe 8080 $ flagPort <|> envPort <|> mc confPort
+  let setGoogleAnalyticsTracking = T.pack <$> (flagGoogleAnalyticsTracking <|> envGoogleAnalyticsTracking <|> mc confGoogleAnalyticsTracking)
+  let setGoogleSearchConsoleVerification = T.pack <$> (flagGoogleSearchConsoleVerification <|> envGoogleSearchConsoleVerification <|> mc confGoogleSearchConsoleVerification)
+  pure Settings {..}
 
 getEnvironment :: IO Environment
 getEnvironment = Env.parse (Env.header "Environment") prefixedEnvironmentParser
@@ -62,14 +62,14 @@ getConfiguration Flags {..} Environment {..} =
     Nothing -> pure Nothing
     Just cf -> resolveFile' cf >>= readYamlConfigFile
 
-getArguments :: IO Arguments
-getArguments = do
+getFlags :: IO Flags
+getFlags = do
   args <- System.getArgs
   let result = runArgumentsParser args
   handleParseResult result
 
-runArgumentsParser :: [String] -> ParserResult Arguments
-runArgumentsParser = execParserPure prefs_ argParser
+runArgumentsParser :: [String] -> ParserResult Flags
+runArgumentsParser = execParserPure prefs_ flagsParser
   where
     prefs_ =
       defaultPrefs
@@ -77,65 +77,11 @@ runArgumentsParser = execParserPure prefs_ argParser
           prefShowHelpOnEmpty = True
         }
 
-argParser :: ParserInfo Arguments
-argParser = info (helper <*> parseArgs) help_
+flagsParser :: ParserInfo Flags
+flagsParser = info (helper <*> parseFlags) help_
   where
     help_ = fullDesc <> progDesc description
     description = "Sparep Web Server version " <> showVersion version
-
-parseArgs :: Parser Arguments
-parseArgs = Arguments <$> parseCommand <*> parseFlags
-
-parseCommand :: Parser Command
-parseCommand = hsubparser $ mconcat [command "serve" parseCommandServe]
-
-parseCommandServe :: ParserInfo Command
-parseCommandServe = info parser modifier
-  where
-    modifier = fullDesc <> progDesc "Serve as the web server"
-    parser =
-      CommandServe
-        <$> ( ServeFlags
-                <$> option
-                  (Just <$> maybeReader parseLogLevel)
-                  ( mconcat
-                      [ long "log-level",
-                        help $
-                          unwords
-                            [ "The log level to use, options:",
-                              show $ map renderLogLevel [LevelDebug, LevelInfo, LevelWarn, LevelError]
-                            ],
-                        value Nothing
-                      ]
-                  )
-                <*> option
-                  (Just <$> auto)
-                  ( mconcat
-                      [ long "port",
-                        metavar "PORT",
-                        help "The port to serve web requests on",
-                        value Nothing
-                      ]
-                  )
-                <*> option
-                  (Just <$> str)
-                  ( mconcat
-                      [ long "google-analytics-tracking",
-                        metavar "CODE",
-                        help "The Google analytics tracking code",
-                        value Nothing
-                      ]
-                  )
-                <*> option
-                  (Just <$> str)
-                  ( mconcat
-                      [ long "google-search-console-verification",
-                        metavar "CODE",
-                        help "The Google search console verification code",
-                        value Nothing
-                      ]
-                  )
-            )
 
 parseFlags :: Parser Flags
 parseFlags =
@@ -146,6 +92,45 @@ parseFlags =
           [ long "config-file",
             metavar "FILEPATH",
             help "The config file",
+            value Nothing
+          ]
+      )
+    <*> option
+      (Just <$> maybeReader parseLogLevel)
+      ( mconcat
+          [ long "log-level",
+            help $
+              unwords
+                [ "The log level to use, options:",
+                  show $ map renderLogLevel [LevelDebug, LevelInfo, LevelWarn, LevelError]
+                ],
+            value Nothing
+          ]
+      )
+    <*> option
+      (Just <$> auto)
+      ( mconcat
+          [ long "port",
+            metavar "PORT",
+            help "The port to serve web requests on",
+            value Nothing
+          ]
+      )
+    <*> option
+      (Just <$> str)
+      ( mconcat
+          [ long "google-analytics-tracking",
+            metavar "CODE",
+            help "The Google analytics tracking code",
+            value Nothing
+          ]
+      )
+    <*> option
+      (Just <$> str)
+      ( mconcat
+          [ long "google-search-console-verification",
+            metavar "CODE",
+            help "The Google search console verification code",
             value Nothing
           ]
       )

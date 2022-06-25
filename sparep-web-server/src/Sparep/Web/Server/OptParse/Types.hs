@@ -13,27 +13,12 @@ import Data.Yaml as Yaml (FromJSON, ToJSON)
 import GHC.Generics (Generic)
 import Text.Read
 
-data Arguments
-  = Arguments Command Flags
-  deriving (Show, Eq)
-
-data Instructions
-  = Instructions Dispatch Settings
-
-newtype Command
-  = CommandServe ServeFlags
-  deriving (Show, Eq)
-
-data ServeFlags = ServeFlags
-  { serveFlagLogLevel :: !(Maybe LogLevel),
-    serveFlagPort :: !(Maybe Int),
-    serveFlagGoogleAnalyticsTracking :: !(Maybe String),
-    serveFlagGoogleSearchConsoleVerification :: !(Maybe String)
-  }
-  deriving (Show, Eq)
-
 data Flags = Flags
-  { flagConfigFile :: !(Maybe FilePath)
+  { flagConfigFile :: !(Maybe FilePath),
+    flagLogLevel :: !(Maybe LogLevel),
+    flagPort :: !(Maybe Int),
+    flagGoogleAnalyticsTracking :: !(Maybe String),
+    flagGoogleSearchConsoleVerification :: !(Maybe String)
   }
   deriving (Show, Eq, Generic)
 
@@ -73,20 +58,12 @@ instance HasCodec LogLevel where
         (LevelError, "Error")
       ]
 
-newtype Dispatch
-  = DispatchServe ServeSettings
-  deriving (Show, Eq, Generic)
-
-data ServeSettings = ServeSettings
-  { serveSetLogLevel :: !LogLevel,
-    serveSetPort :: !Int,
-    serveSetGoogleAnalyticsTracking :: !(Maybe Text),
-    serveSetGoogleSearchConsoleVerification :: !(Maybe Text)
+data Settings = Settings
+  { setLogLevel :: !LogLevel,
+    setPort :: !Int,
+    setGoogleAnalyticsTracking :: !(Maybe Text),
+    setGoogleSearchConsoleVerification :: !(Maybe Text)
   }
-  deriving (Show, Eq, Generic)
-
-data Settings
-  = Settings
   deriving (Show, Eq, Generic)
 
 parseLogLevel :: String -> Maybe LogLevel
