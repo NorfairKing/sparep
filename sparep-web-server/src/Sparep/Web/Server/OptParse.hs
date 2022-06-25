@@ -31,7 +31,7 @@ combineToInstructions (Arguments (CommandServe ServeFlags {..}) Flags {}) Enviro
   let mc :: (Configuration -> Maybe a) -> Maybe a
       mc func = mConf >>= func
   let serveSetLogLevel = fromMaybe LevelInfo $ serveFlagLogLevel <|> envLogLevel <|> mc confLogLevel
-  let serveSetPort = fromMaybe 8000 $ serveFlagPort <|> envPort <|> mc confPort
+  let serveSetPort = fromMaybe 8080 $ serveFlagPort <|> envPort <|> mc confPort
   let serveSetGoogleAnalyticsTracking = T.pack <$> (serveFlagGoogleAnalyticsTracking <|> envGoogleAnalyticsTracking <|> mc confGoogleAnalyticsTracking)
   let serveSetGoogleSearchConsoleVerification = T.pack <$> (serveFlagGoogleSearchConsoleVerification <|> envGoogleSearchConsoleVerification <|> mc confGoogleSearchConsoleVerification)
   pure (Instructions (DispatchServe ServeSettings {..}) Settings)
