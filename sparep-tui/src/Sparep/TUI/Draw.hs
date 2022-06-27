@@ -5,7 +5,6 @@
 module Sparep.TUI.Draw where
 
 import Brick.AttrMap
-import Brick.Markup
 import Brick.Types
 import Brick.Util
 import Brick.Widgets.Border
@@ -17,7 +16,6 @@ import Cursor.Simple.List.NonEmpty
 import Cursor.Text
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
-import Data.Semigroup (sconcat)
 import qualified Data.Text as T
 import Data.Time
 import Graphics.Vty.Attributes
@@ -212,14 +210,13 @@ drawStudyUnitDetails DefinitionContext {..} lTimes =
             [ hCenterLayer $
                 border $
                   padAll 1 $
-                    markup $
-                      sconcat $
-                        NE.map
-                          ( \case
-                              LitPart t -> t @? litPartAttr
-                              FillPart t -> t @? fillPartAttr
-                          )
-                          fillExerciseSequence
+                    hBox $
+                      map
+                        ( \case
+                            LitPart t -> withAttr litPartAttr $ txt t
+                            FillPart t -> withAttr fillPartAttr $ txt t
+                        )
+                        (NE.toList fillExerciseSequence)
             ],
         case lTimes of
           Loading -> [str "Loading", str "Loading"]
@@ -323,15 +320,14 @@ drawFillExerciseCursor DefinitionContext {..} =
   let fec@FillExerciseCursor {..} = definitionContextUnit
       partCursorMarkup =
         \case
-          LitPartCursor t -> t @? litPartAttr
+          LitPartCursor t -> withAttr litPartAttr $ txt t
           FillPartCursor tc t ->
-            ( let t' = rebuildTextCursor tc
-               in (if T.null t' then "___" else t')
-                    @? ( if t' == t
-                           then fillCorrectAttr
-                           else fillIncorrectAttr
-                       )
-            )
+            let t' = rebuildTextCursor tc
+                attr =
+                  if t' == t
+                    then fillCorrectAttr
+                    else fillIncorrectAttr
+             in withAttr attr $ txt (if T.null t' then "___" else t')
    in vBox $
         concat
           [ [ hCenterLayer $ withAttr deckNameAttr $ txt dn
@@ -344,37 +340,36 @@ drawFillExerciseCursor DefinitionContext {..} =
                 border . padAll 1 $
                   NEC.foldNonEmptyCursor
                     ( \befores current afters ->
-                        markup $
-                          mconcat $
-                            concat
-                              [ map partCursorMarkup befores,
-                                case current of
-                                  LitPartCursor t -> [t @? litPartAttr] -- Should not happen.
-                                  FillPartCursor tc t ->
-                                    let t' = rebuildTextCursor tc
-                                        attr =
-                                          if t' == t
-                                            then fillCorrectAttr
-                                            else fillPartAttr
-                                        (t1, t2) = textCursorSplit tc
-                                     in if fillExerciseCursorShow
-                                          then
-                                            [ if t' == t
-                                                then t' @? fillCorrectAttr
-                                                else t @? fillShownAttr
+                        hBox $
+                          concat
+                            [ map partCursorMarkup befores,
+                              case current of
+                                LitPartCursor t -> [withAttr litPartAttr $ txt t] -- Should not happen.
+                                FillPartCursor tc t ->
+                                  let t' = rebuildTextCursor tc
+                                      attr =
+                                        if t' == t
+                                          then fillCorrectAttr
+                                          else fillPartAttr
+                                      (t1, t2) = textCursorSplit tc
+                                   in if fillExerciseCursorShow
+                                        then
+                                          [ if t' == t
+                                              then withAttr fillCorrectAttr $ txt t'
+                                              else withAttr fillShownAttr $ txt t
+                                          ]
+                                        else case T.unpack (rebuildTextCursor t2) of
+                                          [] ->
+                                            [ withAttr attr $ txt $ rebuildTextCursor t1,
+                                              withAttr (attr <> fillCursorPartAttr) $ txt $ T.singleton ' '
                                             ]
-                                          else case T.unpack (rebuildTextCursor t2) of
-                                            [] ->
-                                              [ rebuildTextCursor t1 @? attr,
-                                                T.singleton ' ' @? (attr <> fillCursorPartAttr)
-                                              ]
-                                            (c : _) ->
-                                              [ rebuildTextCursor t1 @? attr,
-                                                T.singleton c @? (attr <> fillCursorPartAttr),
-                                                rebuildTextCursor t2 @? attr
-                                              ],
-                                map partCursorMarkup afters
-                              ]
+                                          (c : _) ->
+                                            [ withAttr attr $ txt $ rebuildTextCursor t1,
+                                              withAttr (attr <> fillCursorPartAttr) $ txt $ T.singleton c,
+                                              withAttr attr $ txt $ rebuildTextCursor t2
+                                            ],
+                              map partCursorMarkup afters
+                            ]
                     )
                     fillExerciseCursorList
             ],
