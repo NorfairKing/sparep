@@ -402,7 +402,7 @@ tuiAttrMap =
       (doneAttr, fg green),
       (readyAttr, fg yellow),
       (newAttr, fg red),
-      (newLabelAttr, withStyle (fg green) blink)
+      (newLabelAttr, fg green)
     ]
 
 headingAttr :: AttrName
