@@ -196,14 +196,21 @@ handleStudyEvent s e =
                               clientRepetitionTimestamp = now,
                               clientRepetitionServerId = Nothing
                             }
-                    let mcursor' = nonEmptyCursorSelectNext (fmap (fmap rebuildStudyUnitCursor)) (fmap (fmap makeStudyUnitCursor)) cursor
+                    -- Require re-studying incorrect studyUnits by adding an
+                    -- incorrect repitition to the end of the "left to study"
+                    -- cards.
+                    let cursor' =
+                          case difficulty of
+                            Incorrect ->
+                              -- Require re-studying incorrect studyUnits
+                              nonEmptyCursorAppendAtEnd (fmap rebuildStudyUnitCursor <$> cur) cursor
+                            _ -> cursor
+                    -- Move forward by one in the cursor.
                     let mcursor'' =
-                          -- Require re-studying incorrect studyUnits
-                          if difficulty == Incorrect
-                            then Just $ case mcursor' of
-                              Nothing -> singletonNonEmptyCursor cur
-                              Just cursor' -> nonEmptyCursorAppendAtEnd (fmap rebuildStudyUnitCursor <$> cur) cursor'
-                            else mcursor'
+                          nonEmptyCursorSelectNext
+                            (fmap (fmap rebuildStudyUnitCursor))
+                            (fmap (fmap makeStudyUnitCursor))
+                            cursor'
                     continue $
                       s
                         { studyStateCursor = Loaded mcursor'',
