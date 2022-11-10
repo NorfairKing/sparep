@@ -245,7 +245,7 @@ drawStudyState StudyState {..} =
                         unwords
                           [ show (length (nonEmptyCursorPrev cursor)),
                             "cards studied ",
-                            show (length (nonEmptyCursorNext cursor)),
+                            show (length (nonEmptyCursorNext cursor) + 1),
                             "cards left"
                           ],
                     vCenterLayer $
