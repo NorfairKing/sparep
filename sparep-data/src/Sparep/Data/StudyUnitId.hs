@@ -90,7 +90,7 @@ parseStudyUnitId sb =
       pure StudyUnitId {cardIdSha256 = sb}
     l
       | l > 32 ->
-          pure StudyUnitId {cardIdSha256 = SB.take 32 sb}
+        pure StudyUnitId {cardIdSha256 = SB.take 32 sb}
       | otherwise -> Left $ "Invalid card id length: " <> T.pack (show l)
 
 instance PersistField StudyUnitId where

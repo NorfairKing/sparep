@@ -1,7 +1,7 @@
-{ sources ? import ./sources.nix
-, pkgs ? import ./pkgs.nix { inherit sources; }
-, sparepReleasePackages ? pkgs.sparepReleasePackages
-, envname
+{ sparep-api-server
+, sparep-web-server
+}:
+{ envname
 }:
 { lib, pkgs, config, ... }:
 with lib;
@@ -122,7 +122,7 @@ in
               ''
                 mkdir -p "${api-server-working-dir}"
                 cd ${api-server-working-dir};
-                ${sparepReleasePackages.sparep-api-server}/bin/sparep-api-server
+                ${sparep-api-server}/bin/sparep-api-server
               '';
             serviceConfig =
               {
@@ -218,7 +218,7 @@ in
             ''
               mkdir -p "${web-server-working-dir}"
               cd ${web-server-working-dir}
-              ${sparepReleasePackages.sparep-web-server}/bin/sparep-web-server
+              ${sparep-web-server}/bin/sparep-web-server
             '';
           serviceConfig =
             {

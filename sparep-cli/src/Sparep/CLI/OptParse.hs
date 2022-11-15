@@ -27,7 +27,6 @@ import Control.Monad.Logger
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import Data.Yaml (FromJSON, ToJSON)
 import qualified Env
 import GHC.Generics (Generic)
@@ -221,7 +220,7 @@ argParser =
         [ Env.helpDoc environmentParser,
           "",
           "Configuration file format:",
-          T.unpack (TE.decodeUtf8 (renderColouredSchemaViaCodec @Configuration))
+          T.unpack (renderColouredSchemaViaCodec @Configuration)
         ]
 
 parseArgs :: OptParse.Parser Arguments

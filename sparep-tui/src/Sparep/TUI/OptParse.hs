@@ -10,7 +10,6 @@ import Autodocodec.Yaml
 import Control.Monad
 import Data.Maybe
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import qualified Env
 import Options.Applicative
 import qualified Options.Applicative.Help as OptParse
@@ -89,10 +88,10 @@ argParser =
         [ Env.helpDoc environmentParser,
           "",
           "Configuration file format:",
-          T.unpack (TE.decodeUtf8 (renderColouredSchemaViaCodec @Configuration)),
+          T.unpack (renderColouredSchemaViaCodec @Configuration),
           "",
           "Deck file format:",
-          T.unpack (TE.decodeUtf8 (renderColouredSchemaViaCodec @Deck))
+          T.unpack (renderColouredSchemaViaCodec @Deck)
         ]
 
 parseArgs :: Parser Flags

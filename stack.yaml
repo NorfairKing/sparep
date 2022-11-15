@@ -20,8 +20,6 @@ extra-deps:
   - autodocodec
   - autodocodec-schema
   - autodocodec-yaml
-- github: supki/envparse
-  commit: de5944fb09e9d941fafa35c0f05446af348e7b4d
 - github: NorfairKing/cursor
   commit: 5f18d58d1b34a752d24a94590c2cd35e8b6d557b
   subdirs:
@@ -88,5 +86,7 @@ extra-deps:
 
 
 
+system-ghc: true
 nix:
   shell-file: shell.nix
+with-hpack: hpack

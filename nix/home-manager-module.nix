@@ -1,3 +1,4 @@
+{ sparepReleasePackages }:
 { lib, pkgs, config, ... }:
 
 with lib;
@@ -13,7 +14,7 @@ in
       enable = mkEnableOption "Sparep cli and syncing";
       sparepReleasePackages = mkOption {
         description = "The sparepReleasePackages attribute defined in the nix/overlay.nix file in the sparep repository.";
-        default = (import ./pkgs.nix { }).sparepReleasePackages;
+        default = sparepReleasePackages;
       };
       decks = mkOption {
         type = types.listOf types.str;
