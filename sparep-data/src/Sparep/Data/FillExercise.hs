@@ -14,7 +14,7 @@ import GHC.Generics (Generic)
 newtype FillExercise = FillExercise
   { fillExerciseSequence :: FillExerciseSequence
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Validity FillExercise
 
@@ -23,6 +23,6 @@ type FillExerciseSequence = NonEmpty FillExercisePart
 data FillExercisePart
   = LitPart !Text
   | FillPart !Text
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Validity FillExercisePart

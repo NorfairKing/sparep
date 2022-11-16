@@ -17,6 +17,7 @@ import Data.Function
 import Data.List
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
+import qualified Data.Set as S
 import Data.Time
 import Graphics.Vty.Input
 import Lens.Micro
@@ -58,6 +59,7 @@ handleMenuEvent qChan s e =
           let decks = menuStateDecks s
           forM_ decks $ \d -> liftIO $ writeBChan qChan $ QueryGetDeckSelection d
           let decksStateCursor = Simple.makeNonEmptyCursor <$> NE.nonEmpty (map (\d -> (d, Loading)) $ sortOn (deckName . rootedDeckDeck) decks)
+          let decksStateSelected = S.empty
           continue $ StateDecks DecksState {..}
         EvKey KEnter [] -> handleStudy qChan (menuStateDecks s)
         _ -> continue $ StateMenu s
@@ -94,7 +96,19 @@ handleDecksEvent qChan s e = case decksStateCursor s of
                 forM_ studyUnits $ \c -> liftIO $ writeBChan qChan $ QueryGetStudyUnitDates c
                 let studyUnitsStateCursor = Simple.makeNonEmptyCursor <$> NE.nonEmpty (map (\c -> (c, Loading)) studyUnits)
                 continue $ StateStudyUnits $ StudyUnitsState {..}
-              EvKey KEnter [] -> handleStudy qChan [fst (nonEmptyCursorCurrent cursor)]
+              EvKey (KChar ' ') [] -> do
+                let deck = fst (nonEmptyCursorCurrent cursor)
+                let newSelected =
+                      if deck `S.member` decksStateSelected s
+                        then S.delete deck (decksStateSelected s)
+                        else S.insert deck (decksStateSelected s)
+                continue $ StateDecks $ s {decksStateSelected = newSelected}
+              EvKey KEnter [] ->
+                let toStudy =
+                      if null (decksStateSelected s)
+                        then [fst (nonEmptyCursorCurrent cursor)]
+                        else S.toList (decksStateSelected s)
+                 in handleStudy qChan toStudy
               _ -> continue $ StateDecks s
       AppEvent (ResponseGetDeckSelection d sel) -> do
         let mCursor' =

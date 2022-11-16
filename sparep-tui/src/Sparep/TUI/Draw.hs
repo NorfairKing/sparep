@@ -16,6 +16,8 @@ import Cursor.Simple.List.NonEmpty
 import Cursor.Text
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
+import Data.Set (Set)
+import qualified Data.Set as S
 import qualified Data.Text as T
 import Data.Time
 import Graphics.Vty.Attributes
@@ -69,7 +71,7 @@ drawDecksState DecksState {..} =
             Just cursor ->
               padBottom Max $
                 hBox
-                  [ padAll 1 $ drawDeckList cursor,
+                  [ padAll 1 $ drawDeckList decksStateSelected cursor,
                     vBorder,
                     padAll 1 $ uncurry drawDeckDetails (nonEmptyCursorCurrent cursor)
                   ],
@@ -82,8 +84,8 @@ drawDecksState DecksState {..} =
         ]
   ]
 
-drawDeckList :: NonEmptyCursor (RootedDeck, Loading (Selection a)) -> Widget n
-drawDeckList =
+drawDeckList :: Set RootedDeck -> NonEmptyCursor (RootedDeck, Loading (Selection a)) -> Widget n
+drawDeckList selectedDecks =
   verticalNonEmptyCursorTableWithHeader
     go
     (map (forceAttr selectedAttr) . go)
@@ -99,22 +101,26 @@ drawDeckList =
   where
     numStr attr n =
       (if n == 0 then id else withAttr attr) (str (show n))
-    go (RootedDeck _ Deck {..}, ls) =
-      concat
-        [ [ padRight Max $ txt $ maybe " " unDeckName deckName
-          ],
-          case ls of
-            Loading ->
-              [ str "Loading",
-                str "Loading",
-                str "Loading"
-              ]
-            Loaded Selection {..} ->
-              [ numStr doneAttr $ length selectionTooSoon,
-                numStr readyAttr $ length selectionReady,
-                numStr newAttr $ length selectionNew
-              ]
-        ]
+    go (rd@(RootedDeck _ Deck {..}), ls) =
+      let ifSelected f =
+            if rd `S.member` selectedDecks
+              then f
+              else id
+       in concat
+            [ [ padRight Max $ ifSelected (withAttr deckSelectedAttr) $ txt $ ifSelected ("> " <>) $ maybe " " unDeckName deckName
+              ],
+              case ls of
+                Loading ->
+                  [ str "Loading",
+                    str "Loading",
+                    str "Loading"
+                  ]
+                Loaded Selection {..} ->
+                  [ numStr doneAttr $ length selectionTooSoon,
+                    numStr readyAttr $ length selectionReady,
+                    numStr newAttr $ length selectionNew
+                  ]
+            ]
 
 drawDeckDetails :: RootedDeck -> Loading (Selection a) -> Widget n
 drawDeckDetails (RootedDeck _ Deck {..}) ls =
@@ -398,6 +404,7 @@ tuiAttrMap =
       (fillPartAttr <> fillCursorPartAttr, withStyle (fg magenta) reverseVideo),
       (fillCorrectAttr <> fillCursorPartAttr, withStyle (fg green) reverseVideo),
       (fillShownAttr, fg blue),
+      (deckSelectedAttr, withStyle mempty underline),
       (totalAttr, fg blue),
       (doneAttr, fg green),
       (readyAttr, fg yellow),
@@ -437,6 +444,9 @@ deckNameAttr = "deck-name"
 
 instructionsAttr :: AttrName
 instructionsAttr = "instructions"
+
+deckSelectedAttr :: AttrName
+deckSelectedAttr = "deck-selected"
 
 totalAttr :: AttrName
 totalAttr = "total"

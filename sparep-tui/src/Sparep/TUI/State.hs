@@ -8,6 +8,7 @@ import Cursor.List.NonEmpty
 import qualified Cursor.Simple.List.NonEmpty as Simple
 import Cursor.Text
 import Data.Maybe
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Time
 import Sparep.Client.Data
@@ -46,7 +47,8 @@ data DecksState = DecksState
                    )
                )
            )
-       )
+       ),
+    decksStateSelected :: !(Set RootedDeck)
   }
   deriving (Show, Eq)
 

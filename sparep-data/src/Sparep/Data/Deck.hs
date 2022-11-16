@@ -70,7 +70,7 @@ data RootedDeck = RootedDeck
   { rootedDeckPath :: !(Path Abs File),
     rootedDeckDeck :: !Deck
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Validity RootedDeck
 
@@ -103,7 +103,7 @@ data Deck = Deck
     deckReverse :: !(Maybe Bool),
     deckStudyUnits :: ![StudyUnitDef]
   }
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
   deriving (FromJSON, ToJSON) via (Autodocodec Deck)
 
 instance Validity Deck
@@ -124,7 +124,7 @@ resolveDeck fp Deck {..} = concat <$> mapM (resolveStudyUnitDef fp deckName deck
 data StudyUnitDef
   = CardUnitDef !CardDef
   | FillExerciseUnitDef !FillExerciseDef
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Validity StudyUnitDef
 
@@ -146,7 +146,7 @@ resolveStudyUnitDef fp mDeckName mDefaultReverse mDefaultInstructions = \case
 data CardDef
   = CardFrontBack !CardFrontBackDef
   | CardManySided !CardManySidedDef
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
   deriving (FromJSON, ToJSON) via (Autodocodec CardDef)
 
 instance Validity CardDef
@@ -172,7 +172,7 @@ data CardFrontBackDef = CardFrontBackDef
     cardFrontBackDefReverse :: !(Maybe Bool),
     cardFrontBackDefInstructions :: !(Maybe Instructions)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
   deriving (FromJSON, ToJSON) via (Autodocodec CardFrontBackDef)
 
 instance Validity CardFrontBackDef
@@ -215,7 +215,7 @@ data CardManySidedDef = CardManySidedDef
   { cardManySidedDefSides :: !(Map Text CardSideDef),
     cardManySidedDefInstructions :: !(Maybe Instructions)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Validity CardManySidedDef
 
@@ -255,7 +255,7 @@ data CardSideDef
   = TextSideDef !Text
   | SoundSideDef !FilePath
   | ImageSideDef !FilePath
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
   deriving (FromJSON, ToJSON) via (Autodocodec CardSideDef)
 
 instance Validity CardSideDef
@@ -300,7 +300,7 @@ data FillExerciseDef = FillExerciseDef
   { fillExerciseDefSequence :: NonEmpty FillExercisePart,
     fillExerciseDefInstructions :: Maybe Instructions
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Validity FillExerciseDef
 
