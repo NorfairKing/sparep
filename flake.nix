@@ -86,9 +86,7 @@
       };
       devShells.${system}.default = pkgs.haskellPackages.shellFor {
         name = "sparep-shell";
-        packages = (p:
-          (builtins.attrValues p.sparepPackages)
-        );
+        packages = p: builtins.attrValues p.sparepPackages;
         withHoogle = true;
         doBenchmark = true;
         buildInputs = (with pkgs; [
